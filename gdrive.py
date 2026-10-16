@@ -39,7 +39,8 @@ def _secret(k):
 
 
 def credenciales():
-    return _secret("GDRIVE_CLIENT_ID"), _secret("GDRIVE_CLIENT_SECRET")
+    cid, sec = _secret("GDRIVE_CLIENT_ID"), _secret("GDRIVE_CLIENT_SECRET")
+    return (cid or "").strip().strip('"') or None, (sec or "").strip().strip('"') or None
 
 
 def configurado():
@@ -72,6 +73,12 @@ def canjear_codigo(texto):
                                        "redirect_uri": REDIRECT, "grant_type": "authorization_code"}, timeout=20)
     d = r.json()
     if r.status_code != 200 or "refresh_token" not in d:
+        if d.get("error") == "invalid_client":
+            raise DriveError("Google rechazó el cliente: el GDRIVE_CLIENT_SECRET (o el ID) cargado en Secrets no coincide "
+                             "con el de Google Cloud. Copie el secreto de nuevo (o genere uno nuevo), guárdelo en Secrets "
+                             "y vuelva a tocar 'Autorizar con Google'.")
+        if d.get("error") == "invalid_grant":
+            raise DriveError("El código ya se usó o venció. Toque 'Autorizar con Google' de nuevo y pegue la dirección enseguida.")
         raise DriveError(d.get("error_description") or d.get("error") or "Google no devolvió el permiso.")
     db.set_config({"gdrive_refresh_token": d["refresh_token"]})
     st.session_state["_gd_token"] = (d["access_token"], time.time() + int(d.get("expires_in", 3600)) - 120)
