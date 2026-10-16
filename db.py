@@ -597,6 +597,26 @@ def guardar_catalogo(tabla, df_nuevo, columnas):
     invalidar()
 
 
+def agregar_dependencia(nombre, sigla=None, color=None, telefono=None):
+    """Alta rápida desde el botón ➕. Devuelve el nombre normalizado y si ya existía."""
+    nombre = " ".join(str(nombre).split()).upper()
+    with conexion() as c, c.cursor() as cur:
+        cur.execute("SELECT 1 FROM dependencias WHERE nombre = %s", (nombre,))
+        if cur.fetchone():
+            cur.execute("UPDATE dependencias SET activa = TRUE WHERE nombre = %s", (nombre,))
+            existia = True
+        else:
+            if not color:
+                cur.execute("SELECT color FROM dependencias")
+                usados = {(r[0] or "").upper() for r in cur.fetchall()}
+                color = next((p for p in C.PALETA if p.upper() not in usados), "#64748B")
+            cur.execute("INSERT INTO dependencias (nombre, sigla, color, telefono_wp) VALUES (%s, %s, %s, %s)",
+                        (nombre, (sigla or "").strip().upper() or None, color, (telefono or "").strip() or None))
+            existia = False
+    invalidar()
+    return nombre, existia
+
+
 def asegurar_catalogos(tipos=(), dependencias=()):
     """Agrega al catálogo tipos/dependencias nuevos detectados en una importación."""
     with conexion() as c, c.cursor() as cur:

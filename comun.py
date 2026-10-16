@@ -92,11 +92,44 @@ def selector_expediente(key, df=None, label="Buscar expediente (N°, tipo o asun
     return df[df["id"] == sel].iloc[0]
 
 
+# ───────────────────────── Alta rápida de dependencia (➕) ─────────────────────────
+def boton_nueva_dependencia(key, seleccionar_en=None):
+    """Popover ➕ para agregar una dependencia sin salir de la pantalla.
+    seleccionar_en: key del selectbox donde queda seleccionada la nueva dependencia."""
+    with st.popover("➕", help="Agregar una dependencia que no está en la lista"):
+        with st.form(f"nd_{key}", clear_on_submit=True):
+            st.markdown("**Nueva dependencia**")
+            nombre = st.text_input("Nombre", placeholder="Ej: COMISARÍA SECCIONAL 5°")
+            c1, c2 = st.columns(2)
+            sigla = c1.text_input("Sigla (opcional)")
+            tel = c2.text_input("WhatsApp (opcional)")
+            if st.form_submit_button("➕ Agregar"):
+                if not nombre.strip():
+                    st.error("Ingrese el nombre.")
+                else:
+                    n, existia = db.agregar_dependencia(nombre, sigla, None, tel)
+                    if seleccionar_en:
+                        st.session_state[f"_sel_{seleccionar_en}"] = n
+                    st.toast(f"{'Ya existía' if existia else 'Agregada'}: {n}", icon="🏢")
+                    st.rerun()
+
+
+def preselect(key):
+    """Aplica la selección pendiente de una dependencia recién agregada (antes de crear el widget)."""
+    v = st.session_state.pop(f"_sel_{key}", None)
+    if v is not None:
+        st.session_state[key] = v
+
+
 # ───────────────────────── Movimiento ─────────────────────────
 def form_movimiento(exp, key):
     """Formulario de registro de movimiento (salida / ingreso / pase / archivo)."""
     lista_dep = deps()
     ub = exp.get("ubicacion_actual") or C.DEP_PROPIA
+    c_a, c_b = st.columns([6, 1], vertical_alignment="bottom")
+    c_a.caption("¿El destino no está en la lista? Agréguelo con ➕")
+    with c_b:
+        boton_nueva_dependencia(f"mov_{key}")
     with st.form(f"fmov_{key}", clear_on_submit=True):
         c1, c2 = st.columns(2)
         tipo_mov = c1.selectbox("Tipo de movimiento", C.TIPOS_MOVIMIENTO, key=f"tm_{key}")

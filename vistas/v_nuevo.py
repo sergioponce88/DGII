@@ -39,6 +39,22 @@ def render():
     origen = c1.radio("Origen del expediente", C.ORIGENES, horizontal=True, key="n_origen")
     tipo = c2.selectbox("Tipo de expediente", lista_tipos, index=None, placeholder="Seleccione el tipo…", key="n_tipo")
 
+    d1, d1b, d2, d2b = st.columns([5, 1, 5, 1], vertical_alignment="bottom")
+    if origen == C.ORIGENES[1]:
+        K.preselect("n_dep_org")
+        dep_org = d1.selectbox("🏢 Dependencia de origen (de dónde viene)", lista_dep, index=None,
+                               placeholder="¿De dónde llega?", key="n_dep_org")
+        with d1b:
+            K.boton_nueva_dependencia("org", "n_dep_org")
+    else:
+        dep_org = C.DEP_PROPIA
+        d1.text_input("🏢 Dependencia de origen", C.DEP_PROPIA, disabled=True)
+    K.preselect("n_destino")
+    destino = d2.selectbox("🎯 Instancia a la que va", lista_dep, index=None,
+                           placeholder="¿A qué instancia se eleva o remite?", key="n_destino")
+    with d2b:
+        K.boton_nueva_dependencia("dest", "n_destino")
+
     sug = db.sugerir_numeracion()
     with st.container(border=True):
         st.markdown("**📖 Asiento en el libro**")
@@ -64,11 +80,7 @@ def render():
         a1, a2, a3 = st.columns(3)
         f_ing = a1.date_input("Fecha de ingreso / inicio", db.hoy(), format="DD/MM/YYYY")
         h_ing = a2.time_input("Hora", db.ahora().time().replace(second=0), step=300)
-        if origen == C.ORIGENES[1]:
-            dep_org = a3.selectbox("Dependencia de origen", lista_dep, index=None, placeholder="¿De dónde llega?")
-        else:
-            dep_org = C.DEP_PROPIA
-            a3.text_input("Dependencia de origen", C.DEP_PROPIA, disabled=True)
+        despacho = a3.selectbox("Sale con", C.DESPACHOS, format_func=lambda d: d or "— A definir —")
         b1, b2 = st.columns(2)
         nro_org = b1.text_input("N° de expediente / nota de origen", placeholder="Ej: J-1234/26")
         iniciador = b2.text_input("Iniciador / causante", placeholder="Jerarquía, apellido y nombre o dependencia")
@@ -78,11 +90,6 @@ def render():
         f_term = d2.date_input("Fecha de término (si es urgente)", value=None, format="DD/MM/YYYY")
         fojas = d3.number_input("Fojas", min_value=0, value=0, step=1)
         ubic = d4.selectbox("Ubicación actual", lista_dep, index=K.idx(lista_dep, C.DEP_PROPIA))
-        ui.seccion("🎯 Instancia a la que va")
-        i1, i2 = st.columns(2)
-        destino = i1.selectbox("Destino / instancia", lista_dep, index=None, placeholder="¿A qué instancia se eleva o remite?",
-                               help="Dependencia a la que debe ir el expediente. Queda registrado para el control y el filtro del libro.")
-        despacho = i2.selectbox("Sale con", C.DESPACHOS, format_func=lambda d: d or "— A definir —")
         e1, e2, e3 = st.columns(3)
         entrega = e1.text_input("Entregado por (quien lo trae)")
         recibe = e2.text_input("Recibido por", value=K.usuario())
@@ -159,6 +166,6 @@ def render():
         st.error(f"No se pudo registrar: {e}")
         return
     st.session_state["ultimo_alta"] = {**exp, "id": exp_id, "identificador": ident_db}
-    for k in ["n_tipo", "n_nf", "n_nro", "n_lib"]:
+    for k in ["n_tipo", "n_nf", "n_nro", "n_lib", "n_dep_org", "n_destino"]:
         st.session_state.pop(k, None)
     st.rerun()
