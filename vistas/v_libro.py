@@ -137,7 +137,9 @@ def render():
             st.caption("💡 Toque una fila para ver el detalle. Seleccione varias para marcarlas como tramitadas juntas.")
         pend = df.iloc[sel] if sel else df.iloc[0:0]
         pend = pend[~pend["tramitado"]]
-        if len(pend):
+        import auth
+
+        if len(pend) and auth.puede("tramitar"):
             with st.form("lib_tram_lote", clear_on_submit=True):
                 st.markdown(f"**✅ Marcar {len(pend)} expediente(s) como TRAMITADO:** " + ", ".join(pend["identificador"]))
                 c1, c2 = st.columns(2)

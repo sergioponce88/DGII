@@ -1,8 +1,11 @@
 import re
 
+import pandas as pd
+
 import streamlit as st
 
 import catalogos as C
+import comun as K
 import db
 import reportes as R
 import ui
@@ -10,8 +13,16 @@ import ui
 
 def render():
     ui.header("Configuración", "Libro, alertas, dependencias, tipos de expediente y respaldo")
+    import auth
+
+    if not auth.puede("configurar"):
+        auth.aviso_sin_permiso("la configuración")
+        return
     cfg = db.get_config()
-    t1, t2, t3, t5, t4 = st.tabs(["📖 Libro y alertas", "🏢 Dependencias y colores", "🗂️ Tipos de expediente", "☁️ Google Drive", "💾 Respaldo y auditoría"])
+    tu, t1, t2, t3, t5, t4 = st.tabs(["👥 Usuarios", "📖 Libro y alertas", "🏢 Dependencias y colores", "🗂️ Tipos de expediente", "☁️ Google Drive", "💾 Respaldo y auditoría"])
+
+    with tu:
+        _usuarios()
 
     with t5:
         _drive(cfg)
@@ -151,3 +162,80 @@ def _drive(cfg):
                 st.rerun()
             except gdrive.DriveError as e:
                 st.error(str(e))
+
+
+def _usuarios():
+    import auth
+
+    df = auth.df_usuarios()
+    yo = auth.actual()
+    act = df[df["activo"]]
+    ui.kpis([
+        ("Usuarios habilitados", len(act), f"{len(df) - len(act)} deshabilitados", "#3B82F6"),
+        ("Oficiales", int((act["rol"] == "OFICIAL").sum()), "cargan y tramitan", C.PALETA[2]),
+        ("Suboficiales", int((act["rol"] == "SUBOFICIAL").sum()), "cargan expedientes", C.PALETA[3]),
+        ("Administradores", int((act["rol"] == "ADMINISTRADOR").sum()), "configuración", C.PALETA[0]),
+    ])
+    st.markdown(" · ".join(f"**{r}**: {d}" for r, d in auth.DESCRIPCION_ROL.items()))
+    tabla = pd.DataFrame({
+        "Legajo": df["legajo"], "Grado": df["grado"], "Apellido": df["apellido"], "Nombre": df["nombre"],
+        "Función": df["funcion"], "Rol": df["rol"], "Habilitado": df["activo"].map({True: "✅ SÍ", False: "⛔ NO"}),
+        "Último acceso": df["ultimo_acceso"].dt.strftime("%d/%m/%Y %H:%M"),
+    })
+    st.dataframe(tabla, hide_index=True, width="stretch")
+    st.download_button("📥 Listado de usuarios (Excel)", R.excel({"Usuarios habilitados": tabla}), file_name="usuarios_expedientes.xlsx")
+
+    c1, c2 = st.columns(2)
+    with c1:
+        ui.seccion("➕ Nuevo usuario")
+        with st.form("nuevo_usuario", clear_on_submit=True):
+            a, b = st.columns(2)
+            grado = a.selectbox("Grado", list(C.JERARQUIAS))
+            legajo = b.text_input("Legajo (usuario para ingresar)")
+            apellido = a.text_input("Apellido")
+            nombre = b.text_input("Nombre")
+            funcion = st.text_input("Función", placeholder="Ej: AUXILIAR DE MESA DE ENTRADAS")
+            rol = st.selectbox("Rol", ["(según grado)"] + auth.ROLES,
+                               help="Según grado: oficiales → OFICIAL (tramitan); suboficiales → SUBOFICIAL (cargan)")
+            clave = st.text_input("Clave inicial (mín. 6)", type="password",
+                                  help="El usuario deberá cambiarla en su primer ingreso")
+            if st.form_submit_button("➕ Crear usuario"):
+                try:
+                    r_final = auth.rol_por_grado(grado) if rol == "(según grado)" else rol
+                    auth.crear_usuario(legajo, grado, apellido, nombre, funcion, r_final, clave, K.usuario())
+                    st.success(f"Usuario creado como {r_final}.")
+                    st.rerun()
+                except ValueError as e:
+                    st.error(str(e))
+    with c2:
+        ui.seccion("✏️ Modificar usuario")
+        if df.empty:
+            return
+        opc = {int(r["id"]): f"{r['legajo']} · {r['grado'] or ''} {r['apellido']} {r['nombre'] or ''}" for _, r in df.iterrows()}
+        uid = st.selectbox("Usuario", list(opc), format_func=opc.get, key="usr_sel")
+        u = df[df["id"] == uid].iloc[0]
+        with st.form(f"edit_usr_{uid}"):
+            a, b = st.columns(2)
+            grado = a.selectbox("Grado", list(C.JERARQUIAS), index=K.idx(list(C.JERARQUIAS), u["grado"]))
+            rol = b.selectbox("Rol", auth.ROLES, index=K.idx(auth.ROLES, u["rol"]))
+            apellido = a.text_input("Apellido", u["apellido"] or "")
+            nombre = b.text_input("Nombre", u["nombre"] or "")
+            funcion = st.text_input("Función", u["funcion"] or "")
+            activo = st.checkbox("Habilitado", bool(u["activo"]))
+            nueva = st.text_input("Nueva clave (dejar vacío para no cambiarla)", type="password")
+            if st.form_submit_button("💾 Guardar"):
+                es_yo = yo and int(yo["id"]) == int(uid)
+                admins = int(((df["rol"] == "ADMINISTRADOR") & df["activo"]).sum())
+                if es_yo and (rol != "ADMINISTRADOR" or not activo) and admins <= 1:
+                    st.error("No puede quitarse el rol de administrador ni deshabilitarse: es el único administrador.")
+                else:
+                    try:
+                        auth.actualizar_usuario(int(uid), {"grado": grado, "rol": rol, "apellido": apellido.strip().upper(),
+                                                           "nombre": nombre.strip().title(), "funcion": funcion.strip().upper() or None,
+                                                           "activo": activo}, K.usuario())
+                        if nueva:
+                            auth.cambiar_clave(int(uid), nueva, K.usuario(), forzar_cambio=not es_yo)
+                        st.success("Usuario actualizado.")
+                        st.rerun()
+                    except ValueError as e:
+                        st.error(str(e))

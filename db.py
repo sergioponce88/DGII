@@ -234,6 +234,21 @@ CREATE TABLE IF NOT EXISTS adjuntos (
 );
 CREATE INDEX IF NOT EXISTS ix_adj_exp ON adjuntos (expediente_id);
 
+CREATE TABLE IF NOT EXISTS usuarios (
+    id SERIAL PRIMARY KEY,
+    legajo TEXT UNIQUE NOT NULL,
+    grado TEXT,
+    apellido TEXT NOT NULL,
+    nombre TEXT,
+    funcion TEXT,
+    rol TEXT NOT NULL DEFAULT 'SUBOFICIAL',
+    clave_hash TEXT NOT NULL,
+    activo BOOLEAN DEFAULT TRUE,
+    debe_cambiar BOOLEAN DEFAULT FALSE,
+    ultimo_acceso TIMESTAMP,
+    creado_en TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS auditoria (
     id SERIAL PRIMARY KEY,
     fecha TIMESTAMP DEFAULT NOW(),
@@ -721,7 +736,8 @@ def registrar_adjunto(exp_id, nombre, drive_id, link, n_bytes, paginas, descripc
 
 
 def respaldo_completo():
-    tablas = ["expedientes", "movimientos", "adjuntos", "cursos", "personal_curso", "eventos", "dependencias", "tipos_expediente", "config", "auditoria"]
+    tablas = ["expedientes", "movimientos", "adjuntos", "usuarios", "cursos", "personal_curso", "eventos", "dependencias", "tipos_expediente", "config", "auditoria"]
     out = {t: leer(f"SELECT * FROM {t} ORDER BY 1") for t in tablas}
+    out["usuarios"] = out["usuarios"].drop(columns=["clave_hash"], errors="ignore")
     out["config"] = out["config"][~out["config"]["clave"].str.startswith("gdrive_refresh")]  # nunca exportar credenciales
     return out

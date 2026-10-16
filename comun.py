@@ -26,7 +26,10 @@ PAGINAS = [PAG_PANEL, PAG_NUEVO, PAG_MOV, PAG_LIBRO, PAG_FICHA, PAG_CURSOS, PAG_
 
 
 def usuario():
-    return st.session_state.get("operador") or "SIN IDENTIFICAR"
+    import auth
+
+    u = auth.actual()
+    return auth.nombre_completo(u) if u else "SIN IDENTIFICAR"
 
 
 def ir_a(pagina, exp_id=None):
@@ -132,7 +135,11 @@ def form_movimiento(exp, key):
         boton_nueva_dependencia(f"mov_{key}")
     with st.form(f"fmov_{key}", clear_on_submit=True):
         c1, c2 = st.columns(2)
-        tipo_mov = c1.selectbox("Tipo de movimiento", C.TIPOS_MOVIMIENTO, key=f"tm_{key}")
+        import auth
+
+        tipos_ok = C.TIPOS_MOVIMIENTO if auth.puede("tramitar") else [t for t in C.TIPOS_MOVIMIENTO if t != "TRÁMITE"]
+        estados_ok = C.ESTADOS if auth.puede("tramitar") else [e for e in C.ESTADOS if e != "TRAMITADO"]
+        tipo_mov = c1.selectbox("Tipo de movimiento", tipos_ok, key=f"tm_{key}")
         defecto_dest = exp.get("destino") if isinstance(exp.get("destino"), str) and exp.get("destino") != ub else (
             C.DEP_PROPIA if ub != C.DEP_PROPIA else (lista_dep[1] if len(lista_dep) > 1 else lista_dep[0]))
         destino = c2.selectbox("Destino ➜", lista_dep, index=idx(lista_dep, defecto_dest), key=f"de_{key}")
@@ -149,7 +156,7 @@ def form_movimiento(exp, key):
         fojas = c9.number_input("Fojas", min_value=0, value=num(exp.get("fojas")), step=1, key=f"fo_{key}")
         urgente = c10.checkbox("⚡ Urgente trámite", value=exp.get("prioridad") == "URGENTE TRÁMITE", key=f"ur_{key}")
         estado_sug = C.ESTADO_POR_MOVIMIENTO.get(tipo_mov, exp.get("estado"))
-        nuevo_estado = c11.selectbox("Estado resultante", ["(automático)"] + C.ESTADOS, key=f"es_{key}",
+        nuevo_estado = c11.selectbox("Estado resultante", ["(automático)"] + estados_ok, key=f"es_{key}",
                                      help="Automático: SALIDA→REMITIDO, INGRESO→EN TRÁMITE, PASE→EN DESPACHO, ARCHIVO→ARCHIVADO")
         obs = st.text_area("Observaciones", height=70, key=f"ob_{key}")
         ok = st.form_submit_button("💾 Registrar movimiento")
@@ -189,13 +196,22 @@ def form_tramite(exp, key):
     if bool(exp.get("tramitado")):
         ui.alerta("✅", f"TRAMITADO el {ui.fmt_fecha(exp.get('fecha_tramite'), True)} por {exp.get('tramitado_por') or '—'}",
                   f"{exp.get('accion_tramite') or ''} · {exp.get('detalle_tramite') or ''}", C.STATUS["ok"])
+        import auth
+
+        if not auth.puede("tramitar"):
+            return
         with st.expander("↺ Anular la marca de tramitado"):
             motivo = st.text_input("Motivo", key=f"anu_m_{key}")
             if st.button("Anular", key=f"anu_b_{key}"):
                 db.marcar_tramitado([int(exp["id"])], None, motivo, db.ahora(), usuario(), usuario(), revertir=True)
                 st.rerun()
         return
+    import auth
+
     ui.alerta("⏳", "PENDIENTE DE TRÁMITE", "Registre lo realizado para dejarlo asentado en la hoja de ruta.", C.STATUS["warning"])
+    if not auth.puede("tramitar"):
+        auth.aviso_sin_permiso("la marca de tramitado")
+        return
     with st.form(f"ftr_{key}", clear_on_submit=True):
         c1, c2 = st.columns(2)
         accion = c1.selectbox("¿Qué se hizo?", C.ACCIONES_TRAMITE, key=f"tr_ac_{key}")

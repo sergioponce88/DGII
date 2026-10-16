@@ -50,6 +50,12 @@ def _datos_curso(c, key, exp_id=None):
         st.rerun()
 
 
+def auth_puede(p):
+    import auth
+
+    return auth.puede(p)
+
+
 def render():
     ui.header("Ficha de Expediente", "Hoja de ruta, movimientos, curso y personal")
     exp = db.df_expedientes()
@@ -95,12 +101,15 @@ def render():
     with t1:
         ui.timeline(movs, mapa)
         if not movs.empty:
-            with st.expander("🗑️ Corregir: eliminar un movimiento cargado por error"):
-                opc = {int(m["id"]): f"{ui.fmt_fecha(m['fecha_hora'], True)} · {m['tipo']} ➜ {m['destino']}" for _, m in movs.iterrows()}
-                mid = st.selectbox("Movimiento", list(opc), format_func=opc.get, key="del_mov")
-                if st.button("Eliminar movimiento", key="del_mov_btn"):
-                    db.eliminar_movimiento(mid, K.usuario())
-                    st.rerun()
+            import auth
+
+            if auth.puede("editar"):
+                with st.expander("🗑️ Corregir: eliminar un movimiento cargado por error"):
+                    opc = {int(m["id"]): f"{ui.fmt_fecha(m['fecha_hora'], True)} · {m['tipo']} ➜ {m['destino']}" for _, m in movs.iterrows()}
+                    mid = st.selectbox("Movimiento", list(opc), format_func=opc.get, key="del_mov")
+                    if st.button("Eliminar movimiento", key="del_mov_btn"):
+                        db.eliminar_movimiento(mid, K.usuario())
+                        st.rerun()
 
     with t2:
         K.form_movimiento(r, f"ficha_{exp_id}")
@@ -120,7 +129,7 @@ def render():
                 unsafe_allow_html=True,
             )
             _datos_curso(c, f"c{c['id']}", exp_id)
-            if st.button("🗑️ Eliminar curso", key=f"delc_{c['id']}"):
+            if auth_puede("editar") and st.button("🗑️ Eliminar curso", key=f"delc_{c['id']}"):
                 db.eliminar_curso(int(c["id"]), K.usuario())
                 st.rerun()
 
@@ -150,53 +159,59 @@ def render():
                 st.rerun()
 
     with t5:
-        lista_dep = K.deps(False)
-        lista_tipos = K.tipos(False)
-        with st.form(f"edit_{exp_id}"):
-            st.caption("⚠️ Cambiar N° / folio / orden modifica la identificación del expediente.")
-            n1, n2, n3, n4, n5 = st.columns(5)
-            nro = n1.number_input("N° Exp", 1, value=int(r["nro_exp"]))
-            fol = n2.number_input("Folio", 1, value=int(r["folio"]))
-            ord_ = n3.number_input("Orden", 1, value=int(r["orden"]))
-            lib = n4.number_input("Libro", 1, value=int(r["libro"]))
-            anio = n5.number_input("Año", 2000, 2100, value=int(r["anio"]))
-            a1, a2, a3 = st.columns(3)
-            tipo = a1.selectbox("Tipo", lista_tipos, index=K.idx(lista_tipos, r["tipo"]))
-            origen = a2.selectbox("Origen", C.ORIGENES, index=K.idx(C.ORIGENES, r["origen"]))
-            dep_org = a3.selectbox("Dependencia de origen", lista_dep, index=K.idx(lista_dep, r["dependencia_origen"]))
-            asunto = st.text_area("Asunto", r["asunto"] or "", height=70)
-            b1_, b2_, b3_ = st.columns(3)
-            nro_org = b1_.text_input("N° origen", r["nro_exp_origen"] or "")
-            inic = b2_.text_input("Iniciador", r["iniciador"] or "")
-            f_ing = b3_.date_input("Fecha ingreso", r["fecha_ingreso"].date(), format="DD/MM/YYYY")
-            c1, c2, c3, c4 = st.columns(4)
-            prio = c1.selectbox("Prioridad", C.PRIORIDADES, index=K.idx(C.PRIORIDADES, r["prioridad"]))
-            ft = c2.date_input("Fecha término", r["fecha_termino"].date() if pd.notna(r["fecha_termino"]) else None, format="DD/MM/YYYY")
-            est = c3.selectbox("Estado", C.ESTADOS, index=K.idx(C.ESTADOS, r["estado"]))
-            desp = c4.selectbox("Despacho", C.DESPACHOS, index=K.idx(C.DESPACHOS, r["despacho"] or ""))
-            d1, d2, d3 = st.columns([2, 2, 1])
-            ubic = d1.selectbox("Ubicación actual", lista_dep, index=K.idx(lista_dep, r["ubicacion_actual"]))
-            dest_ops = [None] + lista_dep
-            dest = d2.selectbox("🎯 Destino / instancia", dest_ops, index=K.idx(dest_ops, r.get("destino")),
-                                format_func=lambda d: d or "— A definir —")
-            fojas = d3.number_input("Fojas", 0, value=K.num(r["fojas"]))
-            obs = st.text_area("Observaciones", r["observaciones"] or "", height=60)
-            if st.form_submit_button("💾 Guardar cambios"):
-                choque = db.conflicto_numeracion(nro, fol, ord_, lib, anio, excluir_id=exp_id)
-                if choque:
-                    st.error(f"La numeración choca con el expediente {choque}.")
-                else:
-                    db.actualizar_expediente(exp_id, dict(
-                        nro_exp=int(nro), folio=int(fol), orden=int(ord_), libro=int(lib), anio=int(anio), tipo=tipo,
-                        origen=origen, dependencia_origen=dep_org, asunto=asunto.strip() or None,
-                        nro_exp_origen=nro_org.strip() or None, iniciador=inic.strip().upper() or None, fecha_ingreso=f_ing,
-                        prioridad=prio, fecha_termino=ft, estado=est, despacho=desp or None, ubicacion_actual=ubic, destino=dest,
-                        fojas=int(fojas) or None, observaciones=obs.strip() or None), K.usuario())
-                    st.toast("Expediente actualizado", icon="✅")
-                    st.rerun()
-        with st.expander("🗑️ Eliminar expediente"):
-            conf = st.text_input(f"Escriba {r['identificador']} para confirmar", key="del_conf")
-            if st.button("Eliminar definitivamente", disabled=conf.strip() != r["identificador"], key="del_exp"):
-                db.eliminar_expediente(exp_id, K.usuario())
-                st.session_state.pop("exp_sel", None)
-                st.rerun()
+        import auth
+
+        if not auth.puede("editar"):
+            auth.aviso_sin_permiso("la edición de expedientes")
+        else:
+            lista_dep = K.deps(False)
+            lista_tipos = K.tipos(False)
+            with st.form(f"edit_{exp_id}"):
+                st.caption("⚠️ Cambiar N° / folio / orden modifica la identificación del expediente.")
+                n1, n2, n3, n4, n5 = st.columns(5)
+                nro = n1.number_input("N° Exp", 1, value=int(r["nro_exp"]))
+                fol = n2.number_input("Folio", 1, value=int(r["folio"]))
+                ord_ = n3.number_input("Orden", 1, value=int(r["orden"]))
+                lib = n4.number_input("Libro", 1, value=int(r["libro"]))
+                anio = n5.number_input("Año", 2000, 2100, value=int(r["anio"]))
+                a1, a2, a3 = st.columns(3)
+                tipo = a1.selectbox("Tipo", lista_tipos, index=K.idx(lista_tipos, r["tipo"]))
+                origen = a2.selectbox("Origen", C.ORIGENES, index=K.idx(C.ORIGENES, r["origen"]))
+                dep_org = a3.selectbox("Dependencia de origen", lista_dep, index=K.idx(lista_dep, r["dependencia_origen"]))
+                asunto = st.text_area("Asunto", r["asunto"] or "", height=70)
+                b1_, b2_, b3_ = st.columns(3)
+                nro_org = b1_.text_input("N° origen", r["nro_exp_origen"] or "")
+                inic = b2_.text_input("Iniciador", r["iniciador"] or "")
+                f_ing = b3_.date_input("Fecha ingreso", r["fecha_ingreso"].date(), format="DD/MM/YYYY")
+                c1, c2, c3, c4 = st.columns(4)
+                prio = c1.selectbox("Prioridad", C.PRIORIDADES, index=K.idx(C.PRIORIDADES, r["prioridad"]))
+                ft = c2.date_input("Fecha término", r["fecha_termino"].date() if pd.notna(r["fecha_termino"]) else None, format="DD/MM/YYYY")
+                est = c3.selectbox("Estado", C.ESTADOS, index=K.idx(C.ESTADOS, r["estado"]))
+                desp = c4.selectbox("Despacho", C.DESPACHOS, index=K.idx(C.DESPACHOS, r["despacho"] or ""))
+                d1, d2, d3 = st.columns([2, 2, 1])
+                ubic = d1.selectbox("Ubicación actual", lista_dep, index=K.idx(lista_dep, r["ubicacion_actual"]))
+                dest_ops = [None] + lista_dep
+                dest = d2.selectbox("🎯 Destino / instancia", dest_ops, index=K.idx(dest_ops, r.get("destino")),
+                                    format_func=lambda d: d or "— A definir —")
+                fojas = d3.number_input("Fojas", 0, value=K.num(r["fojas"]))
+                obs = st.text_area("Observaciones", r["observaciones"] or "", height=60)
+                if st.form_submit_button("💾 Guardar cambios"):
+                    choque = db.conflicto_numeracion(nro, fol, ord_, lib, anio, excluir_id=exp_id)
+                    if choque:
+                        st.error(f"La numeración choca con el expediente {choque}.")
+                    else:
+                        db.actualizar_expediente(exp_id, dict(
+                            nro_exp=int(nro), folio=int(fol), orden=int(ord_), libro=int(lib), anio=int(anio), tipo=tipo,
+                            origen=origen, dependencia_origen=dep_org, asunto=asunto.strip() or None,
+                            nro_exp_origen=nro_org.strip() or None, iniciador=inic.strip().upper() or None, fecha_ingreso=f_ing,
+                            prioridad=prio, fecha_termino=ft, estado=est, despacho=desp or None, ubicacion_actual=ubic, destino=dest,
+                            fojas=int(fojas) or None, observaciones=obs.strip() or None), K.usuario())
+                        st.toast("Expediente actualizado", icon="✅")
+                        st.rerun()
+            if auth.puede("eliminar"):
+                with st.expander("🗑️ Eliminar expediente"):
+                    conf = st.text_input(f"Escriba {r['identificador']} para confirmar", key="del_conf")
+                    if st.button("Eliminar definitivamente", disabled=conf.strip() != r["identificador"], key="del_exp"):
+                        db.eliminar_expediente(exp_id, K.usuario())
+                        st.session_state.pop("exp_sel", None)
+                        st.rerun()

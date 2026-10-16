@@ -93,7 +93,9 @@ def render():
         e1, e2, e3 = st.columns(3)
         entrega = e1.text_input("Entregado por (quien lo trae)")
         recibe = e2.text_input("Recibido por", value=K.usuario())
-        estado = e3.selectbox("Estado", C.ESTADOS)
+        import auth
+
+        estado = e3.selectbox("Estado", C.ESTADOS if auth.puede("tramitar") else [x for x in C.ESTADOS if x != "TRAMITADO"])
         obs = st.text_area("Observaciones", height=60)
 
         curso, personal_df = None, None

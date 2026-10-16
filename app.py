@@ -10,6 +10,7 @@ st.set_page_config(
     initial_sidebar_state="auto",
 )
 
+import auth  # noqa: E402
 import catalogos as C  # noqa: E402
 import comun as K  # noqa: E402
 import db  # noqa: E402
@@ -46,23 +47,72 @@ def _secret(k):
         return os.getenv(k)
 
 
-if not st.session_state.get("operador"):
+def _pantalla_acceso():
     ui.header("Registro de Expedientes", logo=K.LOGO if os.path.exists(K.LOGO) else None)
-    clave_req = _secret("APP_PASSWORD")
     _, mid, _ = st.columns([1, 2, 1])
+    if not auth.hay_usuarios():
+        # Primer uso: se crea el administrador. Si hay APP_PASSWORD, se exige para evitar altas ajenas.
+        with mid, st.form("primer_admin"):
+            st.markdown("#### 🛡️ Primer ingreso: crear el usuario administrador")
+            clave_app = st.text_input("Clave de la app (APP_PASSWORD)", type="password") if _secret("APP_PASSWORD") else ""
+            c1, c2 = st.columns(2)
+            grado = c1.selectbox("Grado", list(C.JERARQUIAS))
+            legajo = c2.text_input("Legajo (será su usuario)")
+            apellido = c1.text_input("Apellido")
+            nombre = c2.text_input("Nombre")
+            funcion = st.text_input("Función", placeholder="Ej: JEFE DE MESA DE ENTRADAS")
+            p1 = c1.text_input("Clave", type="password")
+            p2 = c2.text_input("Repetir clave", type="password")
+            if st.form_submit_button("Crear administrador"):
+                if _secret("APP_PASSWORD") and clave_app != _secret("APP_PASSWORD"):
+                    st.error("Clave de la app incorrecta.")
+                elif p1 != p2:
+                    st.error("Las claves no coinciden.")
+                else:
+                    try:
+                        auth.crear_usuario(legajo, grado, apellido, nombre, funcion, "ADMINISTRADOR", p1)
+                        st.success("Administrador creado. Ingrese con su legajo y clave.")
+                        st.rerun()
+                    except ValueError as e:
+                        st.error(str(e))
+        st.stop()
     with mid, st.form("login"):
-        st.markdown("#### 🔐 Ingreso de operador")
-        op = st.text_input("Jerarquía y apellido del operador", placeholder="Ej: OF. PPAL. GÓMEZ")
-        clave = st.text_input("Clave de acceso", type="password") if clave_req else ""
+        st.markdown("#### 🔐 Ingreso")
+        legajo = st.text_input("Legajo")
+        clave = st.text_input("Clave", type="password")
         if st.form_submit_button("Ingresar"):
-            if not op.strip():
-                st.error("Ingrese el operador.")
-            elif clave_req and clave != clave_req:
-                st.error("Clave incorrecta.")
+            u, err = auth.login(legajo, clave)
+            if err:
+                st.error(err)
             else:
-                st.session_state["operador"] = op.strip().upper()
+                st.session_state["usuario"] = u
                 st.rerun()
     st.stop()
+
+
+def _cambio_obligatorio():
+    ui.header("Cambio de clave", "Por seguridad, defina una clave personal antes de continuar")
+    _, mid, _ = st.columns([1, 2, 1])
+    with mid, st.form("cambio_obl"):
+        p1 = st.text_input("Nueva clave (mínimo 6 caracteres)", type="password")
+        p2 = st.text_input("Repetir nueva clave", type="password")
+        if st.form_submit_button("Guardar clave"):
+            if p1 != p2:
+                st.error("Las claves no coinciden.")
+            else:
+                try:
+                    auth.cambiar_clave(auth.actual()["id"], p1, K.usuario())
+                    st.session_state["usuario"]["debe_cambiar"] = False
+                    st.rerun()
+                except ValueError as e:
+                    st.error(str(e))
+    st.stop()
+
+
+if not auth.actual():
+    _pantalla_acceso()
+if auth.actual().get("debe_cambiar"):
+    _cambio_obligatorio()
 
 # ── Navegación ──
 if "_goto" in st.session_state:
@@ -81,10 +131,13 @@ def _desde_movil():
     st.session_state["nav"] = st.session_state["nav_m"]
 
 
-st.session_state.setdefault("nav", K.PAGINAS[0])
+PAGINAS_OK = [p for p in K.PAGINAS if p != K.PAG_CONFIG or auth.puede("configurar")]
+if st.session_state.get("nav") not in PAGINAS_OK:
+    st.session_state["nav"] = PAGINAS_OK[0]
+st.session_state.setdefault("nav", PAGINAS_OK[0])
 st.session_state["nav_m"] = st.session_state["nav"]
 with st.container(key="nav_movil"):
-    st.selectbox("☰ Menú", K.PAGINAS, key="nav_m", format_func=_fmt, on_change=_desde_movil, label_visibility="collapsed")
+    st.selectbox("☰ Menú", PAGINAS_OK, key="nav_m", format_func=_fmt, on_change=_desde_movil, label_visibility="collapsed")
 
 with st.sidebar:
     if os.path.exists(K.LOGO):
@@ -96,9 +149,30 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    pagina = st.radio("Navegación", K.PAGINAS, key="nav", format_func=_fmt, label_visibility="collapsed")
+    pagina = st.radio("Navegación", PAGINAS_OK, key="nav", format_func=_fmt, label_visibility="collapsed")
     st.markdown("---")
-    st.caption(f"👤 {K.usuario()}")
+    _u = auth.actual()
+    st.markdown(f"<div style='font-size:.82rem;line-height:1.35'>👤 <b>{ui.esc(K.usuario())}</b><br>"
+                f"<span style='color:#94A3B8'>Legajo {ui.esc(_u['legajo'])} · {ui.esc(_u.get('funcion') or '')}</span><br>"
+                f"{ui.chip(_u['rol'], C.PALETA[0] if _u['rol'] == 'ADMINISTRADOR' else (C.PALETA[2] if _u['rol'] == 'OFICIAL' else C.PALETA[3]), False)}</div>",
+                unsafe_allow_html=True)
+    with st.expander("🔑 Cambiar mi clave"):
+        with st.form("mi_clave", clear_on_submit=True):
+            actual_c = st.text_input("Clave actual", type="password")
+            n1 = st.text_input("Nueva clave", type="password")
+            n2 = st.text_input("Repetir", type="password")
+            if st.form_submit_button("Cambiar"):
+                ok_u, _err = auth.login(_u["legajo"], actual_c)
+                if not ok_u:
+                    st.error("Clave actual incorrecta.")
+                elif n1 != n2:
+                    st.error("No coinciden.")
+                else:
+                    try:
+                        auth.cambiar_clave(_u["id"], n1, K.usuario())
+                        st.success("Clave actualizada.")
+                    except ValueError as e:
+                        st.error(str(e))
     cs1, cs2 = st.columns(2)
     if cs1.button("🔄 Actualizar"):
         db.invalidar()
