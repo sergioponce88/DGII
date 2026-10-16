@@ -72,6 +72,8 @@ def estadisticas_cursos(cur, pers):
         ("Personal fuera de la provincia", len(fuera), "efectivos de Tucumán cursando afuera", C.PALETA[1]),
         ("Oficiales capacitándose", of, "cursantes", C.PALETA[2]),
         ("Suboficiales capacitándose", sub, "cursantes", C.PALETA[3]),
+        ("PTP / Cadetes / Aspirantes", f"{int((pers['escalafon'] == 'PTP').sum())} / {int((pers['escalafon'] == 'CADETE').sum())} / "
+         f"{int((pers['escalafon'] == 'ASPIRANTE').sum())}", "personal en formación afectado", C.PALETA[5]),
         ("De otras provincias", len(otra_prov), "cursando en Tucumán", C.PALETA[4]),
         ("Con viático / movilidad", f"{len(viat)} / {len(mov)}", "actividades que lo requieren", C.PALETA[6]),
     ]
@@ -181,7 +183,8 @@ def render():
                 if not cs.empty:
                     pv = cs.groupby(["ambito", "escalafon"]).size().reset_index(name="n")
                     fig = px.bar(pv, x="ambito", y="n", color="escalafon", barmode="group",
-                                 color_discrete_map={"OFICIAL": C.PALETA[0], "SUBOFICIAL": C.PALETA[1], "OTRO": "#64748B"},
+                                 color_discrete_map={"OFICIAL": C.PALETA[0], "SUBOFICIAL": C.PALETA[1], "PTP": C.PALETA[2],
+                                                     "CADETE": C.PALETA[3], "ASPIRANTE": C.PALETA[4], "OTRO": "#64748B"},
                                  labels={"ambito": "", "n": "Efectivos", "escalafon": "Escalafón"})
                     fig.update_traces(marker_cornerradius=4, hovertemplate="%{x}<br>%{y} efectivos<extra>%{fullData.name}</extra>")
                     fig.update_layout(title="Oficiales y suboficiales por ámbito")
@@ -249,7 +252,7 @@ def render():
             ql = q.strip().lower()
             pf = pf[(pf["apellido"].fillna("").str.lower().str.contains(ql, regex=False)) | (pf["dni"].fillna("").str.contains(ql, regex=False))]
         e1, e2 = st.columns(2)
-        esc = e1.multiselect("Escalafón", ["OFICIAL", "SUBOFICIAL", "OTRO"])
+        esc = e1.multiselect("Escalafón", C.ESCALAFONES)
         rol = e2.multiselect("Rol", C.ROLES_PERSONAL)
         if esc:
             pf = pf[pf["escalafon"].isin(esc)]

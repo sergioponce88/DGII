@@ -56,7 +56,7 @@ def _pantalla_acceso():
             st.markdown("#### 🛡️ Primer ingreso: crear el usuario administrador")
             clave_app = st.text_input("Clave de la app (APP_PASSWORD)", type="password") if _secret("APP_PASSWORD") else ""
             c1, c2 = st.columns(2)
-            grado = c1.selectbox("Grado", list(C.JERARQUIAS))
+            grado = c1.selectbox("Grado", C.GRADOS_USUARIO)
             legajo = c2.text_input("Legajo (será su usuario)")
             apellido = c1.text_input("Apellido")
             nombre = c2.text_input("Nombre")

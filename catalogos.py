@@ -163,10 +163,18 @@ JERARQUIAS = {
     "CABO PRIMERO": "SUBOFICIAL",
     "CABO": "SUBOFICIAL",
     "AGENTE": "SUBOFICIAL",
-    "CADETE": "OTRO",
+    "PERSONAL TRANSITORIO POLICIAL (PTP)": "PTP",
+    "CADETE DE 1° AÑO": "CADETE",
+    "CADETE DE 2° AÑO": "CADETE",
+    "CADETE DE 3° AÑO": "CADETE",
+    "ASPIRANTE A SUBOFICIAL (CADETE)": "ASPIRANTE",
     "PERSONAL CIVIL": "OTRO",
     "OTRO": "OTRO",
 }
+ESCALAFONES = ["OFICIAL", "SUBOFICIAL", "PTP", "CADETE", "ASPIRANTE", "OTRO"]
+# Los usuarios del sistema son solo personal policial en actividad (y civil); PTP, cadetes y aspirantes
+# figuran únicamente como personal afectado a expedientes / actividades.
+GRADOS_USUARIO = [g for g, e in JERARQUIAS.items() if e in ("OFICIAL", "SUBOFICIAL")] + ["PERSONAL CIVIL"]
 
 
 def escalafon(grado):
@@ -174,6 +182,12 @@ def escalafon(grado):
     g = str(grado or "").strip().upper()
     if g in JERARQUIAS:
         return JERARQUIAS[g]
+    if "PTP" in g or "TRANSITORIO" in g:
+        return "PTP"
+    if "ASPIRANTE" in g:
+        return "ASPIRANTE"
+    if "CADETE" in g:
+        return "CADETE"
     if g.startswith(("COMISARIO", "SUBCOMISARIO", "OFICIAL", "OF.")):
         return "OFICIAL"
     if g.startswith(("SUBOFICIAL", "SARGENTO", "CABO", "AGENTE", "SGTO")):
