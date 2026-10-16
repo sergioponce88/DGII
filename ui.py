@@ -48,6 +48,12 @@ CSS = """
 .stApp, .stApp p, .stApp span, .stApp label, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5 {
   color:#F8FAFC; font-family:'Inter', system-ui, -apple-system, sans-serif !important; }
 .stApp { background: radial-gradient(circle at 50% 0%, #111C38 0%, #070A14 100%) !important; }
+/* Los íconos de Streamlit usan su propia fuente: sin esto se ve el texto "expand_more", "arrow_right", etc. */
+.stApp [data-testid="stIconMaterial"], .stApp span[data-testid="stIconMaterial"],
+.stApp .material-symbols-rounded, .stApp [class*="material-symbols"], .stApp [class*="material-icons"] {
+  font-family: "Material Symbols Rounded" !important; font-weight: normal !important; font-style: normal !important;
+  letter-spacing: normal !important; text-transform: none !important; font-feature-settings: "liga" !important;
+  -webkit-font-feature-settings: "liga" !important; white-space: nowrap; direction: ltr; }
 .block-container { padding-top: 2.2rem; padding-bottom: 4rem; max-width: 1500px; }
 footer, [data-testid="stStatusWidget"], .stDeployButton { display:none !important; }
 
