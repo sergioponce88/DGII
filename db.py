@@ -147,6 +147,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_exp_nro_anio ON expedientes (nro_exp, anio)
 CREATE INDEX IF NOT EXISTS ix_exp_tipo ON expedientes (tipo);
 CREATE INDEX IF NOT EXISTS ix_exp_estado ON expedientes (estado);
 
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS tramitado BOOLEAN DEFAULT FALSE;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS fecha_tramite TIMESTAMP;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS tramitado_por TEXT;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS accion_tramite TEXT;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS detalle_tramite TEXT;
+
 CREATE TABLE IF NOT EXISTS movimientos (
     id SERIAL PRIMARY KEY,
     expediente_id INTEGER NOT NULL REFERENCES expedientes (id) ON DELETE CASCADE,
@@ -301,9 +307,10 @@ def df_expedientes():
     )
     for col in ["fecha_ingreso", "fecha_termino"]:
         df[col] = pd.to_datetime(df[col], errors="coerce")
-    for col in ["ult_mov", "creado_en", "actualizado_en"]:
+    for col in ["ult_mov", "creado_en", "actualizado_en", "fecha_tramite"]:
         df[col] = pd.to_datetime(df[col], errors="coerce")
     df["cant_mov"] = df["cant_mov"].fillna(0).astype(int)
+    df["tramitado"] = df["tramitado"].fillna(False).astype(bool)
     return df
 
 
@@ -489,6 +496,33 @@ def registrar_movimiento(exp_id, mov, nuevo_estado=None, usuario=""):
         elif mov.get("despacho") == "NO AUTORIZADO":
             cur.execute("UPDATE cursos SET estado = 'NO AUTORIZADO' WHERE expediente_id = %s", (exp_id,))
     log(usuario, "MOVIMIENTO", f"{exp_id} → {mov.get('destino')}")
+    invalidar()
+
+
+def marcar_tramitado(ids, accion, detalle, fecha_hora, tramito, usuario="", revertir=False):
+    """Deja asentado que el expediente fue tramitado (o revierte la marca). Queda en la hoja de ruta."""
+    with conexion() as c, c.cursor() as cur:
+        for i in ids:
+            cur.execute("SELECT ubicacion_actual, estado FROM expedientes WHERE id = %s", (_py(i),))
+            fila = cur.fetchone()
+            if not fila:
+                continue
+            ub, est = fila
+            if revertir:
+                _update(cur, "expedientes", {"tramitado": False, "fecha_tramite": None, "tramitado_por": None,
+                                             "accion_tramite": None, "detalle_tramite": None,
+                                             "estado": "EN TRÁMITE" if est == "TRAMITADO" else est, "actualizado_en": ahora()}, i)
+                obs = f"Se anula la marca de tramitado. {detalle or ''}".strip()
+            else:
+                _update(cur, "expedientes", {"tramitado": True, "fecha_tramite": fecha_hora, "tramitado_por": tramito,
+                                             "accion_tramite": accion, "detalle_tramite": detalle,
+                                             "estado": "TRAMITADO" if est not in ("REMITIDO", "RESUELTO", "ARCHIVADO") else est,
+                                             "actualizado_en": ahora()}, i)
+                obs = detalle
+            _insert(cur, "movimientos", {"expediente_id": i, "fecha_hora": fecha_hora, "tipo": "TRÁMITE", "origen": ub,
+                                         "destino": ub, "despacho": None if revertir else accion,
+                                         "entregado_por": tramito, "observaciones": obs, "registrado_por": usuario}, None)
+    log(usuario, "TRÁMITE" if not revertir else "ANULA TRÁMITE", ",".join(str(i) for i in ids))
     invalidar()
 
 

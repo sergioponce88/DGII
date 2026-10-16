@@ -149,6 +149,34 @@ def form_movimiento(exp, key):
         st.link_button("📲 Informar por WhatsApp", R.link_whatsapp(msg, tel_dep(m["destino"])))
 
 
+# ───────────────────────── Trámite ─────────────────────────
+def form_tramite(exp, key):
+    """Marca el expediente como TRAMITADO: qué se hizo, quién y cuándo. Permite anular la marca."""
+    if bool(exp.get("tramitado")):
+        ui.alerta("✅", f"TRAMITADO el {ui.fmt_fecha(exp.get('fecha_tramite'), True)} por {exp.get('tramitado_por') or '—'}",
+                  f"{exp.get('accion_tramite') or ''} · {exp.get('detalle_tramite') or ''}", C.STATUS["ok"])
+        with st.expander("↺ Anular la marca de tramitado"):
+            motivo = st.text_input("Motivo", key=f"anu_m_{key}")
+            if st.button("Anular", key=f"anu_b_{key}"):
+                db.marcar_tramitado([int(exp["id"])], None, motivo, db.ahora(), usuario(), usuario(), revertir=True)
+                st.rerun()
+        return
+    ui.alerta("⏳", "PENDIENTE DE TRÁMITE", "Registre lo realizado para dejarlo asentado en la hoja de ruta.", C.STATUS["warning"])
+    with st.form(f"ftr_{key}", clear_on_submit=True):
+        c1, c2 = st.columns(2)
+        accion = c1.selectbox("¿Qué se hizo?", C.ACCIONES_TRAMITE, key=f"tr_ac_{key}")
+        quien = c2.text_input("Tramitado por", value=usuario(), key=f"tr_q_{key}")
+        c3, c4 = st.columns(2)
+        f = c3.date_input("Fecha", db.hoy(), format="DD/MM/YYYY", key=f"tr_f_{key}")
+        h = c4.time_input("Hora", db.ahora().time().replace(second=0), step=300, key=f"tr_h_{key}")
+        det = st.text_area("Detalle (N° de nota, providencia, a quién se respondió…)", height=70, key=f"tr_d_{key}")
+        if st.form_submit_button("✅ Marcar como TRAMITADO"):
+            db.marcar_tramitado([int(exp["id"])], accion, det.strip() or None, datetime.combine(f, h),
+                                quien.strip().upper() or usuario(), usuario())
+            st.toast(f"Exp. {exp['identificador']} tramitado", icon="✅")
+            st.rerun()
+
+
 # ───────────────────────── Personal (editor) ─────────────────────────
 COLS_PERSONAL = ["apellido", "nombre", "jerarquia", "dni", "division", "provincia", "rol"]
 

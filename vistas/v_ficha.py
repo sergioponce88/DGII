@@ -84,7 +84,10 @@ def render():
     resumen = R.msg_alta(r.to_dict()) + f"\n📍 Ubicación actual: {r['ubicacion_actual'] or '—'}\nEstado: {r['estado']}"
     b2.link_button("📲 Compartir por WhatsApp", R.link_whatsapp(resumen))
 
-    t1, t2, t3, t4, t5 = st.tabs(["🧭 Hoja de ruta", "🔁 Registrar movimiento", "🎓 Curso y personal", "🔔 Alertas", "✏️ Editar"])
+    t0, t1, t2, t3, t4, t5 = st.tabs(["✅ Trámite", "🧭 Hoja de ruta", "🔁 Registrar movimiento", "🎓 Curso y personal", "🔔 Alertas", "✏️ Editar"])
+
+    with t0:
+        K.form_tramite(r, f"ficha_{exp_id}")
 
     with t1:
         ui.timeline(movs, mapa)

@@ -245,6 +245,10 @@ def tarjeta_expediente(r, mapa=None, detalle=True):
         col = C.STATUS["critical"] if dv < 0 else (C.STATUS["warning"] if dv <= 2 else C.STATUS["ok"])
         txt = f"VENCIDO hace {-dv} d" if dv < 0 else (f"Vence en {dv} d" if dv else "VENCE HOY")
         venc = chip(f"⏱ {txt}", col, punto=False)
+    if bool(r.get("tramitado")):
+        venc += chip(f"✅ TRAMITADO {fmt_fecha(r.get('fecha_tramite'))}", C.STATUS["ok"], punto=False)
+    elif r.get("estado") not in C.ESTADOS_CERRADOS:
+        venc += chip("⏳ PENDIENTE DE TRÁMITE", C.STATUS["warning"], punto=False)
     meta = ""
     if detalle:
         org = r.get("dependencia_origen") or "—"

@@ -36,6 +36,7 @@ def render():
         [
             ("Expedientes " + str(anio), len(e), f"{(e['origen'] == C.ORIGENES[0]).sum()} iniciados · {(e['origen'] == C.ORIGENES[1]).sum()} recibidos", "#3B82F6"),
             ("En trámite", len(abiertos), f"{len(e) - len(abiertos)} resueltos / archivados", C.PALETA[2]),
+            ("Pendientes de trámite", int((~abiertos["tramitado"]).sum()), f"{int(e['tramitado'].sum())} tramitados", C.STATUS["warning"]),
             ("Urgentes activos", len(urg), "Urgente trámite", C.STATUS["serious"]),
             ("Vencidos", len(vencidos), "Fecha de término superada", C.STATUS["critical"]),
             ("Fuera de la Dirección", len(fuera[~fuera["estado"].isin(C.ESTADOS_CERRADOS)]), "Abiertos en otras dependencias", C.PALETA[3]),

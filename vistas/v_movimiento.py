@@ -7,7 +7,7 @@ import ui
 
 
 def render():
-    ui.header("Movimiento Rápido", "Salidas, ingresos y pases · pensado para el celular")
+    ui.header("Movimiento Rápido", "Trámite, salidas, ingresos y pases · pensado para el celular")
     exp = db.df_expedientes()
     if exp.empty:
         st.info("No hay expedientes registrados.")
@@ -18,7 +18,11 @@ def render():
     if r is None:
         return
     ui.tarjeta_expediente(r, detalle=False)
-    K.form_movimiento(r, "rapido")
+    accion = st.segmented_control("Acción", ["✅ Trámite", "🔁 Movimiento"], default="✅ Trámite", key="mr_accion")
+    if accion == "🔁 Movimiento":
+        K.form_movimiento(r, "rapido")
+    else:
+        K.form_tramite(r, "rapido")
     with st.expander("🧭 Hoja de ruta"):
         movs = db.df_movimientos()
         ui.timeline(movs[movs["expediente_id"] == r["id"]].head(10))

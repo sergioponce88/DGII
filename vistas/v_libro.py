@@ -20,9 +20,10 @@ def filtrar(exp, key):
         estados = c5.multiselect("Estado", C.ESTADOS, key=f"{key}_est")
         origen = c6.multiselect("Dependencia de origen", sorted(exp["dependencia_origen"].dropna().unique()), key=f"{key}_org")
         ubic = c7.multiselect("Ubicación actual", sorted(exp["ubicacion_actual"].dropna().unique()), key=f"{key}_ub")
-        c8, c9 = st.columns(2)
+        c8, c9, c10 = st.columns(3)
         desde = c8.date_input("Ingreso desde", value=None, format="DD/MM/YYYY", key=f"{key}_d")
         hasta = c9.date_input("Ingreso hasta", value=None, format="DD/MM/YYYY", key=f"{key}_h")
+        tram = c10.selectbox("Trámite", ["Todos", "⏳ Pendientes de trámite", "✅ Tramitados"], key=f"{key}_tram")
     df = exp
     if texto:
         t = texto.strip().lower()
@@ -41,6 +42,10 @@ def filtrar(exp, key):
         df = df[df["dependencia_origen"].isin(origen)]
     if ubic:
         df = df[df["ubicacion_actual"].isin(ubic)]
+    if tram.startswith("⏳"):
+        df = df[~df["tramitado"] & ~df["estado"].isin(C.ESTADOS_CERRADOS)]
+    elif tram.startswith("✅"):
+        df = df[df["tramitado"]]
     if desde:
         df = df[df["fecha_ingreso"] >= pd.Timestamp(desde)]
     if hasta:
@@ -61,6 +66,8 @@ def tabla_libro(df):
             "Iniciador": df["iniciador"],
             "Prioridad": df["prioridad"],
             "Estado": df["estado"],
+            "Tramitado": df["tramitado"].map({True: "✅ SÍ", False: "⏳ NO"}),
+            "Fecha trámite": df["fecha_tramite"].dt.strftime("%d/%m/%Y %H:%M"),
             "Despacho": df["despacho"],
             "Ubicación": df["ubicacion_actual"],
             "Últ. movimiento": df["ult_mov"].dt.strftime("%d/%m/%Y %H:%M"),
@@ -83,6 +90,7 @@ def render():
             ("Resultado", len(df), "expedientes filtrados", "#3B82F6"),
             ("Abiertos", len(abiertos), "en trámite", C.PALETA[2]),
             ("Urgentes", int((abiertos["prioridad"] == "URGENTE TRÁMITE").sum()), "abiertos", C.STATUS["serious"]),
+            ("Pendientes de trámite", int((~abiertos["tramitado"]).sum()), f"{int(df['tramitado'].sum())} tramitados", C.STATUS["warning"]),
             ("Folios", df["folio"].nunique(), "del libro", C.PALETA[6]),
         ]
     )
@@ -106,18 +114,30 @@ def render():
             width="stretch",
             height=min(700, 38 + 35 * max(1, len(t))),
             on_select="rerun",
-            selection_mode="single-row",
+            selection_mode="multi-row",
             key="lib_tabla",
         )
         sel = ev.selection.rows if ev and hasattr(ev, "selection") else []
-        if sel:
+        if len(sel) == 1:
             r = df.iloc[sel[0]]
             st.caption("Expediente seleccionado:")
             ui.tarjeta_expediente(r, mapa)
             if st.button("🔎 Abrir ficha completa", key="lib_abrir"):
                 K.ir_a(K.PAG_FICHA, r["id"])
-        else:
-            st.caption("💡 Toque una fila para ver el detalle y abrir la ficha.")
+        elif not sel:
+            st.caption("💡 Toque una fila para ver el detalle. Seleccione varias para marcarlas como tramitadas juntas.")
+        pend = df.iloc[sel] if sel else df.iloc[0:0]
+        pend = pend[~pend["tramitado"]]
+        if len(pend):
+            with st.form("lib_tram_lote", clear_on_submit=True):
+                st.markdown(f"**✅ Marcar {len(pend)} expediente(s) como TRAMITADO:** " + ", ".join(pend["identificador"]))
+                c1, c2 = st.columns(2)
+                acc = c1.selectbox("¿Qué se hizo?", C.ACCIONES_TRAMITE)
+                det = c2.text_input("Detalle")
+                if st.form_submit_button("✅ Marcar como tramitados"):
+                    db.marcar_tramitado([int(i) for i in pend["id"]], acc, det.strip() or None, db.ahora(), K.usuario(), K.usuario())
+                    st.toast(f"{len(pend)} expedientes tramitados", icon="✅")
+                    st.rerun()
 
     st.download_button("📥 Exportar a Excel", R.excel({"Libro de expedientes": t}),
                        file_name=f"libro_expedientes_{db.hoy():%Y%m%d}.xlsx",
