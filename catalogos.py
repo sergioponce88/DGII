@@ -164,12 +164,11 @@ JERARQUIAS = {
     "CABO": "SUBOFICIAL",
     "AGENTE": "SUBOFICIAL",
     "PERSONAL TRANSITORIO POLICIAL (PTP)": "PTP",
-    # Escuela de Oficiales: cadete (ingreso civil), suboficial cadete (cadete ascendido) y
-    # agente / cabo cadete (personal policial que cursa como cadete)
+    # Escuela de Oficiales: cadete (ingreso civil), agente cadete y suboficiales cadetes
+    # (cabo, sargento y sargento primero cadete / abanderado, ascensos ad honorem en el IESP)
     "CADETE DE 1° AÑO": "CADETE",
     "CADETE DE 2° AÑO": "CADETE",
     "CADETE DE 3° AÑO": "CADETE",
-    "SUBOFICIAL CADETE": "CADETE",
     "AGENTE CADETE": "CADETE",
     "CABO CADETE": "CADETE",
     "SARGENTO CADETE": "CADETE",
