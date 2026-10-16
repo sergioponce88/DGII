@@ -100,13 +100,18 @@ def render():
 
         curso, personal_df = None, None
         if es_curso:
-            ui.seccion("🎓 Datos del curso / actividad")
+            ui.seccion("🎓 Datos de la actividad (curso, formación, disertación, congreso, evento…)")
             cat_def = 1 if any(k in tipo for k in ("DICTAR", "DISERTACIÓN")) else 0
+            a_1, a_2, a_3 = st.columns([2, 1, 2])
+            tipo_act = a_1.selectbox("Tipo de actividad", C.TIPOS_ACTIVIDAD,
+                                     index=K.idx(C.TIPOS_ACTIVIDAD, C.ACTIVIDAD_POR_TIPO.get(tipo, "CURSO")))
+            hora_act = a_2.text_input("Hora", placeholder="08:30")
+            organiza = a_3.text_input("Organiza / convoca")
             k1, k2 = st.columns(2)
             categoria = k1.radio("Categoría", C.CATEGORIAS_CURSO, index=cat_def, horizontal=True)
             requerimiento = k2.radio("¿Qué se solicita?", C.REQUERIMIENTOS, horizontal=True)
             k3, k4 = st.columns(2)
-            nombre_curso = k3.text_input("Nombre del curso / actividad")
+            nombre_curso = k3.text_input("Nombre de la actividad")
             div_dicta = k4.text_input("División / institución que dicta")
             k5, k6, k7 = st.columns(3)
             lugar = k5.text_input("Lugar")
@@ -116,11 +121,12 @@ def render():
             f_ini = k8.date_input("Fecha de inicio", value=None, format="DD/MM/YYYY")
             f_fin = k9.date_input("Fecha de finalización", value=None, format="DD/MM/YYYY")
             plan = k10.checkbox("Integra la planificación anual")
-            st.markdown("**👮 Personal que realizará / dictará el curso**")
+            st.markdown("**👮 Personal afectado (cursantes, disertantes, participantes, colaboradores)**")
             personal_df = K.editor_personal(None, "n_personal")
             curso = dict(categoria=categoria, requerimiento=requerimiento, nombre=nombre_curso, division_dicta=div_dicta,
                          lugar=lugar, ambito=ambito, modalidad=modalidad, fecha_inicio=f_ini, fecha_fin=f_fin,
-                         planificacion_anual=plan)
+                         planificacion_anual=plan, tipo_actividad=tipo_act, hora=hora_act.strip() or None,
+                         organiza=organiza.strip().upper() or None)
 
         enviar = st.form_submit_button("💾 Registrar expediente", disabled=bool(conflicto))
 
@@ -134,7 +140,7 @@ def render():
     if prioridad == "URGENTE TRÁMITE" and not f_term:
         st.warning("Expediente urgente sin fecha de término: se registrará igual, pero no tendrá alerta de vencimiento.")
     if curso and not curso["nombre"].strip():
-        errores.append("Indique el nombre del curso / actividad.")
+        errores.append("Indique el nombre de la actividad.")
     if curso and curso["fecha_inicio"] and curso["fecha_fin"] and curso["fecha_fin"] < curso["fecha_inicio"]:
         errores.append("La fecha de finalización es anterior a la de inicio.")
     if errores:

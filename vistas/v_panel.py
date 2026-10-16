@@ -41,7 +41,7 @@ def render():
             ("Vencidos", len(vencidos), "Fecha de término superada", C.STATUS["critical"]),
             ("Fuera de la Dirección", len(fuera[~fuera["estado"].isin(C.ESTADOS_CERRADOS)]), "Abiertos en otras dependencias", C.PALETA[3]),
             ("Movimientos hoy", len(mov_hoy), ui.fmt_fecha(h), C.PALETA[6]),
-            ("Cursos en desarrollo", len(cur_act), f"{len(cur)} cursos registrados", C.PALETA[4]),
+            ("Actividades en desarrollo", len(cur_act), f"{len(cur)} actividades registradas", C.PALETA[4]),
         ]
     )
 
@@ -51,6 +51,24 @@ def render():
         for a in top:
             ic, col, _ = K.NIVELES[a["nivel"]]
             ui.alerta(ic, a["titulo"], a["detalle"], col)
+
+    # ── Qué está pasando esta semana (más allá de los expedientes) ──
+    if not cur.empty:
+        fin = cur["fecha_fin"].fillna(cur["fecha_inicio"])
+        vigentes = cur[cur["fecha_inicio"].notna() & ~cur["estado"].isin(["NO AUTORIZADO", "SUSPENDIDO"])
+                       & (cur["fecha_inicio"] <= h + pd.Timedelta(days=7)) & (fin >= h)].sort_values("fecha_inicio")
+        if not vigentes.empty:
+            ui.seccion(f"📅 Esta semana en la Dirección ({len(vigentes)} actividades)")
+            filas = []
+            for _, c in vigentes.head(8).iterrows():
+                en_curso = c["fecha_inicio"] <= h
+                col = C.PALETA[2] if en_curso else C.STATUS["warning"]
+                tipo = c["tipo_actividad"] if isinstance(c["tipo_actividad"], str) else "CURSO"
+                cuando = "EN DESARROLLO" if en_curso else f"Inicia {ui.fmt_fecha(c['fecha_inicio'])}"
+                filas.append(f"<div class='card acc' style='--c:{col};padding:9px 14px;margin-bottom:8px'>{ui.chip(tipo, C.PALETA[0], False)}"
+                             f"{ui.chip(cuando, col)} <b>{ui.esc(c['nombre'])}</b>"
+                             f"<span class='meta'> · {ui.esc(c['lugar'] or '')} · {int(c['cant_personal'] or 0)} efectivos</span></div>")
+            st.markdown("".join(filas), unsafe_allow_html=True)
 
     g1, g2 = st.columns([3, 2])
     with g1:

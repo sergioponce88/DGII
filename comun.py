@@ -17,7 +17,7 @@ PAG_NUEVO = "➕ Nuevo Expediente"
 PAG_MOV = "🔁 Movimiento Rápido"
 PAG_LIBRO = "📚 Libro de Registro"
 PAG_FICHA = "🔎 Ficha de Expediente"
-PAG_CURSOS = "🎓 Cursos y Personal"
+PAG_CURSOS = "🎓 Actividades y Personal"
 PAG_ALERTAS = "🔔 Alertas y Agenda"
 PAG_CARGA = "📥 Carga Masiva"
 PAG_INFORMES = "📈 Informes"
@@ -354,19 +354,20 @@ def calcular_alertas():
         if c["estado"] in ("NO AUTORIZADO", "SUSPENDIDO"):
             continue
         ini, fin = c["fecha_inicio"], c["fecha_fin"]
-        ref = f"Exp. {c['identificador']}" if pd.notna(c.get("identificador")) else "Planificación anual"
+        tipo_a = c["tipo_actividad"] if isinstance(c.get("tipo_actividad"), str) else "CURSO"
+        ref = f"Exp. {c['identificador']}" if pd.notna(c.get("identificador")) else "Sin expediente"
         lugar = f"{c.get('lugar') or 's/lugar'} · {c.get('modalidad') or ''} · {int(c.get('cant_personal') or 0)} efectivos"
         if pd.notna(ini):
             d = (ini - h).days
             if d == 0:
-                add("critical", f"HOY inicia: {c['nombre']}", f"{ref} · {lugar}", ini, c.get("expediente_id"), cat="Cursos")
+                add("critical", f"HOY inicia · {tipo_a}: {c['nombre']}", f"{ref} · {lugar}", ini, c.get("expediente_id"), cat="Actividades")
             elif 0 < d <= n_aviso:
-                sin_aut = c["estado"] in ("PREVISTO", "SOLICITADO")
+                sin_aut = c["estado"] == "SOLICITADO" and "SIN REQUERIMIENTO" not in str(c.get("requerimiento") or "")
                 add("serious" if sin_aut else "warning",
-                    f"En {d} día{'s' if d > 1 else ''} inicia: {c['nombre']}" + (" · SIN AUTORIZACIÓN" if sin_aut else ""),
-                    f"{ref} · {ui.fmt_fecha(ini)} · {lugar}", ini, c.get("expediente_id"), cat="Cursos")
+                    f"En {d} día{'s' if d > 1 else ''} inicia · {tipo_a}: {c['nombre']}" + (" · SIN AUTORIZACIÓN" if sin_aut else ""),
+                    f"{ref} · {ui.fmt_fecha(ini)} · {lugar}", ini, c.get("expediente_id"), cat="Actividades")
         if pd.notna(fin) and (fin - h).days == 0 and not (pd.notna(ini) and ini == fin):
-            add("info", f"HOY finaliza: {c['nombre']}", f"{ref} · {lugar}", fin, c.get("expediente_id"), cat="Cursos")
+            add("info", f"HOY finaliza · {tipo_a}: {c['nombre']}", f"{ref} · {lugar}", fin, c.get("expediente_id"), cat="Actividades")
 
     exp = db.df_expedientes()
     abiertos = exp[~exp["estado"].isin(C.ESTADOS_CERRADOS)] if not exp.empty else exp

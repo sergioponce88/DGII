@@ -190,6 +190,11 @@ CREATE TABLE IF NOT EXISTS cursos (
     creado_en TIMESTAMP DEFAULT NOW()
 );
 
+ALTER TABLE cursos ADD COLUMN IF NOT EXISTS tipo_actividad TEXT DEFAULT 'CURSO';
+ALTER TABLE cursos ADD COLUMN IF NOT EXISTS organiza TEXT;
+ALTER TABLE cursos ADD COLUMN IF NOT EXISTS hora TEXT;
+ALTER TABLE cursos ADD COLUMN IF NOT EXISTS responsable TEXT;
+
 CREATE TABLE IF NOT EXISTS personal_curso (
     id SERIAL PRIMARY KEY,
     curso_id INTEGER NOT NULL REFERENCES cursos (id) ON DELETE CASCADE,
@@ -276,12 +281,19 @@ def init_db(version=VERSION_ESQUEMA):
                     "INSERT INTO dependencias (nombre, sigla, color) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
                     (n, s, col),
                 )
+        # Migración única: tipos que generan actividades (formaciones, congresos, eventos, colaboraciones…)
+        cur.execute("SELECT valor FROM config WHERE clave = 'mig_actividades_v1'")
+        if not cur.fetchone():
+            for nom in C.ACTIVIDAD_POR_TIPO:
+                cur.execute("UPDATE tipos_expediente SET es_curso = TRUE WHERE nombre = %s", (nom,))
+            cur.execute("UPDATE cursos SET tipo_actividad = 'CURSO' WHERE tipo_actividad IS NULL")
+            cur.execute("INSERT INTO config (clave, valor) VALUES ('mig_actividades_v1', 'OK') ON CONFLICT DO NOTHING")
         cur.execute("SELECT COUNT(*) FROM tipos_expediente")
         if cur.fetchone()[0] == 0:
             for n, g, o, ec in C.TIPOS_SEED:
                 cur.execute(
                     "INSERT INTO tipos_expediente (nombre, grupo, origen, es_curso) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING",
-                    (n, g, o, ec),
+                    (n, g, o, bool(ec or n in C.ACTIVIDAD_POR_TIPO)),
                 )
     return True
 
@@ -386,7 +398,7 @@ def df_cursos():
 def df_personal():
     df = leer(
         """
-        SELECT p.*, c.nombre AS curso, c.categoria, c.ambito, c.modalidad, c.requerimiento,
+        SELECT p.*, c.nombre AS curso, c.tipo_actividad, c.categoria, c.ambito, c.modalidad, c.requerimiento,
                c.fecha_inicio, c.fecha_fin, c.estado AS estado_curso, c.division_dicta, c.lugar,
                e.identificador
         FROM personal_curso p

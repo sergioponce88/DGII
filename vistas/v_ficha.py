@@ -8,15 +8,20 @@ import reportes as R
 import ui
 
 
-def _datos_curso(c, key, exp_id=None):
-    """Formulario de alta/edición de curso. c = Series o None."""
+def _datos_curso(c, key, exp_id=None, tipo_def=None):
+    """Alta/edición de actividad (curso, formación, disertación, congreso, evento…). c = Series o None."""
     g = (lambda k, d=None: c.get(k) if c is not None and pd.notna(c.get(k)) else d)
     with st.form(f"fc_{key}"):
+        t1_, t2_, t3_ = st.columns([2, 1, 2])
+        tipo_act = t1_.selectbox("Tipo de actividad", C.TIPOS_ACTIVIDAD,
+                                 index=K.idx(C.TIPOS_ACTIVIDAD, g("tipo_actividad", tipo_def or "CURSO")))
+        hora = t2_.text_input("Hora", g("hora", "") or "", placeholder="08:30")
+        organiza = t3_.text_input("Organiza / convoca", g("organiza", "") or "")
         k1, k2 = st.columns(2)
         categoria = k1.radio("Categoría", C.CATEGORIAS_CURSO, index=K.idx(C.CATEGORIAS_CURSO, g("categoria")), horizontal=True)
         requerimiento = k2.radio("¿Qué se solicita?", C.REQUERIMIENTOS, index=K.idx(C.REQUERIMIENTOS, g("requerimiento")), horizontal=True)
         k3, k4 = st.columns(2)
-        nombre = k3.text_input("Nombre del curso / actividad", g("nombre", ""))
+        nombre = k3.text_input("Nombre de la actividad", g("nombre", ""))
         div = k4.text_input("División / institución que dicta", g("division_dicta", ""))
         k5, k6, k7, k8 = st.columns(4)
         lugar = k5.text_input("Lugar", g("lugar", ""))
@@ -29,24 +34,27 @@ def _datos_curso(c, key, exp_id=None):
         f_ini = k9.date_input("Inicio", value=pd.Timestamp(fi).date() if fi is not None else None, format="DD/MM/YYYY")
         f_fin = k10.date_input("Fin", value=pd.Timestamp(ff).date() if ff is not None else None, format="DD/MM/YYYY")
         plan = k11.checkbox("Planificación anual", value=bool(g("planificacion_anual", False)))
-        obs = st.text_input("Observaciones", g("observaciones", "") or "")
+        o1, o2 = st.columns(2)
+        responsable = o1.text_input("Responsable por la Dirección", g("responsable", "") or "")
+        obs = o2.text_input("Observaciones / resultado", g("observaciones", "") or "")
         st.markdown("**👮 Personal**")
         pers = db.df_personal()
         pers = pers[pers["curso_id"] == c["id"]] if c is not None else pd.DataFrame()
         ed = K.editor_personal(pers, f"pers_{key}")
-        ok = st.form_submit_button("💾 Guardar curso y personal")
+        ok = st.form_submit_button("💾 Guardar actividad y personal")
     if ok:
         if not nombre.strip():
-            st.error("Falta el nombre del curso.")
+            st.error("Falta el nombre de la actividad.")
             return
         data = dict(categoria=categoria, requerimiento=requerimiento, nombre=nombre.strip().upper(),
                     division_dicta=div.strip().upper() or None, lugar=lugar.strip().upper() or None, ambito=ambito,
                     modalidad=modalidad, estado=estado, fecha_inicio=f_ini, fecha_fin=f_fin, planificacion_anual=plan,
-                    observaciones=obs.strip() or None)
+                    observaciones=obs.strip() or None, tipo_actividad=tipo_act, hora=hora.strip() or None,
+                    organiza=organiza.strip().upper() or None, responsable=responsable.strip().upper() or None)
         if exp_id is not None:
             data["expediente_id"] = int(exp_id)
         db.guardar_curso(data, K.limpiar_personal(ed), int(c["id"]) if c is not None else None, K.usuario())
-        st.toast("Curso guardado", icon="✅")
+        st.toast("Actividad guardada", icon="✅")
         st.rerun()
 
 
@@ -118,7 +126,7 @@ def render():
         if cursos.empty:
             st.caption("Este expediente no tiene curso asociado.")
             if st.toggle("➕ Agregar datos de curso / actividad", key="add_curso"):
-                _datos_curso(None, f"nuevo_{exp_id}", exp_id)
+                _datos_curso(None, f"nuevo_{exp_id}", exp_id, C.ACTIVIDAD_POR_TIPO.get(r["tipo"]))
         for _, c in cursos.iterrows():
             ui.seccion(f"🎓 {c['nombre']} · {c['fase']}")
             st.markdown(

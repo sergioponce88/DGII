@@ -63,7 +63,7 @@ def render():
     ]
     ui.kpis(kp)
 
-    t1, t2, t3, t4 = st.tabs(["📊 Gestión", "⏳ Control de pendientes", "🔁 Libro de movimientos", "🎓 Cursos"])
+    t1, t2, t3, t4 = st.tabs(["📊 Gestión", "⏳ Control de pendientes", "🔁 Libro de movimientos", "🎓 Actividades"])
 
     with t1:
         if e.empty:
@@ -163,7 +163,7 @@ def render():
         cur = cur[(cur["fecha_inicio"] >= pd.Timestamp(d)) & (cur["fecha_inicio"] <= pd.Timestamp(a))]
         pers = pers[pers["curso_id"].isin(cur["id"])]
         if cur.empty:
-            st.info("Sin cursos con inicio en el período.")
+            st.info("Sin actividades con inicio en el período.")
         else:
             kc, tablas = estadisticas_cursos(cur, pers)
             ui.kpis(kc)
@@ -171,5 +171,5 @@ def render():
                 with st.expander(f"{n} ({len(t)})"):
                     st.dataframe(t, hide_index=True, width="stretch")
             st.download_button("🖨️ Estadística de cursos (PDF)",
-                               R.pdf_informe("ESTADÍSTICA DE CURSOS", periodo, [(k, v) for k, v, *_ in kc], list(tablas.items()), K.LOGO),
+                               R.pdf_informe("ESTADÍSTICA DE ACTIVIDADES", periodo, [(k, v) for k, v, *_ in kc], list(tablas.items()), K.LOGO),
                                file_name=f"cursos_{d:%Y%m%d}_{a:%Y%m%d}.pdf", mime="application/pdf")
