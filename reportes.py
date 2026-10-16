@@ -49,13 +49,17 @@ def _f(x, hora=False):
     return pd.Timestamp(x).strftime("%d/%m/%Y %H:%M" if hora else "%d/%m/%Y")
 
 
+def _t(x, d="—"):
+    return d if x is None or (isinstance(x, float) and pd.isna(x)) or str(x).strip() == "" else str(x)
+
+
 def msg_movimiento(exp, mov):
     urg = "⚡ *URGENTE TRÁMITE*\n" if mov.get("urgente") or exp.get("prioridad") == "URGENTE TRÁMITE" else ""
     lineas = [
         f"📁 *{C.INSTITUCION_CORTA} – Movimiento de Expediente*",
         urg + f"*Exp. N° {exp['identificador']}* (Año {exp['anio']})",
         f"Tipo: {exp['tipo']}",
-        f"Asunto: {exp.get('asunto') or '—'}",
+        f"Asunto: {_t(exp.get('asunto'))}",
         f"Movimiento: {mov['tipo']} · {mov.get('origen') or '—'} ➜ *{mov.get('destino') or '—'}*",
         f"Fecha/hora: {_f(mov['fecha_hora'], True)}",
     ]
@@ -76,8 +80,9 @@ def msg_alta(exp):
             f"📁 *{C.INSTITUCION_CORTA} – Nuevo expediente registrado*",
             f"*Exp. N° {exp['identificador']}* (Año {exp['anio']})",
             f"Tipo: {exp['tipo']}",
-            f"Origen: {exp.get('dependencia_origen') or exp.get('origen')}",
-            f"Asunto: {exp.get('asunto') or '—'}",
+            f"Origen: {_t(exp.get('dependencia_origen'), exp.get('origen'))}",
+            f"Asunto: {_t(exp.get('asunto'))}",
+            f"Destino: {exp.get('destino') if isinstance(exp.get('destino'), str) else 'a definir'}",
             f"Ingreso: {_f(exp.get('fecha_ingreso'))}" + (" · ⚡ URGENTE TRÁMITE" if exp.get("prioridad") == "URGENTE TRÁMITE" else ""),
         ]
     )
@@ -114,7 +119,7 @@ def excel(hojas: dict) -> bytes:
 COLUMNAS_PLANTILLA = [
     "NRO_EXP", "FOLIO", "ORDEN", "LIBRO", "AÑO", "FECHA_INGRESO", "TIPO", "ORIGEN", "DEPENDENCIA_ORIGEN",
     "NRO_EXP_ORIGEN", "ASUNTO", "INICIADOR", "PRIORIDAD", "FECHA_TERMINO", "ESTADO", "DESPACHO",
-    "UBICACION_ACTUAL", "FOJAS", "OBSERVACIONES",
+    "UBICACION_ACTUAL", "DESTINO", "FOJAS", "OBSERVACIONES",
 ]
 
 
@@ -123,10 +128,10 @@ def plantilla_carga(tipos, dependencias) -> bytes:
         [
             [545, 120, 1, 1, 2026, "15/10/2026", "AUTORIZACIÓN PARA REALIZAR CURSO", "RECIBIDO DE OTRA DEPENDENCIA",
              "JEFATURA DE POLICÍA", "J-1234/26", "Curso de Tirador Especial", "Crio. Pérez", "NORMAL", "",
-             "EN TRÁMITE", "", C.DEP_PROPIA, 5, ""],
+             "EN TRÁMITE", "", C.DEP_PROPIA, "JEFATURA DE POLICÍA", 5, ""],
             [546, 120, 2, 1, 2026, "15/10/2026", "SUMARIO ADMINISTRATIVO", "INICIADO EN LA DIRECCIÓN", "", "",
              "Sumario a Agte. Gómez", "", "URGENTE TRÁMITE", "20/10/2026", "REMITIDO", "VISTO BUENO",
-             "JEFATURA DE POLICÍA", 12, ""],
+             "JEFATURA DE POLICÍA", "JEFATURA DE POLICÍA", 12, ""],
         ],
         columns=COLUMNAS_PLANTILLA,
     )
@@ -151,6 +156,7 @@ def plantilla_carga(tipos, dependencias) -> bytes:
                 " / ".join(C.ESTADOS),
                 " / ".join([d for d in C.DESPACHOS if d]),
                 "Dónde está hoy el expediente",
+                "Instancia / dependencia a la que debe ir",
                 "Cantidad de fojas",
                 "Texto libre",
             ],
@@ -232,6 +238,7 @@ def pdf_hoja_ruta(exp, movs, cursos, personal, logo=None) -> bytes:
         ["N° origen", exp.get("nro_exp_origen") or "—", "Iniciador", exp.get("iniciador") or "—"],
         ["Estado", exp.get("estado") or "", "Prioridad", exp.get("prioridad") or ""],
         ["Despacho", exp.get("despacho") or "—", "Ubicación actual", exp.get("ubicacion_actual") or "—"],
+        ["Destino / instancia", exp.get("destino") if isinstance(exp.get("destino"), str) else "—", "", ""],
         ["Fecha término", _f(exp.get("fecha_termino")), "Fojas", ("—" if pd.isna(exp.get("fojas")) or not exp.get("fojas") else str(int(exp["fojas"])))],
     ]
     t = Table([[Paragraph(f"<b>{a}</b>", ST_B), Paragraph(_e(b), ST_B), Paragraph(f"<b>{c}</b>", ST_B), Paragraph(_e(d), ST_B)] for a, b, c, d in datos],

@@ -20,6 +20,7 @@ def filtrar(exp, key):
         estados = c5.multiselect("Estado", C.ESTADOS, key=f"{key}_est")
         origen = c6.multiselect("Dependencia de origen", sorted(exp["dependencia_origen"].dropna().unique()), key=f"{key}_org")
         ubic = c7.multiselect("Ubicación actual", sorted(exp["ubicacion_actual"].dropna().unique()), key=f"{key}_ub")
+        dest = st.multiselect("🎯 Instancia de destino", sorted(exp["destino"].dropna().unique()), key=f"{key}_dest")
         c8, c9, c10 = st.columns(3)
         desde = c8.date_input("Ingreso desde", value=None, format="DD/MM/YYYY", key=f"{key}_d")
         hasta = c9.date_input("Ingreso hasta", value=None, format="DD/MM/YYYY", key=f"{key}_h")
@@ -42,6 +43,8 @@ def filtrar(exp, key):
         df = df[df["dependencia_origen"].isin(origen)]
     if ubic:
         df = df[df["ubicacion_actual"].isin(ubic)]
+    if dest:
+        df = df[df["destino"].isin(dest)]
     if tram.startswith("⏳"):
         df = df[~df["tramitado"] & ~df["estado"].isin(C.ESTADOS_CERRADOS)]
     elif tram.startswith("✅"):
@@ -70,6 +73,7 @@ def tabla_libro(df):
             "Fecha trámite": df["fecha_tramite"].dt.strftime("%d/%m/%Y %H:%M"),
             "Despacho": df["despacho"],
             "Ubicación": df["ubicacion_actual"],
+            "Destino": df["destino"],
             "Últ. movimiento": df["ult_mov"].dt.strftime("%d/%m/%Y %H:%M"),
             "Movs.": df["cant_mov"],
         }

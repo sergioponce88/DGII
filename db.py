@@ -152,6 +152,7 @@ ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS fecha_tramite TIMESTAMP;
 ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS tramitado_por TEXT;
 ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS accion_tramite TEXT;
 ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS detalle_tramite TEXT;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS destino TEXT;
 
 CREATE TABLE IF NOT EXISTS movimientos (
     id SERIAL PRIMARY KEY,
@@ -611,7 +612,7 @@ def importar_expedientes(filas, modo="omitir", usuario=""):
     ok, act, omit, errores = 0, 0, 0, []
     campos_upd = [
         "fecha_ingreso", "origen", "dependencia_origen", "nro_exp_origen", "tipo", "asunto", "iniciador",
-        "prioridad", "estado", "despacho", "ubicacion_actual", "fojas", "observaciones", "fecha_termino",
+        "prioridad", "estado", "despacho", "destino", "ubicacion_actual", "fojas", "observaciones", "fecha_termino",
     ]
     with conexion() as c, c.cursor() as cur:
         for f in filas:

@@ -100,7 +100,8 @@ def form_movimiento(exp, key):
     with st.form(f"fmov_{key}", clear_on_submit=True):
         c1, c2 = st.columns(2)
         tipo_mov = c1.selectbox("Tipo de movimiento", C.TIPOS_MOVIMIENTO, key=f"tm_{key}")
-        defecto_dest = C.DEP_PROPIA if ub != C.DEP_PROPIA else (lista_dep[1] if len(lista_dep) > 1 else lista_dep[0])
+        defecto_dest = exp.get("destino") if isinstance(exp.get("destino"), str) and exp.get("destino") != ub else (
+            C.DEP_PROPIA if ub != C.DEP_PROPIA else (lista_dep[1] if len(lista_dep) > 1 else lista_dep[0]))
         destino = c2.selectbox("Destino ➜", lista_dep, index=idx(lista_dep, defecto_dest), key=f"de_{key}")
         c3, c4 = st.columns(2)
         origen = c3.selectbox("Desde", lista_dep, index=idx(lista_dep, ub), key=f"or_{key}")

@@ -99,7 +99,7 @@ def render():
         c2.dataframe(t_org, hide_index=True, width="stretch")
         listado = pd.DataFrame({
             "Exp.": e["identificador"], "Año": e["anio"], "Ingreso": e["fecha_ingreso"].dt.strftime("%d/%m/%Y"), "Tipo": e["tipo"],
-            "Asunto": e["asunto"], "Origen": e["dependencia_origen"], "Estado": e["estado"], "Ubicación": e["ubicacion_actual"],
+            "Asunto": e["asunto"], "Origen": e["dependencia_origen"], "Destino": e["destino"], "Estado": e["estado"], "Ubicación": e["ubicacion_actual"],
         })
         secc = [("Por tipo de expediente", t_tipo), ("Por grupo", t_grupo), ("Por estado", t_est), ("Por dependencia de origen", t_org), ("Listado", listado)]
         b1, b2 = st.columns(2)
@@ -120,7 +120,7 @@ def render():
             ab = ab.sort_values(["prioridad", "dias_quieto"], ascending=[False, False])
             pend = pd.DataFrame({
                 "Exp.": ab["identificador"], "Año": ab["anio"], "Tipo": ab["tipo"], "Asunto": ab["asunto"], "Prioridad": ab["prioridad"],
-                "Estado": ab["estado"], "Ubicación": ab["ubicacion_actual"], "Días sin mover": ab["dias_quieto"], "Días totales": ab["dias_total"],
+                "Estado": ab["estado"], "Ubicación": ab["ubicacion_actual"], "Destino": ab["destino"], "Días sin mover": ab["dias_quieto"], "Días totales": ab["dias_total"],
                 "Vence": ab["fecha_termino"].dt.strftime("%d/%m/%Y"),
             })
             mapa = ui.mapa_dependencias()

@@ -280,6 +280,7 @@ def tarjeta_expediente(r, mapa=None, detalle=True):
         f'<div style="margin-top:6px">{chip(r.get("tipo"), "#60A5FA", False)}{chip_estado(r.get("estado"))}'
         f'{chip_prioridad(r.get("prioridad"))}{venc}</div>'
         f'<div style="margin-top:4px">📍 {chip(ub, c_ub)}'
+        f'{"🎯 " + chip(r.get("destino"), color_dep(r.get("destino"), mapa)) if isinstance(r.get("destino"), str) and r.get("destino") else ""}'
         f'{chip(r.get("despacho"), "#A78BFA", False) if r.get("despacho") else ""}</div>{meta}</div>',
         unsafe_allow_html=True,
     )

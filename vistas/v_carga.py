@@ -29,7 +29,8 @@ ALIAS = {
     "fecha_termino": ["FECHATERMINO", "TERMINO", "VENCIMIENTO", "PLAZO"],
     "estado": ["ESTADO", "SITUACION"],
     "despacho": ["DESPACHO", "RESOLUCION", "SALIDACON"],
-    "ubicacion_actual": ["UBICACIONACTUAL", "UBICACION", "DESTINO", "SALIOA", "ENPODERDE"],
+    "ubicacion_actual": ["UBICACIONACTUAL", "UBICACION", "ENPODERDE"],
+    "destino": ["DESTINO", "INSTANCIA", "INSTANCIADESTINO", "SALIOA", "VAA", "SEELEVAA", "ELEVADOA"],
     "fojas": ["FOJAS", "CANTFOJAS", "CANTIDADDEFOJAS"],
     "observaciones": ["OBSERVACIONES", "OBS", "OBSERVACION", "NOTAS"],
 }
@@ -153,6 +154,9 @@ def validar(df_std):
         ub = (_txt(g("ubicacion_actual")) or C.DEP_PROPIA).upper()
         if ub not in deps_cat:
             deps_nuevas.add(ub)
+        dest = (_txt(g("destino")) or "").upper() or None
+        if dest and dest not in deps_cat:
+            deps_nuevas.add(dest)
         fojas = _int(g("fojas"))
         fojas = None if fojas == "ERR" else fojas
 
@@ -170,14 +174,14 @@ def validar(df_std):
             "Validación": estado_val, "Detalle": "; ".join(err + avisos),
             "N° Exp/Folio/Orden": f"{nro}/{fol}/{ord_}", "Libro": libro, "Año": anio,
             "Ingreso": fing if fing != "ERR" else None, "Tipo": tipo, "Origen": dep, "Asunto": _txt(g("asunto")),
-            "Estado": estado, "Ubicación": ub,
+            "Estado": estado, "Ubicación": ub, "Destino": dest,
         })
         if not err:
             filas.append(dict(
                 nro_exp=nro, folio=fol, orden=ord_, libro=libro, anio=anio, fecha_ingreso=fing, origen=origen,
                 dependencia_origen=dep, nro_exp_origen=_txt(g("nro_exp_origen")), tipo=tipo, asunto=_txt(g("asunto")),
                 iniciador=(_txt(g("iniciador")) or "").upper() or None, prioridad=prio, fecha_termino=ft, estado=estado,
-                despacho=desp, ubicacion_actual=ub, fojas=fojas, observaciones=_txt(g("observaciones")),
+                despacho=desp, destino=dest, ubicacion_actual=ub, fojas=fojas, observaciones=_txt(g("observaciones")),
             ))
     return filas, pd.DataFrame(prev), tipos_nuevos, deps_nuevas
 
@@ -260,7 +264,7 @@ def render():
             for _ in range(int(n)):
                 filas.append(dict(nro_exp=num["nro_exp"], folio=num["folio"], orden=num["orden"], fecha_ingreso=fecha_def,
                                   tipo=None, dependencia_origen=None, asunto=None, iniciador=None, nro_exp_origen=None,
-                                  prioridad="NORMAL", estado="EN TRÁMITE", despacho=None, ubicacion_actual=C.DEP_PROPIA))
+                                  prioridad="NORMAL", estado="EN TRÁMITE", despacho=None, destino=None, ubicacion_actual=C.DEP_PROPIA))
                 num = db.avanzar(num)
             st.session_state["tr_df"] = pd.DataFrame(filas)
             st.session_state["tr_n_prev"] = n
@@ -281,6 +285,7 @@ def render():
                 "prioridad": st.column_config.SelectboxColumn("Prioridad", options=C.PRIORIDADES),
                 "estado": st.column_config.SelectboxColumn("Estado", options=C.ESTADOS),
                 "despacho": st.column_config.SelectboxColumn("Despacho", options=[d for d in C.DESPACHOS if d]),
+                "destino": st.column_config.SelectboxColumn("🎯 Destino", options=lista_dep, width="medium"),
                 "ubicacion_actual": st.column_config.SelectboxColumn("Ubicación", options=lista_dep, width="medium"),
             },
         )

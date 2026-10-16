@@ -171,9 +171,12 @@ def render():
             ft = c2.date_input("Fecha término", r["fecha_termino"].date() if pd.notna(r["fecha_termino"]) else None, format="DD/MM/YYYY")
             est = c3.selectbox("Estado", C.ESTADOS, index=K.idx(C.ESTADOS, r["estado"]))
             desp = c4.selectbox("Despacho", C.DESPACHOS, index=K.idx(C.DESPACHOS, r["despacho"] or ""))
-            d1, d2 = st.columns(2)
+            d1, d2, d3 = st.columns([2, 2, 1])
             ubic = d1.selectbox("Ubicación actual", lista_dep, index=K.idx(lista_dep, r["ubicacion_actual"]))
-            fojas = d2.number_input("Fojas", 0, value=K.num(r["fojas"]))
+            dest_ops = [None] + lista_dep
+            dest = d2.selectbox("🎯 Destino / instancia", dest_ops, index=K.idx(dest_ops, r.get("destino")),
+                                format_func=lambda d: d or "— A definir —")
+            fojas = d3.number_input("Fojas", 0, value=K.num(r["fojas"]))
             obs = st.text_area("Observaciones", r["observaciones"] or "", height=60)
             if st.form_submit_button("💾 Guardar cambios"):
                 choque = db.conflicto_numeracion(nro, fol, ord_, lib, anio, excluir_id=exp_id)
@@ -184,7 +187,7 @@ def render():
                         nro_exp=int(nro), folio=int(fol), orden=int(ord_), libro=int(lib), anio=int(anio), tipo=tipo,
                         origen=origen, dependencia_origen=dep_org, asunto=asunto.strip() or None,
                         nro_exp_origen=nro_org.strip() or None, iniciador=inic.strip().upper() or None, fecha_ingreso=f_ing,
-                        prioridad=prio, fecha_termino=ft, estado=est, despacho=desp or None, ubicacion_actual=ubic,
+                        prioridad=prio, fecha_termino=ft, estado=est, despacho=desp or None, ubicacion_actual=ubic, destino=dest,
                         fojas=int(fojas) or None, observaciones=obs.strip() or None), K.usuario())
                     st.toast("Expediente actualizado", icon="✅")
                     st.rerun()

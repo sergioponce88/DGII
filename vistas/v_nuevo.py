@@ -78,6 +78,11 @@ def render():
         f_term = d2.date_input("Fecha de término (si es urgente)", value=None, format="DD/MM/YYYY")
         fojas = d3.number_input("Fojas", min_value=0, value=0, step=1)
         ubic = d4.selectbox("Ubicación actual", lista_dep, index=K.idx(lista_dep, C.DEP_PROPIA))
+        ui.seccion("🎯 Instancia a la que va")
+        i1, i2 = st.columns(2)
+        destino = i1.selectbox("Destino / instancia", lista_dep, index=None, placeholder="¿A qué instancia se eleva o remite?",
+                               help="Dependencia a la que debe ir el expediente. Queda registrado para el control y el filtro del libro.")
+        despacho = i2.selectbox("Sale con", C.DESPACHOS, format_func=lambda d: d or "— A definir —")
         e1, e2, e3 = st.columns(3)
         entrega = e1.text_input("Entregado por (quien lo trae)")
         recibe = e2.text_input("Recibido por", value=K.usuario())
@@ -132,7 +137,7 @@ def render():
         nro_exp=int(nro), folio=int(folio), orden=int(orden), libro=int(libro), anio=f_ing.year,
         fecha_ingreso=f_ing, origen=origen, dependencia_origen=dep_org, nro_exp_origen=nro_org.strip() or None,
         tipo=tipo, asunto=asunto.strip() or None, iniciador=iniciador.strip().upper() or None, prioridad=prioridad,
-        fecha_termino=f_term, estado=estado, ubicacion_actual=ubic, fojas=int(fojas) or None, observaciones=obs.strip() or None,
+        fecha_termino=f_term, estado=estado, ubicacion_actual=ubic, destino=destino, despacho=despacho or None, fojas=int(fojas) or None, observaciones=obs.strip() or None,
     )
     mov = dict(
         fecha_hora=datetime.combine(f_ing, h_ing), tipo="INGRESO" if origen == C.ORIGENES[1] else "PASE INTERNO",
