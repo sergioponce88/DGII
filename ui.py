@@ -272,6 +272,9 @@ def tarjeta_expediente(r, mapa=None, detalle=True):
         venc += chip(f"✅ TRAMITADO {fmt_fecha(r.get('fecha_tramite'))}", C.STATUS["ok"], punto=False)
     elif r.get("estado") not in C.ESTADOS_CERRADOS:
         venc += chip("⏳ PENDIENTE DE TRÁMITE", C.STATUS["warning"], punto=False)
+    rei = r.get("reingresos")
+    if pd.notna(rei) and int(rei) > 0:
+        venc += chip(f"↩️ REINGRESÓ {int(rei)}×", "#9085E9", punto=False)
     meta = ""
     if detalle:
         org = r.get("dependencia_origen") or "—"

@@ -190,6 +190,59 @@ def form_movimiento(exp, key):
         st.link_button("📲 Informar por WhatsApp", R.link_whatsapp(msg, tel_dep(m["destino"])))
 
 
+# ───────────────────────── Reingreso ─────────────────────────
+def form_reingreso(exp, key):
+    """Vuelve a la Dirección un expediente ya registrado (tramitado o remitido): se actualiza el MISMO expediente."""
+    ub = exp.get("ubicacion_actual") or "—"
+    if bool(exp.get("tramitado")):
+        ui.alerta("↩️", f"Vuelve un expediente TRAMITADO el {ui.fmt_fecha(exp.get('fecha_tramite'), True)} por {exp.get('tramitado_por') or '—'}",
+                  f"{exp.get('accion_tramite') or ''} · {exp.get('detalle_tramite') or ''} — El trámite anterior queda en la hoja de ruta.",
+                  C.STATUS["warning"])
+    else:
+        ui.alerta("↩️", f"Último lugar registrado: {ub}", "Se asienta el reingreso sobre el mismo N° / folio / orden.", C.STATUS["warning"])
+    if int(num(exp.get("reingresos"))):
+        st.caption(f"Este expediente ya reingresó {int(num(exp.get('reingresos')))} vez/veces.")
+    lista_dep = deps()
+    c_a, c_b = st.columns([6, 1], vertical_alignment="bottom")
+    c_a.caption("¿De dónde vuelve? Si no está en la lista, agréguela con ➕")
+    with c_b:
+        boton_nueva_dependencia(f"rei_{key}")
+    with st.form(f"frei_{key}", clear_on_submit=True):
+        c1, c2 = st.columns(2)
+        desde = c1.selectbox("Vuelve desde", lista_dep, index=idx(lista_dep, ub if ub != C.DEP_PROPIA else exp.get("destino")), key=f"rd_{key}")
+        despacho = c2.selectbox("Vuelve con (despacho / resolución)", C.DESPACHOS, format_func=lambda d: d or "— Sin indicar —", key=f"rp_{key}")
+        c3, c4 = st.columns(2)
+        f = c3.date_input("Fecha de reingreso", db.hoy(), format="DD/MM/YYYY", key=f"rf_{key}")
+        h = c4.time_input("Hora", db.ahora().time().replace(second=0), step=300, key=f"rh_{key}")
+        c5, c6 = st.columns(2)
+        trae = c5.text_input("Quién lo trae", key=f"rt_{key}")
+        recibe = c6.text_input("Quién lo recibe", value=usuario(), key=f"rr_{key}")
+        c7, c8, c9 = st.columns([1, 1, 2])
+        fojas = c7.number_input("Fojas actuales", min_value=0, value=num(exp.get("fojas")), step=1, key=f"rfo_{key}")
+        urgente = c8.checkbox("⚡ Urgente", key=f"ru_{key}")
+        f_term = c9.date_input("Nueva fecha de término (si es urgente)", None, format="DD/MM/YYYY", key=f"rft_{key}")
+        motivo = st.text_area("Motivo / qué se solicita ahora", height=70, key=f"rm_{key}",
+                              placeholder="Ej.: vuelve con informe de la División, para nueva providencia…")
+        ok = st.form_submit_button("📥 Registrar reingreso", type="primary")
+    if ok:
+        mov = {
+            "fecha_hora": datetime.combine(f, h if isinstance(h, time) else time(0, 0)),
+            "tipo": "REINGRESO", "origen": desde, "destino": C.DEP_PROPIA, "despacho": despacho or None,
+            "entregado_por": trae.strip().upper() or None, "recibido_por": recibe.strip().upper() or None,
+            "fojas": int(fojas) or None, "urgente": bool(urgente), "observaciones": motivo.strip() or None,
+        }
+        try:
+            db.registrar_movimiento(int(exp["id"]), mov, "EN TRÁMITE", usuario(), fecha_termino=f_term if urgente else None)
+            st.session_state[f"ultimo_mov_{key}"] = {"exp": dict(exp), "mov": mov}
+            st.toast(f"Reingreso registrado: {exp['identificador']} · queda PENDIENTE DE TRÁMITE", icon="📥")
+            st.rerun()
+        except Exception as e:
+            st.error(f"No se pudo registrar el reingreso: {e}")
+    ult = st.session_state.get(f"ultimo_mov_{key}")
+    if ult and ult["exp"]["id"] == exp["id"] and ult["mov"]["tipo"] == "REINGRESO":
+        st.success(f"✔ Reingreso desde {ult['mov']['origen']} ({ui.fmt_fecha(ult['mov']['fecha_hora'], True)}). Ya puede tramitarse nuevamente.")
+
+
 # ───────────────────────── Trámite ─────────────────────────
 def form_tramite(exp, key):
     """Marca el expediente como TRAMITADO: qué se hizo, quién y cuándo. Permite anular la marca."""

@@ -34,6 +34,14 @@ def render():
     lista_dep = K.deps()
     lista_tipos = K.tipos()
 
+    with st.container(border=True):
+        a, b = st.columns([3, 1], vertical_alignment="center")
+        a.markdown("**¿Vuelve un expediente que ya está registrado** (tramitado, remitido o archivado)? "
+                   "No lo cargue de nuevo: registre el **reingreso** sobre el mismo número.")
+        if b.button("📥 Registrar reingreso", width="stretch"):
+            st.session_state["mr_reingreso"] = True
+            K.ir_a(K.PAG_MOV)
+
     # ── Paso 1 (reactivo): origen, tipo y numeración ──
     c1, c2 = st.columns(2)
     origen = c1.radio("Origen del expediente", C.ORIGENES, horizontal=True, key="n_origen")
@@ -69,6 +77,11 @@ def render():
         ident = f"{nro}/{folio}/{orden}"
         if conflicto:
             st.error(f"⚠️ La numeración choca con el expediente ya registrado **{conflicto}**. Corrija N°, folio u orden.")
+            ex = db.leer("SELECT id FROM expedientes WHERE identificador = %s ORDER BY anio DESC LIMIT 1", (conflicto,))
+            if not ex.empty and st.button(f"📥 Es el {conflicto} que vuelve: registrar reingreso", key="n_rei"):
+                st.session_state["mr_reingreso"] = True
+                st.session_state["mov_sel"] = int(ex["id"].iloc[0])
+                K.ir_a(K.PAG_MOV, int(ex["id"].iloc[0]))
         else:
             st.markdown(f"<div class='ident'>{ui.esc(ident)}<small>IDENTIFICACIÓN · {sug['cap']} renglones por folio</small></div>", unsafe_allow_html=True)
 

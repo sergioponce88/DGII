@@ -153,6 +153,7 @@ ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS tramitado_por TEXT;
 ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS accion_tramite TEXT;
 ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS detalle_tramite TEXT;
 ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS destino TEXT;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS reingresos INTEGER DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS movimientos (
     id SERIAL PRIMARY KEY,
@@ -525,7 +526,7 @@ def eliminar_expediente(exp_id, usuario=""):
     invalidar()
 
 
-def registrar_movimiento(exp_id, mov, nuevo_estado=None, usuario=""):
+def registrar_movimiento(exp_id, mov, nuevo_estado=None, usuario="", fecha_termino=None):
     with conexion() as c, c.cursor() as cur:
         _insert(cur, "movimientos", {**mov, "expediente_id": exp_id, "registrado_por": usuario}, None)
         upd = {"ubicacion_actual": mov.get("destino"), "actualizado_en": ahora()}
@@ -537,6 +538,14 @@ def registrar_movimiento(exp_id, mov, nuevo_estado=None, usuario=""):
             upd["prioridad"] = "URGENTE TRÁMITE"
         if mov.get("fojas"):
             upd["fojas"] = mov["fojas"]
+        if mov.get("tipo") == "REINGRESO":
+            # Vuelve un expediente ya registrado: mismo N°/folio/orden, queda pendiente de un nuevo trámite.
+            # El trámite anterior sigue en la hoja de ruta (movimiento TRÁMITE).
+            upd |= {"tramitado": False, "fecha_tramite": None, "tramitado_por": None, "accion_tramite": None,
+                    "detalle_tramite": None, "estado": nuevo_estado or "EN TRÁMITE"}
+            if fecha_termino:
+                upd["fecha_termino"] = fecha_termino
+            cur.execute("UPDATE expedientes SET reingresos = COALESCE(reingresos, 0) + 1 WHERE id = %s", (_py(exp_id),))
         _update(cur, "expedientes", upd, exp_id)
         # Visto bueno sobre un expediente de curso -> curso autorizado
         if mov.get("despacho") == "VISTO BUENO":
