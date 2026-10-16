@@ -145,7 +145,7 @@ PROVINCIAS = [
     "TIERRA DEL FUEGO", "FUERZA FEDERAL", "EXTRANJERO",
 ]
 
-# Jerarquía -> escalafón (para la estadística Oficiales / Suboficiales)
+# Escala jerárquica de la Policía de Tucumán. Jerarquía -> escalafón (oficiales tramitan / suboficiales cargan)
 JERARQUIAS = {
     "COMISARIO GENERAL": "OFICIAL",
     "COMISARIO MAYOR": "OFICIAL",
@@ -153,9 +153,8 @@ JERARQUIAS = {
     "COMISARIO": "OFICIAL",
     "SUBCOMISARIO": "OFICIAL",
     "OFICIAL PRINCIPAL": "OFICIAL",
-    "OFICIAL INSPECTOR": "OFICIAL",
-    "OFICIAL SUBINSPECTOR": "OFICIAL",
     "OFICIAL AYUDANTE": "OFICIAL",
+    "OFICIAL SUBAYUDANTE": "OFICIAL",
     "SUBOFICIAL MAYOR": "SUBOFICIAL",
     "SUBOFICIAL PRINCIPAL": "SUBOFICIAL",
     "SARGENTO AYUDANTE": "SUBOFICIAL",
@@ -168,6 +167,18 @@ JERARQUIAS = {
     "PERSONAL CIVIL": "OTRO",
     "OTRO": "OTRO",
 }
+
+
+def escalafon(grado):
+    """Escalafón de un grado; tolera grados escritos de otra forma (p. ej. cargados antes del cambio de escala)."""
+    g = str(grado or "").strip().upper()
+    if g in JERARQUIAS:
+        return JERARQUIAS[g]
+    if g.startswith(("COMISARIO", "SUBCOMISARIO", "OFICIAL", "OF.")):
+        return "OFICIAL"
+    if g.startswith(("SUBOFICIAL", "SARGENTO", "CABO", "AGENTE", "SGTO")):
+        return "SUBOFICIAL"
+    return "OTRO"
 
 TIPOS_EVENTO = ["INICIO DE CURSO", "FIN DE CURSO", "VENCIMIENTO", "REUNIÓN", "ACTO / CEREMONIA", "EVENTO DEPORTIVO", "OTRO"]
 

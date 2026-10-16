@@ -320,7 +320,7 @@ def limpiar_personal(df):
                 "apellido": ape.upper(),
                 "nombre": str(r.get("nombre") or "").strip().title(),
                 "jerarquia": jer,
-                "escalafon": C.JERARQUIAS.get(jer, "OTRO"),
+                "escalafon": C.escalafon(jer),
                 "dni": "".join(ch for ch in str(r.get("dni") or "") if ch.isdigit()) or None,
                 "division": str(r.get("division") or "").strip().upper() or None,
                 "provincia": r.get("provincia") if isinstance(r.get("provincia"), str) else "TUCUMÁN",

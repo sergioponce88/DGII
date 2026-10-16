@@ -46,7 +46,7 @@ def verificar(clave: str, guardado: str) -> bool:
 
 
 def rol_por_grado(grado):
-    esc = C.JERARQUIAS.get(grado, "OTRO")
+    esc = C.escalafon(grado)
     return "OFICIAL" if esc == "OFICIAL" else "SUBOFICIAL"
 
 

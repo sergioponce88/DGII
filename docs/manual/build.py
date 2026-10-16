@@ -214,7 +214,7 @@ def armar():
     s += h2("¿Qué puede hacer cada usuario?")
     s += [tabla(["Rol", "Quiénes", "Puede hacer"],
                 [["<b>SUBOFICIAL</b>", "Suboficial Mayor a Agente", "Registrar expedientes, cargar el libro, registrar salidas / ingresos / pases, subir el PDF, consultar todo."],
-                 ["<b>OFICIAL</b>", "Comisario General a Oficial Ayudante", "Todo lo anterior + <b>tramitar</b> (marcar TRAMITADO) y <b>corregir</b> datos de expedientes."],
+                 ["<b>OFICIAL</b>", "Comisario General a Oficial Subayudante", "Todo lo anterior + <b>tramitar</b> (marcar TRAMITADO) y <b>corregir</b> datos de expedientes."],
                  ["<b>ADMINISTRADOR</b>", "Responsable del sistema", "Todo + usuarios, dependencias, tipos de expediente, Google Drive y respaldos."]],
                 [30 * mm, 48 * mm, ANCHO - 78 * mm]),
           Spacer(1, 6),

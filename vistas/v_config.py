@@ -216,7 +216,8 @@ def _usuarios():
         u = df[df["id"] == uid].iloc[0]
         with st.form(f"edit_usr_{uid}"):
             a, b = st.columns(2)
-            grado = a.selectbox("Grado", list(C.JERARQUIAS), index=K.idx(list(C.JERARQUIAS), u["grado"]))
+            grados = list(C.JERARQUIAS) + ([u["grado"]] if u["grado"] and u["grado"] not in C.JERARQUIAS else [])
+            grado = a.selectbox("Grado", grados, index=K.idx(grados, u["grado"]))
             rol = b.selectbox("Rol", auth.ROLES, index=K.idx(auth.ROLES, u["rol"]))
             apellido = a.text_input("Apellido", u["apellido"] or "")
             nombre = b.text_input("Nombre", u["nombre"] or "")
