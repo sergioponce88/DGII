@@ -66,7 +66,7 @@ class Pantalla:
         self.text(150, 128, "MESA DE ENTRADAS", 15, "ExtraBold", anchor="mm")
         self.text(150, 150, "DIRECCIÓN GRAL. DE INSTITUTOS E INSTRUCCIÓN", 10, "SemiBold", (96, 165, 250), anchor="mm")
         items = ["Panel de Control", "Nuevo Expediente", "Movimiento Rápido", "Libro de Registro", "Ficha de Expediente",
-                 "Cursos y Personal", "Alertas y Agenda", "Carga Masiva", "Informes", "Configuración"]
+                 "Actividades y Personal", "Alertas y Agenda", "Carga Masiva", "Informes", "Configuración"]
         y = 185
         for it in items:
             if it == activo:

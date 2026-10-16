@@ -44,6 +44,16 @@ def panel():
     p.marca(1540, 210, 3)
     y = p.alerta(340, y, 1220, "VENCIDO hace 1 d · Exp. 546/120/2", "SUMARIO ADMINISTRATIVO · JEFATURA DE POLICÍA", ROJO)
     p.marca(1540, y - 50, 4)
+    y = p.seccion(340, y, "Esta semana en la Dirección (3 actividades)")
+    for tipo, cuando, col, nom in [("CONGRESO", "EN DESARROLLO", PAL[2], "CONGRESO NACIONAL DE SEGURIDAD · Salta · 4 efectivos"),
+                                   ("ACTO / CEREMONIA", "Inicia 18/10/2026", AMBAR, "ACTO ANIVERSARIO IESP · Plaza de armas · 60 efectivos")]:
+        p.card(340, y, 1220, 50, col)
+        xx = p.chip(362, y + 12, tipo, PAL[0])
+        xx = p.chip(xx, y + 12, cuando, col)
+        p.text(xx + 6, y + 25, nom, 14, "Bold", anchor="lm")
+        y += 60
+    p.marca(1540, y - 90, 5)
+    y += 6
     # gráfico de barras
     p.card(340, y, 720, 360)
     p.text(366, y + 20, "Ingresos por mes · 2026", 17, "Bold")
@@ -341,9 +351,9 @@ def alertas():
                           ("Próximas", 6, "en los próximos días", AMBAR), ("Informativas", 9, "seguimiento", AZUL)])
     p.marca(330, y - 70, 1)
     y = p.tabs(340, y, ["Alertas", "Agenda 60 días", "Nuevo evento"], 0)
-    for t, dsc, c, ic in [("HOY inicia: CURSO DE TIRADOR ESPECIAL", "Exp. 547/120/3 · EFT · EXTERNO · 12 efectivos", ROJO, "!"),
+    for t, dsc, c, ic in [("HOY inicia · CURSO: TIRADOR ESPECIAL", "Exp. 547/120/3 · EFT · EXTERNO · 12 efectivos", ROJO, "!"),
                           ("VENCIDO hace 1 d · Exp. 546/120/2", "SUMARIO ADMINISTRATIVO · JEFATURA DE POLICÍA", ROJO, "!"),
-                          ("En 3 días inicia: SEMINARIO DDHH · SIN AUTORIZACIÓN", "Exp. 549/122/2 · 19/10/2026 · IESP", NAR, "!"),
+                          ("En 3 días inicia · SEMINARIO: DDHH · SIN AUTORIZACIÓN", "Exp. 549/122/2 · 19/10/2026 · IESP", NAR, "!"),
                           ("19 días sin movimiento · Exp. 548/122/1", "INVITACIÓN · SUBJEFATURA DE POLICÍA", AZUL, "i")]:
         p.alerta(340, y, 900, t, dsc, c, ic)
         p.boton(1260, y + 11, 140, "Ficha", "sec", 46)
@@ -428,7 +438,66 @@ def flujo():
     return P("00_flujo.png")
 
 
-TODAS = [flujo, login, panel, movil, nuevo_1, nuevo_2, libro_fisico, tramite, movimiento, pdf, libro, hoja_ruta, alertas, carga, usuarios]
+def tarjeta_act(p, x, y, w, tipo, fase, col, nombre, meta):
+    p.card(x, y, w, 120, col)
+    xx = p.chip(x + 22, y + 14, tipo, PAL[0])
+    p.chip(xx, y + 14, fase, col)
+    p.text(x + 22, y + 52, nombre, 17, "ExtraBold")
+    p.text(x + 22, y + 84, meta, 13, "Regular", INK2)
+    return y + 136
+
+
+def actividades():
+    p = Pantalla(activo="Actividades y Personal", titulo="Actividades y Personal",
+                 sub="Cursos, formaciones, disertaciones, congresos, eventos y todo lo que acontece")
+    y = p.tabs(340, p.y, ["Qué está pasando", "Nueva actividad", "Estadística", "Actividades", "Personal", "Planificación anual"], 0)
+    p.marca(330, y - 40, 1)
+    y = p.kpis(340, y, [("En desarrollo hoy", 2, "16 efectivos afectados", PAL[2]), ("Próximos 7 días", 3, "por iniciar", AMBAR),
+                        ("Próximo mes", 7, "programadas", PAL[0]), ("Terminaron esta semana", 2, "para cerrar / informar", PAL[6])])
+    p.marca(1580, y - 70, 2)
+    y = p.seccion(340, y, "En desarrollo hoy (2)")
+    tarjeta_act(p, 340, y, 600, "CONGRESO", "EN CURSO", PAL[2], "CONGRESO NACIONAL DE SEGURIDAD", "16/10 al 18/10 · 09:00 · Salta · 4 efectivos · Sin expediente")
+    tarjeta_act(p, 960, y, 600, "CURSO", "EN CURSO", PAL[2], "TIRADOR ESPECIAL", "16/10 al 30/10 · EFT · Externo · 12 efectivos · Exp. 547/120/3")
+    p.marca(1580, y + 60, 3)
+    y += 150
+    y = p.seccion(340, y, "Próximos 7 días (3)")
+    tarjeta_act(p, 340, y, 600, "ACTO / CEREMONIA", "AUTORIZADO", PAL[0], "ACTO ANIVERSARIO IESP", "18/10 · 10:00 · Plaza de armas · 60 efectivos")
+    tarjeta_act(p, 960, y, 600, "EVENTO DEPORTIVO", "SOLICITADO", PAL[3], "TORNEO INTERFUERZAS DE FÚTBOL", "20/10 al 22/10 · Club Atlético · 18 efectivos")
+    p.marca(1580, y + 60, 4)
+    return p.guardar(P("15_actividades.png"))
+
+
+def actividad_form():
+    p = Pantalla(activo="Actividades y Personal", titulo="Actividades y Personal", sub="Nueva actividad (con o sin expediente)")
+    y = p.tabs(340, p.y, ["Qué está pasando", "Nueva actividad", "Estadística", "Actividades", "Personal", "Planificación anual"], 1)
+    p.card(340, y, 1220, 760)
+    x = 366
+    p.campo(x, y + 18, 540, "Tipo de actividad", "DISERTACIÓN", "select")
+    p.marca(350, y + 66, 1)
+    p.campo(x + 560, y + 18, 180, "Hora", "09:30")
+    p.campo(x + 760, y + 18, 410, "Organiza / convoca", "MINISTERIO DE SEGURIDAD")
+    p.text(x, y + 112, "Categoría", 14, "SemiBold", INK2)
+    p.radio(x, y + 140, ["REALIZAR / CURSAR", "DICTAR / DISERTAR", "ORGANIZAR", "ASISTIR / PARTICIPAR"], 1)
+    p.marca(1180, y + 150, 2)
+    p.campo(x, y + 184, 560, "Nombre de la actividad", "JORNADA DE VIOLENCIA DE GÉNERO")
+    p.campo(x + 580, y + 184, 590, "¿Qué se solicita?", "AUTORIZACIÓN + MOVILIDAD", "select")
+    p.campo(x, y + 270, 380, "Lugar", "AULA MAGNA IESP")
+    p.campo(x + 400, y + 270, 380, "Fecha de inicio", "22/10/2026", "fecha")
+    p.campo(x + 800, y + 270, 370, "Fin", "22/10/2026", "fecha")
+    p.text(x, y + 368, "Personal afectado", 15, "Bold")
+    p.marca(1180, y + 378, 3)
+    p.tabla(x, y + 396, ["Apellido", "Nombre", "Jerarquía / Grado", "DNI", "División", "Rol"],
+            [["PONCE", "Sergio", "OFICIAL AUXILIAR", "30111222", "IESP", "DISERTANTE"],
+             ["ROMERO", "Ana", "CADETE DE 2° AÑO", "44555666", "IESP", "PARTICIPANTE"],
+             ["DÍAZ", "Luis", "PERSONAL TRANSITORIO POLICIAL (PTP)", "40999888", "DGII", "COLABORADOR"],
+             ["SOSA", "Marcos", "ASPIRANTE (ESCUELA DE SUBOFICIALES)", "45123456", "ESyA", "PARTICIPANTE"]],
+            [130, 110, 330, 120, 120, 360], {(0, 2): ("tx", PAL[2]), (1, 2): ("tx", PAL[3]), (2, 2): ("tx", PAL[3]), (3, 2): ("tx", PAL[3])})
+    p.boton(x, y + 690, 340, "Guardar actividad y personal")
+    p.marca(x + 360, y + 714, 4)
+    return p.guardar(P("16_actividad_form.png"))
+
+
+TODAS = [actividades, actividad_form, flujo, login, panel, movil, nuevo_1, nuevo_2, libro_fisico, tramite, movimiento, pdf, libro, hoja_ruta, alertas, carga, usuarios]
 
 if __name__ == "__main__":
     for f in TODAS:

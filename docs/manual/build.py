@@ -148,7 +148,15 @@ def portada(c, doc):
     c.setFillColor(colors.HexColor("#CBD5E1"))
     c.setFont("S", 10)
     c.drawCentredString(W / 2, 40 * mm, "expedientesdgii.streamlit.app")
-    c.drawCentredString(W / 2, 33 * mm, f"Versión 1.0 · {date.today():%m/%Y}")
+    c.setFillColor(colors.white)
+    c.setFont("S", 10)
+    c.drawCentredString(W / 2, 62 * mm, "Elaborado por")
+    c.setFont("SB", 12.5)
+    c.drawCentredString(W / 2, 55 * mm, "Oficial Auxiliar PONCE Sergio")
+    c.setFont("S", 10)
+    c.drawCentredString(W / 2, 49.5 * mm, "I.E.S.P. – Policía de Tucumán")
+    c.setFillColor(colors.HexColor("#CBD5E1"))
+    c.drawCentredString(W / 2, 33 * mm, f"Versión 1.1 · {date.today():%m/%Y}")
     c.restoreState()
 
 
@@ -165,7 +173,7 @@ def normal(c, doc):
     c.line(M, 13 * mm, W - M, 13 * mm)
     c.setFillColor(GRIS)
     c.setFont("S", 8)
-    c.drawString(M, 8.5 * mm, "Uso interno – Dirección General de Institutos e Instrucción")
+    c.drawString(M, 8.5 * mm, "Uso interno – D.G.I.I. · Elaborado por Of. Aux. Ponce Sergio (I.E.S.P.)")
     c.drawRightString(W - M, 8.5 * mm, f"Página {doc.page}")
     c.restoreState()
 
@@ -173,7 +181,7 @@ def normal(c, doc):
 class Doc(BaseDocTemplate):
     def __init__(self, ruta):
         super().__init__(ruta, pagesize=A4, leftMargin=M, rightMargin=M, topMargin=20 * mm, bottomMargin=18 * mm,
-                         title="Manual de Usuario – Registro de Expedientes D.G.I.I.", author="D.G.I.I. – Policía de Tucumán")
+                         title="Manual de Usuario – Registro de Expedientes D.G.I.I.", author="Oficial Auxiliar Ponce Sergio – I.E.S.P.")
         fr = Frame(M, 18 * mm, ANCHO, H - 38 * mm, id="f")
         self.addPageTemplates([PageTemplate("portada", [Frame(0, 0, W, H)], onPage=portada),
                                PageTemplate("normal", [fr], onPage=normal)])
@@ -208,7 +216,7 @@ def armar():
     # Introducción
     s += h1("Antes de empezar")
     s += [p("Este sistema reemplaza y complementa el <b>libro de registro</b> de la Mesa de Entradas. Permite saber en todo momento "
-            "<b>qué expedientes hay, dónde está cada uno, quién lo tiene, si ya fue tramitado</b> y qué cursos o vencimientos se aproximan. "
+            "<b>qué expedientes hay, dónde está cada uno, quién lo tiene, si ya fue tramitado</b>, qué vencimientos se aproximan y <b>qué actividades se desarrollan</b> (cursos, formaciones, congresos, disertaciones, eventos). "
             "Funciona en la computadora y en el celular, desde el navegador, sin instalar nada."),
           imagen("00_flujo.png", pie="Figura 1. Recorrido de un expediente y quién realiza cada paso.")]
     s += h2("¿Qué puede hacer cada usuario?")
@@ -216,8 +224,11 @@ def armar():
                 [["<b>SUBOFICIAL</b>", "Suboficial Mayor a Agente", "Registrar expedientes, cargar el libro, registrar salidas / ingresos / pases, subir el PDF, consultar todo."],
                  ["<b>OFICIAL</b>", "Comisario General a Oficial Subayudante", "Todo lo anterior + <b>tramitar</b> (marcar TRAMITADO) y <b>corregir</b> datos de expedientes."],
                  ["<b>ADMINISTRADOR</b>", "Responsable del sistema", "Todo + usuarios, dependencias, tipos de expediente, Google Drive y respaldos."]],
-                [30 * mm, 48 * mm, ANCHO - 78 * mm]),
+                [35 * mm, 46 * mm, ANCHO - 81 * mm]),
           Spacer(1, 6),
+          caja("El <b>PTP</b>, los <b>cadetes</b> y los <b>aspirantes</b> no son usuarios del sistema: se registran como <b>personal afectado</b> "
+               "a una actividad o expediente. La escala completa está en el anexo <i>Jerarquías</i>.", "tip"),
+          Spacer(1, 4),
           caja("Todo lo que usted haga queda registrado con su <b>grado, apellido y nombre</b>, la fecha y la hora. Por eso cada persona "
                "debe ingresar con <b>su propio legajo</b> y nunca compartir la clave.", "ojo")]
 
@@ -238,7 +249,8 @@ def armar():
           pasos([(1, "<b>Menú</b>: desde aquí se va a cada sección del sistema."),
                  (2, "<b>Su usuario</b>: grado, apellido, legajo, función y rol. Debajo están <b>Actualizar</b>, <b>Cambiar mi clave</b> y <b>Salir</b>."),
                  (3, "<b>Indicadores</b>: expedientes del año, pendientes de trámite, urgentes, vencidos y los que están fuera de la Dirección."),
-                 (4, "<b>Alertas prioritarias</b>: vencimientos y cursos que inician hoy. El detalle está en <i>Alertas y Agenda</i>.")])]
+                 (4, "<b>Alertas prioritarias</b>: vencimientos y actividades que inician hoy. El detalle está en <i>Alertas y Agenda</i>."),
+                 (5, "<b>Esta semana en la Dirección</b>: actividades en desarrollo y las que comienzan en los próximos días, con su tipo y lugar.")])]
     tel = Image(os.path.join(IMG, "03_movil.png"), width=58 * mm, height=58 * mm * 1160 / 580)
     txt = [pasos([(1, "Arriba aparece una <b>barra azul</b> con la página actual. Tóquela para elegir otra sección."),
                   (2, "El botón <b>›</b> abre el menú lateral completo (usuario, clave, salir)."),
@@ -269,7 +281,7 @@ def armar():
     s += [p("Menú → <b>Nuevo Expediente</b>. Lo pueden hacer suboficiales y oficiales."),
           imagen("04_nuevo_1.png", pie="Figura 5. Parte superior: origen, tipo, de dónde viene, a dónde va y numeración."),
           pasos([(1, "Indique si fue <b>iniciado en la Dirección</b> o <b>recibido de otra dependencia</b>."),
-                 (2, "Elija el <b>tipo de expediente</b>. Si es un curso, taller, seminario, beca, etc., más abajo aparecen los datos del curso y del personal."),
+                 (2, "Elija el <b>tipo de expediente</b>. Si genera una actividad (curso, formación, congreso, disertación, taller, beca, evento…), más abajo aparecen sus datos y el personal."),
                  (3, "<b>Dependencia de origen</b>: de dónde viene."),
                  (4, "<b>Instancia a la que va</b>: a qué dependencia se eleva o remite. Sirve después para filtrar y controlar."),
                  (5, "Si una dependencia <b>no está en la lista</b>, toque <b>+</b>, escriba el nombre y <b>Agregar</b>: queda seleccionada."),
@@ -282,11 +294,12 @@ def armar():
                  (4, "Quién lo trajo y quién lo recibió."),
                  (5, "Toque <b>Registrar expediente</b>. Aparece un aviso verde con la identificación y los botones <b>Avisar por WhatsApp</b> y <b>Abrir ficha</b>.")]),
           caja("Si el expediente es <b>urgente</b>, cargue siempre la <b>fecha de término</b>: así el sistema avisa antes de que venza.", "ojo")]
-    s += h2("Expedientes de cursos")
-    s += [p("En los tipos de capacitación se completan: categoría (<b>cursar</b> o <b>dictar/disertar</b>), qué se solicita "
-            "(<b>solo autorización</b> o <b>autorización + viático + movilidad</b>), nombre del curso, división que lo dicta, lugar, "
-            "ámbito (en o fuera de la provincia), fechas de inicio y fin, modalidad (interno / externo / mixto) y la <b>grilla del personal</b>: "
-            "apellido, nombre, jerarquía, DNI, división, provincia y rol. Con estos datos se arman solas las estadísticas de cursos y las alertas de inicio.")]
+    s += h2("Expedientes que generan actividades")
+    s += [p("Cuando el expediente se refiere a una actividad se completan: <b>tipo de actividad</b>, categoría (<b>realizar / cursar</b>, "
+            "<b>dictar / disertar</b>, <b>organizar</b> o <b>asistir / participar</b>), qué se solicita (<b>solo autorización</b>, "
+            "<b>autorización + viático + movilidad</b> o <b>sin requerimiento – informativo</b>), nombre, quién la <b>organiza</b>, lugar, "
+            "ámbito, fechas, <b>hora</b>, modalidad, responsable y la <b>grilla del personal afectado</b>. La actividad queda vinculada al "
+            "expediente y aparece en <i>Actividades y Personal</i> (capítulo 10).")]
 
     # 5 PDF
     s += h1("5. Subir el expediente en PDF")
@@ -324,7 +337,7 @@ def armar():
                 [["SALIDA / DEVOLUCIÓN", "REMITIDO"], ["INGRESO", "EN TRÁMITE"], ["PASE INTERNO", "EN DESPACHO"], ["ARCHIVO", "ARCHIVADO"]],
                 [60 * mm, ANCHO - 60 * mm], AZUL),
           Spacer(1, 6),
-          caja("Un despacho <b>VISTO BUENO</b> sobre un expediente de curso marca el curso como <b>AUTORIZADO</b> automáticamente.", "ok")]
+          caja("Un despacho <b>VISTO BUENO</b> sobre un expediente de actividad la marca como <b>AUTORIZADO</b> automáticamente.", "ok")]
 
     # 8 Libro
     s += h1("8. Consultar el Libro de Registro")
@@ -342,32 +355,49 @@ def armar():
           tabla(["Pestaña", "Para qué sirve"],
                 [["Trámite", "Marcar o ver el trámite."], ["PDF", "Subir o ver el expediente digitalizado."],
                  ["Hoja de ruta", "Historial completo de movimientos."], ["Registrar movimiento", "Salida, ingreso, pase o archivo."],
-                 ["Curso y personal", "Datos del curso y efectivos afectados."], ["Alertas", "Recordatorios propios del expediente."],
+                 ["Actividad y personal", "Datos de la actividad y efectivos afectados."], ["Alertas", "Recordatorios propios del expediente."],
                  ["Editar", "Corregir datos (oficiales). Eliminar: solo administrador."]],
                 [45 * mm, ANCHO - 45 * mm], AZUL)]
 
-    # 10 Alertas
-    s += h1("10. Alertas y agenda")
-    s += [imagen("12_alertas.png", pie="Figura 12. Alertas ordenadas por prioridad."),
+    # 10 Actividades
+    s += h1("10. Actividades: todo lo que acontece")
+    s += [p("Menú → <b>Actividades y Personal</b>. La Dirección no solo lleva expedientes: aquí se controla <b>todo lo que se desarrolla</b> "
+            "— cursos, formaciones, capacitaciones, disertaciones, congresos, seminarios, talleres, jornadas, prácticas de tiro, eventos, "
+            "actos, colaboraciones de efectivos, intervenciones del gabinete, reuniones y visitas —, <b>tenga o no expediente</b>."),
+          imagen("15_actividades.png", pie="Figura 12. Qué está pasando: actividades de hoy y de los próximos días."),
+          pasos([(1, "<b>Pestañas</b>: Qué está pasando, Nueva actividad, Estadística, Actividades (listado), Personal y Planificación."),
+                 (2, "<b>Indicadores</b>: actividades en desarrollo, próximas, sin autorización y efectivos afectados."),
+                 (3, "<b>En desarrollo hoy</b>: cada tarjeta muestra tipo, nombre, lugar, horario y cantidad de personal."),
+                 (4, "<b>Próximos 7 días</b>: lo que comienza esta semana, para prever personal y autorizaciones.")]),
+          imagen("16_actividad_form.png", pie="Figura 13. Carga de una actividad sin expediente."),
+          pasos([(1, "Elija el <b>tipo</b>, la <b>hora</b> y quién la <b>organiza</b>."),
+                 (2, "Indique la <b>categoría</b> (realizar, dictar, organizar o asistir) y qué se solicita. Si solo se informa, elija <b>Sin requerimiento (informativo)</b>."),
+                 (3, "Cargue el <b>personal afectado</b>: puede incluir oficiales, suboficiales, <b>PTP</b>, <b>cadetes</b> y <b>aspirantes</b>, con su rol (alumno, instructor, disertante, participante, organizador, colaborador…)."),
+                 (4, "Toque <b>Guardar actividad</b>. Ya cuenta para las alertas, la estadística y el historial de cada efectivo.")]),
+          caja("En la pestaña <b>Personal</b> se busca un efectivo por apellido o DNI y se ve <b>todo lo que realizó</b>: cursos, disertaciones, eventos.", "ok")]
+
+    # 11 Alertas
+    s += h1("11. Alertas y agenda")
+    s += [imagen("12_alertas.png", pie="Figura 14. Alertas ordenadas por prioridad."),
           pasos([(1, "Resumen por prioridad: <b>críticas</b> (hoy o vencidas), <b>importantes</b>, <b>próximas</b> e <b>informativas</b>."),
-                 (2, "Cada alerta indica qué pasa y con qué expediente: cursos que inician, términos vencidos, expedientes detenidos, eventos."),
+                 (2, "Cada alerta indica qué pasa y con qué expediente: actividades que inician (con su tipo: <i>HOY inicia · CURSO…</i>), las que no tienen autorización, términos vencidos, expedientes detenidos y eventos."),
                  (3, "<b>Ficha</b> abre el expediente; <b>Avisar</b> envía el aviso por WhatsApp.")]),
           caja("En <b>Nuevo evento</b> puede agendar reuniones, actos o recordatorios, asociados o no a un expediente.")]
 
-    # 11 Carga masiva
-    s += h1("11. Pasar el libro existente al sistema")
+    # 12 Carga masiva
+    s += h1("12. Pasar el libro existente al sistema")
     s += [p("Menú → <b>Carga Masiva</b>. Sirve para incorporar los asientos que ya están escritos en el libro."),
-          imagen("13_carga.png", pie="Figura 13. Transcripción rápida del libro."),
+          imagen("13_carga.png", pie="Figura 15. Transcripción rápida del libro."),
           pasos([(1, "Elija <b>Desde Excel / CSV</b> (descargue la plantilla) o <b>Transcripción rápida</b> para tipear renglón por renglón."),
                  (2, "En la grilla la numeración viene propuesta: complete fecha, tipo, origen, asunto y destino. Los renglones sin tipo se ignoran."),
                  (3, "Revise la validación: <b>listas para cargar</b>, <b>ya existen</b> y <b>con error</b>."),
                  (4, "Toque <b>Importar</b>. Cada asiento queda con su ingreso en la hoja de ruta.")])]
 
-    # 12 Usuarios
-    s += h1("12. Usuarios (administrador)")
-    s += [imagen("14_usuarios.png", pie="Figura 14. Alta y control de usuarios."),
+    # 13 Usuarios
+    s += h1("13. Usuarios (administrador)")
+    s += [imagen("14_usuarios.png", pie="Figura 16. Alta y control de usuarios."),
           pasos([(1, "Listado de usuarios con grado, apellido, nombre, legajo, función, rol y último acceso. Se puede descargar en Excel."),
-                 (2, "<b>Nuevo usuario</b>: el rol se asigna <b>según el grado</b> (oficial / suboficial). Puede cambiarse si hace falta."),
+                 (2, "<b>Nuevo usuario</b>: el rol se asigna <b>según el grado</b> de la escala de Tucumán (oficial / suboficial). PTP, cadetes y aspirantes no figuran: se cargan como personal de actividades."),
                  (3, "Al crear el usuario se entrega una clave inicial; la persona debe cambiarla en su primer ingreso.")]),
           caja("Cuando alguien deja la oficina, <b>deshabilítelo</b> (no lo borre): su nombre debe seguir figurando en el historial. "
                "Desde la misma pantalla se blanquea la clave de quien la olvidó.", "ojo")]
@@ -389,6 +419,7 @@ def armar():
         "Subir el <b>PDF</b> o las fotos de las fojas.",
         "Cuando sale: <b>Movimiento Rápido → SALIDA</b>, quién lo lleva y quién lo recibe.",
         "Avisar por <b>WhatsApp</b> a la dependencia.",
+        "Cargar las <b>actividades</b> (con o sin expediente) y su personal.",
         "Revisar <b>Alertas</b> al empezar la jornada."])
     of = col("OFICIAL – Trámite y control", colors.HexColor("#15803D"), [
         "Revisar en el Libro el filtro <b>Pendientes de trámite</b>.",
@@ -397,7 +428,8 @@ def armar():
         "Corregir datos mal cargados desde <b>Editar</b>.",
         "Controlar <b>vencidos</b> y expedientes <b>detenidos</b>.",
         "Emitir <b>Informes</b> de gestión y de cursos.",
-        "Verificar cursos <b>sin autorización</b> próximos a iniciar."])
+        "Verificar actividades <b>sin autorización</b> próximas a iniciar.",
+        "Seguir <b>Qué está pasando</b> en Actividades y Personal."])
     t = Table([[sub, of]], colWidths=[(ANCHO) / 2, ANCHO / 2])
     t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0)]))
     s += [t, Spacer(1, 10)]
@@ -412,6 +444,24 @@ def armar():
     for q, a in faq:
         s += [KeepTogether([Paragraph(f"<b>{q}</b>", st["p"]), Paragraph(a, ParagraphStyle("a", parent=st["p"], leftIndent=10, textColor=GRIS))])]
     s += [Spacer(1, 8), caja("Ante cualquier duda o error, tome una captura de pantalla y envíela al administrador del sistema.", "tip")]
+    # Anexo jerarquías
+    s += h1("Anexo: Jerarquías")
+    s += [p("Escala de la Policía de Tucumán usada en el sistema. Solo <b>oficiales</b> y <b>suboficiales</b> (y personal civil) pueden ser usuarios; "
+            "el resto se registra como personal afectado."),
+          tabla(["Escalafón", "Grados", "¿Usuario?"],
+                [["<b>OFICIALES</b>", "Comisario General · Comisario Mayor · Comisario Inspector · Comisario · Subcomisario · Oficial Principal · "
+                  "Oficial Auxiliar · Oficial Ayudante · Oficial Subayudante", "Sí (rol OFICIAL)"],
+                 ["<b>SUBOFICIALES</b>", "Suboficial Mayor · Suboficial Principal · Sargento Ayudante · Sargento Primero · Sargento · Cabo Primero · Cabo · Agente",
+                  "Sí (rol SUBOFICIAL)"],
+                 ["<b>PTP</b>", "Personal Transitorio Policial", "No"],
+                 ["<b>CADETES</b>", "Cadete de 1°, 2° y 3° año (Escuela de Oficiales) · Agente Cadete · Cabo Cadete · Sargento Cadete · "
+                  "Sargento Primero Cadete (Abanderado, ascendido ad honorem en el I.E.S.P.)", "No"],
+                 ["<b>ASPIRANTES</b>", "Aspirante (Escuela de Suboficiales)", "No"],
+                 ["<b>OTROS</b>", "Personal civil · Otro", "Civil: sí"]],
+                [35 * mm, ANCHO - 63 * mm, 28 * mm]),
+          Spacer(1, 10),
+          Paragraph("Manual elaborado por el <b>Oficial Auxiliar Ponce Sergio</b> – I.E.S.P., para la Dirección General de Institutos e Instrucción.",
+                    ParagraphStyle("firma", parent=st["p"], alignment=1, textColor=GRIS))]
     return s
 
 
