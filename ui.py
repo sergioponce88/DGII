@@ -111,6 +111,16 @@ div.stFormSubmitButton>button, .stButton>button[kind="primary"] {
 .stTabs [aria-selected="true"] { background:linear-gradient(135deg,#2563EB,#1D4ED8) !important; color:#fff !important; }
 [data-testid="stMetric"] { background:rgba(15,23,42,.55); border:1px solid #1E293B; border-radius:12px; padding:10px 14px; }
 
+/* ── Barra superior y botón del menú lateral siempre visibles ── */
+header[data-testid="stHeader"] { background: rgba(7,10,20,.92) !important; backdrop-filter: blur(8px); }
+header[data-testid="stHeader"] svg, [data-testid="stSidebarCollapsedControl"] svg, [data-testid="stExpandSidebarButton"] svg,
+[data-testid="stSidebarCollapseButton"] svg { color:#F8FAFC !important; fill:#F8FAFC !important; }
+[data-testid="stSidebarCollapsedControl"] button, [data-testid="stExpandSidebarButton"] {
+  background:rgba(59,130,246,.25) !important; border:1px solid rgba(96,165,250,.6) !important; border-radius:8px !important; }
+
+/* ── Menú de navegación para celular ── */
+.st-key-nav_movil { display:none; }
+
 /* ── Celular ── */
 @media (max-width: 640px) {
   .block-container { padding: 3.2rem .7rem 5rem; }
@@ -125,6 +135,10 @@ div.stFormSubmitButton>button, .stButton>button[kind="primary"] {
   [data-testid="stForm"] { padding:12px !important; }
   .stTabs [data-baseweb="tab"] { padding:6px 10px; font-size:.78rem; }
   input, textarea, select { font-size:16px !important; } /* evita zoom en iOS */
+  .st-key-nav_movil { display:block; position:sticky; top:3.75rem; z-index:990; background:rgba(7,10,20,.97);
+    padding:8px 0 10px; margin-bottom:6px; border-bottom:1px solid #1E293B; }
+  .st-key-nav_movil [data-baseweb="select"] > div { background:linear-gradient(135deg,#1D4ED8,#1E3A8A) !important;
+    border:1px solid #60A5FA !important; border-radius:10px !important; min-height:3rem; font-weight:700; }
 }
 @media print { [data-testid="stSidebar"], header, .stButton { display:none !important; } }
 </style>

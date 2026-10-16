@@ -71,6 +71,21 @@ if "_goto" in st.session_state:
 alertas = K.calcular_alertas()
 n_crit = sum(1 for a in alertas if a["nivel"] in ("critical", "serious"))
 
+
+def _fmt(p):
+    return f"{p}  ·  {n_crit}" if p == K.PAG_ALERTAS and n_crit else p
+
+
+# ── Menú superior para celular (el CSS lo muestra solo en pantallas angostas) ──
+def _desde_movil():
+    st.session_state["nav"] = st.session_state["nav_m"]
+
+
+st.session_state.setdefault("nav", K.PAGINAS[0])
+st.session_state["nav_m"] = st.session_state["nav"]
+with st.container(key="nav_movil"):
+    st.selectbox("☰ Menú", K.PAGINAS, key="nav_m", format_func=_fmt, on_change=_desde_movil, label_visibility="collapsed")
+
 with st.sidebar:
     if os.path.exists(K.LOGO):
         c1, c2, c3 = st.columns([1, 2, 1])
@@ -80,9 +95,6 @@ with st.sidebar:
         f"<div style='text-align:center;color:#60A5FA;font-size:.74rem;font-weight:600;margin-bottom:10px'>{C.INSTITUCION}</div>",
         unsafe_allow_html=True,
     )
-
-    def _fmt(p):
-        return f"{p}  ·  {n_crit}" if p == K.PAG_ALERTAS and n_crit else p
 
     pagina = st.radio("Navegación", K.PAGINAS, key="nav", format_func=_fmt, label_visibility="collapsed")
     st.markdown("---")
