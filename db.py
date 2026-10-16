@@ -219,6 +219,21 @@ CREATE TABLE IF NOT EXISTS eventos (
     creado_en TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS adjuntos (
+    id SERIAL PRIMARY KEY,
+    expediente_id INTEGER NOT NULL REFERENCES expedientes (id) ON DELETE CASCADE,
+    nombre TEXT,
+    drive_id TEXT,
+    link TEXT,
+    bytes INTEGER,
+    paginas INTEGER,
+    version INTEGER DEFAULT 1,
+    descripcion TEXT,
+    subido_por TEXT,
+    subido_en TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS ix_adj_exp ON adjuntos (expediente_id);
+
 CREATE TABLE IF NOT EXISTS auditoria (
     id SERIAL PRIMARY KEY,
     fecha TIMESTAMP DEFAULT NOW(),
@@ -302,11 +317,15 @@ def df_tipos(solo_activos=False):
 def df_expedientes():
     df = leer(
         """
-        SELECT e.*, m.ult_mov, m.cant_mov, COALESCE(t.grupo, 'Otros') AS grupo
+        SELECT e.*, m.ult_mov, m.cant_mov, COALESCE(t.grupo, 'Otros') AS grupo,
+               a.pdf_link, COALESCE(a.pdf_versiones, 0) AS pdf_versiones
         FROM expedientes e
         LEFT JOIN (SELECT expediente_id, MAX(fecha_hora) AS ult_mov, COUNT(*) AS cant_mov
                    FROM movimientos GROUP BY expediente_id) m ON m.expediente_id = e.id
         LEFT JOIN tipos_expediente t ON t.nombre = e.tipo
+        LEFT JOIN (SELECT DISTINCT ON (expediente_id) expediente_id, link AS pdf_link,
+                          COUNT(*) OVER (PARTITION BY expediente_id) AS pdf_versiones
+                   FROM adjuntos ORDER BY expediente_id, subido_en DESC, id DESC) a ON a.expediente_id = e.id
         ORDER BY e.libro DESC, e.folio DESC, e.orden DESC
         """
     )
@@ -680,6 +699,29 @@ def importar_expedientes(filas, modo="omitir", usuario=""):
     return ok, act, omit, errores
 
 
+def df_adjuntos(exp_id):
+    df = leer("SELECT * FROM adjuntos WHERE expediente_id = %s ORDER BY subido_en DESC, id DESC", (exp_id,))
+    df["subido_en"] = pd.to_datetime(df["subido_en"], errors="coerce")
+    return df
+
+
+def registrar_adjunto(exp_id, nombre, drive_id, link, n_bytes, paginas, descripcion, usuario=""):
+    with conexion() as c, c.cursor() as cur:
+        cur.execute("SELECT COALESCE(MAX(version), 0) + 1 FROM adjuntos WHERE expediente_id = %s", (exp_id,))
+        (ver,) = cur.fetchone()
+        _insert(cur, "adjuntos", {"expediente_id": exp_id, "nombre": nombre, "drive_id": drive_id, "link": link,
+                                  "bytes": n_bytes, "paginas": paginas, "version": ver, "descripcion": descripcion,
+                                  "subido_por": usuario, "subido_en": ahora()}, None)
+        _insert(cur, "movimientos", {"expediente_id": exp_id, "fecha_hora": ahora(), "tipo": "DIGITALIZACIÓN",
+                                     "observaciones": f"PDF v{ver} subido a Drive ({paginas or '?'} fojas). {descripcion or ''}".strip(),
+                                     "registrado_por": usuario}, None)
+    log(usuario, "PDF A DRIVE", f"{exp_id} v{ver}")
+    invalidar()
+    return ver
+
+
 def respaldo_completo():
-    tablas = ["expedientes", "movimientos", "cursos", "personal_curso", "eventos", "dependencias", "tipos_expediente", "config", "auditoria"]
-    return {t: leer(f"SELECT * FROM {t} ORDER BY 1") for t in tablas}
+    tablas = ["expedientes", "movimientos", "adjuntos", "cursos", "personal_curso", "eventos", "dependencias", "tipos_expediente", "config", "auditoria"]
+    out = {t: leer(f"SELECT * FROM {t} ORDER BY 1") for t in tablas}
+    out["config"] = out["config"][~out["config"]["clave"].str.startswith("gdrive_refresh")]  # nunca exportar credenciales
+    return out

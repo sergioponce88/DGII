@@ -11,7 +11,10 @@ import ui
 def render():
     ui.header("Configuración", "Libro, alertas, dependencias, tipos de expediente y respaldo")
     cfg = db.get_config()
-    t1, t2, t3, t4 = st.tabs(["📖 Libro y alertas", "🏢 Dependencias y colores", "🗂️ Tipos de expediente", "💾 Respaldo y auditoría"])
+    t1, t2, t3, t5, t4 = st.tabs(["📖 Libro y alertas", "🏢 Dependencias y colores", "🗂️ Tipos de expediente", "☁️ Google Drive", "💾 Respaldo y auditoría"])
+
+    with t5:
+        _drive(cfg)
 
     with t1:
         with st.form("cfg_libro"):
@@ -92,3 +95,59 @@ def render():
             st.download_button("📥 Descargar respaldo", st.session_state["respaldo"], file_name=f"respaldo_expedientes_{db.hoy():%Y%m%d}.xlsx")
         ui.seccion("🕵️ Auditoría (últimas 200 acciones)")
         st.dataframe(db.leer("SELECT fecha, usuario, accion, detalle FROM auditoria ORDER BY id DESC LIMIT 200"), hide_index=True, width="stretch")
+
+
+def _drive(cfg):
+    import gdrive
+
+    if not gdrive.configurado():
+        st.warning("Faltan las credenciales de Google en los Secrets de Streamlit.")
+        st.markdown(
+            "En Streamlit Cloud: **Manage app → ⋮ → Settings → Secrets**, agregue estas dos líneas debajo de las existentes "
+            "(con los datos del cliente OAuth *App de escritorio* de Google Cloud) y guarde:"
+        )
+        st.code('GDRIVE_CLIENT_ID = "xxxxxxxx.apps.googleusercontent.com"\nGDRIVE_CLIENT_SECRET = "GOCSPX-xxxxxxxx"', language="toml")
+        return
+
+    with st.form("gd_carpeta"):
+        fid = st.text_input("ID de la carpeta de Drive donde guardar los expedientes", cfg.get("gdrive_folder_id", ""),
+                            help="Es lo que aparece en el link de la carpeta después de /folders/")
+        if st.form_submit_button("💾 Guardar carpeta"):
+            db.set_config({"gdrive_folder_id": fid.strip(), "gdrive_raiz_id": ""})
+            st.toast("Carpeta guardada", icon="📁")
+            st.rerun()
+
+    if gdrive.conectado():
+        ui.alerta("✅", "Google Drive conectado", "Los PDF se guardan en la carpeta 'EXPEDIENTES DGII - SISTEMA', con subcarpetas por año.", C.STATUS["ok"])
+        c1, c2 = st.columns(2)
+        if c1.button("🔎 Probar conexión"):
+            try:
+                link = gdrive.probar()
+                st.success("Conexión correcta.")
+                st.link_button("📁 Abrir carpeta en Drive", link)
+                if db.get_config().get("gdrive_raiz_en_carpeta") == "NO":
+                    st.info("Por el permiso mínimo de Google, la app creó su carpeta en 'Mi unidad'. "
+                            "Si querés, arrastrala dentro de tu carpeta: la app la sigue encontrando igual.")
+            except gdrive.DriveError as e:
+                st.error(str(e))
+        if c2.button("⛔ Desconectar Drive"):
+            gdrive.desconectar()
+            st.rerun()
+        return
+
+    st.markdown("**Conectar con Google Drive (una sola vez)**")
+    st.markdown("1. Tocá el botón y aceptá con tu cuenta de Google. Si aparece *Google no verificó esta app*, "
+                "tocá **Configuración avanzada → Ir a … (no seguro)** y luego **Continuar**.")
+    st.link_button("🔐 Autorizar con Google", gdrive.url_autorizacion())
+    st.markdown("2. Al terminar, el navegador va a una página que **no carga** (`localhost`). Es normal: "
+                "**copiá la dirección completa** de esa pestaña y pegala acá:")
+    with st.form("gd_codigo", clear_on_submit=True):
+        url = st.text_input("Dirección completa (empieza con http://localhost/?...code=...)")
+        if st.form_submit_button("✅ Conectar"):
+            try:
+                gdrive.canjear_codigo(url)
+                gdrive.carpeta_raiz()
+                st.toast("Google Drive conectado", icon="☁️")
+                st.rerun()
+            except gdrive.DriveError as e:
+                st.error(str(e))

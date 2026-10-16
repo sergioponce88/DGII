@@ -76,8 +76,12 @@ def tabla_libro(df):
             "Destino": df["destino"],
             "Últ. movimiento": df["ult_mov"].dt.strftime("%d/%m/%Y %H:%M"),
             "Movs.": df["cant_mov"],
+            "PDF": df["pdf_link"],
         }
     )
+
+
+COLCFG = {"PDF": st.column_config.LinkColumn("PDF", display_text="📄 Ver")}
 
 
 def render():
@@ -110,10 +114,11 @@ def render():
     elif vista == "📖 Por folio":
         for (lib, fol), g in df.sort_values(["libro", "folio", "orden"], ascending=[False, False, True]).groupby(["libro", "folio"], sort=False):
             ui.seccion(f"Libro {lib} · Folio {fol}–{fol + 1}  ({len(g)} asientos)")
-            st.dataframe(ui.estilo_tabla(tabla_libro(g).drop(columns=["Libro"]), mapa), hide_index=True, width="stretch")
+            st.dataframe(ui.estilo_tabla(tabla_libro(g).drop(columns=["Libro"]), mapa), hide_index=True, width="stretch", column_config=COLCFG)
     else:
         ev = st.dataframe(
             ui.estilo_tabla(t, mapa),
+            column_config=COLCFG,
             hide_index=True,
             width="stretch",
             height=min(700, 38 + 35 * max(1, len(t))),

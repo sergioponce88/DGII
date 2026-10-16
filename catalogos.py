@@ -164,4 +164,5 @@ CONFIG_DEFAULT = {
     "dias_aviso_cursos": "7",
     "dias_estancado": "15",
     "wp_por_defecto": "",
+    "gdrive_folder_id": "1Qai_8GktJcfYxF2u1jytjj-MR8Zo7Uk0",
 }

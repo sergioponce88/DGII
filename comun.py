@@ -211,6 +211,61 @@ def form_tramite(exp, key):
             st.rerun()
 
 
+# ───────────────────────── PDF del expediente (Google Drive) ─────────────────────────
+def panel_pdf(exp, key):
+    import gdrive
+
+    exp_id = int(exp["id"])
+    adj = db.df_adjuntos(exp_id)
+    if not adj.empty:
+        ult = adj.iloc[0]
+        st.link_button(f"📄 Ver PDF del expediente (v{int(ult['version'])})", ult["link"])
+        with st.expander(f"🗂️ Versiones ({len(adj)})"):
+            for _, a in adj.iterrows():
+                st.markdown(f"**v{int(a['version'])}** · {ui.fmt_fecha(a['subido_en'], True)} · {ui.esc(a['subido_por'])} · "
+                            f"{num(a['paginas']) or '?'} fojas · {(num(a['bytes']) or 0) / 1e6:.1f} MB · "
+                            f"[abrir]({a['link']}) {('· ' + ui.esc(a['descripcion'])) if a['descripcion'] else ''}")
+    else:
+        st.caption("Este expediente todavía no tiene PDF digitalizado.")
+
+    if not gdrive.conectado():
+        st.info("Para subir el PDF, primero conecte Google Drive en ⚙️ Configuración → ☁️ Google Drive.")
+        return
+    ui.seccion("📎 Subir expediente digitalizado")
+    modo = st.segmented_control("Origen", ["📄 Archivo PDF", "📷 Fotos de las fojas"], default="📄 Archivo PDF", key=f"pdfm_{key}")
+    if modo == "📷 Fotos de las fojas":
+        arch = st.file_uploader("Fotos en orden (en el celular podés usar la cámara)", type=["jpg", "jpeg", "png", "webp"],
+                                accept_multiple_files=True, key=f"pdfi_{key}")
+    else:
+        arch = st.file_uploader("PDF del expediente (si elegís varios, se unen en uno)", type=["pdf"],
+                                accept_multiple_files=True, key=f"pdff_{key}")
+    desc = st.text_input("Descripción (opcional)", placeholder="Ej: con informe de la División y providencia", key=f"pdfd_{key}")
+    if arch and st.button(f"☁️ Subir a Google Drive ({len(arch)} archivo/s)", type="primary", key=f"pdfb_{key}"):
+        try:
+            with st.spinner("Preparando PDF…"):
+                if modo == "📷 Fotos de las fojas":
+                    contenido, paginas = gdrive.imagenes_a_pdf(arch), len(arch)
+                else:
+                    contenido = arch[0].getvalue() if len(arch) == 1 else gdrive.unir_pdfs(arch)
+                    try:
+                        from pypdf import PdfReader
+                        import io as _io
+                        paginas = len(PdfReader(_io.BytesIO(contenido)).pages)
+                    except Exception:
+                        paginas = None
+            ver = (0 if adj.empty else int(adj["version"].max())) + 1
+            nombre = f"{exp['nro_exp']}-{exp['folio']}-{exp['orden']}_{exp['anio']}_v{ver}.pdf"
+            with st.spinner(f"Subiendo {len(contenido) / 1e6:.1f} MB a Google Drive…"):
+                fid, link = gdrive.subir_pdf(nombre, contenido, int(exp["anio"]), f"{exp['tipo']} · {exp.get('asunto') or ''} {desc}".strip())
+            db.registrar_adjunto(exp_id, nombre, fid, link, len(contenido), paginas, desc.strip() or None, usuario())
+            st.toast(f"PDF subido: {nombre}", icon="☁️")
+            st.rerun()
+        except gdrive.DriveError as e:
+            st.error(str(e))
+        except Exception as e:
+            st.error(f"No se pudo subir el archivo: {e}")
+
+
 # ───────────────────────── Personal (editor) ─────────────────────────
 COLS_PERSONAL = ["apellido", "nombre", "jerarquia", "dni", "division", "provincia", "rol"]
 
