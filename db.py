@@ -229,8 +229,12 @@ CREATE TABLE IF NOT EXISTS auditoria (
 """
 
 
-@st.cache_resource(show_spinner="Conectando con la base de datos…")
-def init_db():
+VERSION_ESQUEMA = __import__("hashlib").md5(ESQUEMA.encode()).hexdigest()[:10]
+
+
+@st.cache_resource(show_spinner="Actualizando la estructura de la base…")
+def init_db(version=VERSION_ESQUEMA):
+    """La versión forma parte de la clave de caché: cada cambio en ESQUEMA vuelve a ejecutar las migraciones."""
     with conexion() as c, c.cursor() as cur:
         cur.execute(ESQUEMA)
         for k, v in C.CONFIG_DEFAULT.items():

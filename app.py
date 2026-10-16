@@ -31,7 +31,7 @@ ui.css()
 
 # ── Base de datos ──
 try:
-    db.init_db()
+    db.init_db(db.VERSION_ESQUEMA)
 except Exception as e:
     st.error(f"❌ No se pudo conectar a la base de datos: {e}")
     st.info("Configure `SUPABASE_URL` en *Settings → Secrets* de Streamlit Cloud (cadena de conexión PostgreSQL de Supabase, preferentemente el *Session pooler*).")
