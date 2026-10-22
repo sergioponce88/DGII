@@ -50,7 +50,12 @@ def leer(sql, params=None):
     with conexion() as c, c.cursor() as cur:
         cur.execute(sql, [_py(p) for p in params] if params else params)
         cols = [d[0] for d in cur.description]
-        return pd.DataFrame(cur.fetchall(), columns=cols)
+        df = pd.DataFrame(cur.fetchall(), columns=cols)
+    # pandas 3 convierte los textos vacíos (NULL) en NaN: se dejan como None para que "x or 'defecto'" funcione.
+    for c in df.columns:
+        if pd.api.types.is_string_dtype(df[c]):
+            df[c] = df[c].astype(object).where(df[c].notna(), None)
+    return df
 
 
 def ejecutar(sql, params=None):
