@@ -27,7 +27,7 @@ for _n in _PROPIOS + [f"vistas.{v}" for v in _VISTAS]:
         _t = os.path.getmtime(_m.__file__)
     except OSError:
         continue
-    if _cambio or getattr(_m, "_mtime_carga", _t) != _t:
+    if _cambio or getattr(_m, "_mtime_carga", None) != _t:  # sin marca = cargado por una versión anterior
         _cambio = True
         _m = importlib.reload(_m)
     _m._mtime_carga = _t
@@ -51,6 +51,14 @@ from vistas import (  # noqa: E402
     v_nuevo,
     v_panel,
 )
+
+for _n in _PROPIOS + [f"vistas.{v}" for v in _VISTAS]:  # marca de carga de esta versión
+    _m = sys.modules.get(_n)
+    if _m is not None and getattr(_m, "__file__", None):
+        try:
+            _m._mtime_carga = os.path.getmtime(_m.__file__)
+        except OSError:
+            pass
 
 ui.css()
 
