@@ -10,6 +10,28 @@ st.set_page_config(
     initial_sidebar_state="auto",
 )
 
+# Al publicar cambios, Streamlit Cloud a veces conserva módulos viejos en memoria (AttributeError en K.PAG_…):
+# si el archivo de un módulo propio cambió desde que se cargó, se recarga en orden de dependencias.
+import importlib  # noqa: E402
+import sys  # noqa: E402
+
+_PROPIOS = ["catalogos", "docword", "redaccion", "db", "auth", "gdrive", "reportes", "ui", "comun", "modelos"]
+_VISTAS = ["v_alertas", "v_carga", "v_config", "v_cursos", "v_ficha", "v_informes", "v_libro", "v_movimiento",
+           "v_tramitar", "v_comision", "v_nuevo", "v_panel"]
+_cambio = False
+for _n in _PROPIOS + [f"vistas.{v}" for v in _VISTAS]:
+    _m = sys.modules.get(_n)
+    if _m is None or not getattr(_m, "__file__", None):
+        continue
+    try:
+        _t = os.path.getmtime(_m.__file__)
+    except OSError:
+        continue
+    if _cambio or getattr(_m, "_mtime_carga", _t) != _t:
+        _cambio = True
+        _m = importlib.reload(_m)
+    _m._mtime_carga = _t
+
 import auth  # noqa: E402
 import catalogos as C  # noqa: E402
 import comun as K  # noqa: E402
