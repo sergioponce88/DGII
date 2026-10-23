@@ -111,6 +111,8 @@ CREATE TABLE IF NOT EXISTS dependencias (
     telefono_wp TEXT,
     activa BOOLEAN DEFAULT TRUE
 );
+-- Dependencia (de la lista) a la que el comisionista lleva lo dirigido a esa autoridad
+ALTER TABLE autoridades ADD COLUMN IF NOT EXISTS dependencia TEXT;
 
 CREATE TABLE IF NOT EXISTS tipos_expediente (
     id SERIAL PRIMARY KEY,
@@ -888,19 +890,26 @@ def df_autoridades(solo_activas=True):
     return leer("SELECT * FROM autoridades" + (" WHERE activa" if solo_activas else "") + " ORDER BY id")
 
 
+def asociar_dependencia(clave, dependencia):
+    """Recuerda a qué dependencia se lleva lo dirigido a esa autoridad (se aprende al encargar la entrega)."""
+    if clave and dependencia:
+        ejecutar("UPDATE autoridades SET dependencia = %s WHERE clave = %s", (dependencia, clave))
+        invalidar()
+
+
 def guardar_autoridades(df, usuario=""):
-    campos = ["clave", "tratamiento", "cargo", "titular", "saludo", "relacion", "activa"]
+    campos = ["clave", "tratamiento", "cargo", "titular", "saludo", "relacion", "activa", "dependencia"]
     with conexion() as c, c.cursor() as cur:
         for _, r in df.iterrows():
             clave = str(r.get("clave") or "").strip().upper().replace(" ", "_")
             if not clave or not str(r.get("cargo") or "").strip():
                 continue
             vals = [clave] + [_py(r.get(k)) for k in campos[1:]]
-            vals[-1] = bool(vals[-1]) if vals[-1] is not None else True
+            vals[6] = bool(vals[6]) if vals[6] is not None else True
             cur.execute(
-                "INSERT INTO autoridades (clave, tratamiento, cargo, titular, saludo, relacion, activa) VALUES (%s,%s,%s,%s,%s,%s,%s) "
+                "INSERT INTO autoridades (clave, tratamiento, cargo, titular, saludo, relacion, activa, dependencia) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) "
                 "ON CONFLICT (clave) DO UPDATE SET tratamiento = EXCLUDED.tratamiento, cargo = EXCLUDED.cargo, titular = EXCLUDED.titular, "
-                "saludo = EXCLUDED.saludo, relacion = EXCLUDED.relacion, activa = EXCLUDED.activa", vals)
+                "saludo = EXCLUDED.saludo, relacion = EXCLUDED.relacion, activa = EXCLUDED.activa, dependencia = EXCLUDED.dependencia", vals)
     log(usuario, "AUTORIDADES", f"{len(df)} filas")
     invalidar()
 

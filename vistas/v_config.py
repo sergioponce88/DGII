@@ -284,8 +284,10 @@ def _tramitacion(cfg):
     ui.seccion("📇 Libreta de autoridades")
     st.caption("Destinatarios de las notas. **Relación** define el verbo: SUPERIOR → *elevo*, PAR → *remito*, INTERNO → *pase*. "
                "Actualice los titulares cuando cambia la gestión.")
+    if "dependencia" not in aut.columns:
+        aut["dependencia"] = None
     ed = st.data_editor(
-        aut[["clave", "tratamiento", "cargo", "titular", "saludo", "relacion", "activa"]], num_rows="dynamic", width="stretch", hide_index=True,
+        aut[["clave", "tratamiento", "cargo", "titular", "saludo", "relacion", "dependencia", "activa"]], num_rows="dynamic", width="stretch", hide_index=True,
         key="ed_aut",
         column_config={
             "clave": st.column_config.TextColumn("Clave", help="Identificador corto, sin espacios (ej. ESC_SUPERIOR)"),
@@ -294,6 +296,8 @@ def _tramitacion(cfg):
             "titular": st.column_config.TextColumn("Grado y nombre del titular", width="medium"),
             "saludo": st.column_config.SelectboxColumn("Su …", options=["Despacho", "Oficina"]),
             "relacion": st.column_config.SelectboxColumn("Relación", options=C.RELACIONES_AUT),
+            "dependencia": st.column_config.SelectboxColumn("El comisionista lo lleva a", options=[d for d in K.deps() if d != C.DEP_PROPIA],
+                                                            help="Se completa solo la primera vez que encarga una entrega a esa autoridad"),
             "activa": st.column_config.CheckboxColumn("Activa"),
         })
     if st.button("💾 Guardar autoridades"):

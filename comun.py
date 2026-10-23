@@ -551,11 +551,19 @@ def calcular_alertas():
 
 # ───────────────────────── Encargo de entrega al comisionista ─────────────────────────
 def dep_parecida(texto, lista):
-    """Dependencia de la lista que más palabras comparte con el texto (p. ej. el cargo del destinatario)."""
+    """Dependencia de la lista que comparte palabras distintivas con el texto (p. ej. el cargo del destinatario).
+    Las palabras genéricas (Dirección, Escuela, General…) no cuentan, para no encargar a un lugar equivocado."""
     import re as _re
 
-    pal = lambda t: {w for w in _re.findall(r"[A-ZÁÉÍÓÚÑ0-9]{3,}", str(t or "").upper()) if w not in {"DEL", "LOS", "LAS", "POLICIA", "POLICÍA"}}  # noqa: E731
-    p = pal(texto)
+    genericas = {"DEL", "LOS", "LAS", "POLICIA", "POLICÍA", "PROVINCIA", "DIRECCIÓN", "DIRECCION", "DIRECTOR", "DIRECTORA", "GENERAL",
+                 "ESCUELA", "DEPARTAMENTO", "DIVISIÓN", "DIVISION", "CENTRO", "JEFE", "SEÑOR", "SEÑORA", "UNIDAD", "OFICINA", "SECCIÓN"}
+    pal = lambda t: {w for w in _re.findall(r"[A-ZÁÉÍÓÚÑ0-9]{3,}", str(t or "").upper()) if w not in genericas}  # noqa: E731
+    t = str(texto or "").upper()
+    p = pal(t)
+    if _re.search(r"\bSUBJEFE DE POLIC", t):
+        p.add("SUBJEFATURA")
+    elif _re.search(r"\bJEFE DE POLIC", t):
+        p.add("JEFATURA")
     mejor = max(lista, key=lambda d: len(p & pal(d)), default=None) if p else None
     return mejor if mejor and p & pal(mejor) else None
 

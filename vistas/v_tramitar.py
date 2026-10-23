@@ -387,7 +387,9 @@ def _formulario(m, r, ctx):
         dest = ctx["aut"].get(clave or "", {}) if clave else {}
         nombre = f"{m.id}_{str(r['identificador']).replace('/', '-')}_{db.hoy():%Y%m%d}.docx"
         db.registrar_documento(exp_id, m.id, m.nombre, dest.get("cargo"), json.dumps(v, default=str, ensure_ascii=False), K.usuario())
-        st.session_state[p + "_doc"] = {"bytes": doc.bytes(), "nombre": nombre, "destino": dest.get("cargo"), "v": v}
+        st.session_state[p + "_doc"] = {"bytes": doc.bytes(), "nombre": nombre, "destino": dest.get("cargo"), "v": v, "clave": clave,
+                                        "auto": _asentar(m, r, v, clave, dest) if m.destino else None}
+        st.rerun()
     _panel_revision(m, p)
     _resultado(m, r, p)
     return {"completo": not faltan, "doc": bool(st.session_state.get(p + "_doc"))}
@@ -504,6 +506,49 @@ def _panel_revision(m, p):
 
 
 # ───────────────────────── Resultado y registro del trámite ─────────────────────────
+def _dep_destino(clave, dest):
+    """Dependencia a la que el comisionista lleva lo dirigido a esa autoridad: la aprendida o la más parecida."""
+    lista = [d for d in K.deps() if d != C.DEP_PROPIA]
+    d = (dest or {}).get("dependencia")
+    if d in lista:
+        return d
+    return K.dep_parecida(f"{(dest or {}).get('cargo') or ''} {clave or ''}", lista) if dest else None
+
+
+def _asentar(m, r, v, clave, dest):
+    """Al generar una nota que sale de la Dirección: queda TRAMITADO y encargado al comisionista, sin volver a cargarlo."""
+    u = K.usuario()
+    hecho = {"tramito": False, "encargo": None}
+    if not bool(r.get("tramitado")):
+        det = m.nombre + (f" → {dest['cargo']}" if dest.get("cargo") else "")
+        db.marcar_tramitado([int(r["id"])], m.accion, det, db.ahora(), u, u)
+        hecho["tramito"] = True
+    if not bool(r.get("entrega_pendiente")):
+        dep = _dep_destino(clave, dest)
+        if dep:
+            db.solicitar_entrega(int(r["id"]), dep, m.despacho(v) if m.despacho else None, None, u)
+            hecho["encargo"] = dep
+    return hecho
+
+
+def _cambiar_encargo(r, p, clave, desp):
+    lista = [d for d in K.deps() if d != C.DEP_PROPIA]
+    with st.expander("✏️ Cambiar destino o dejar indicaciones al comisionista"):
+        c1, c2 = st.columns(2)
+        dest = c1.selectbox("Llevar a", lista, index=K.idx(lista, r.get("entrega_destino")), key=p + "cd_dest")
+        ind = c2.text_input("Indicaciones (opcional)", r.get("entrega_indicaciones") or "", key=p + "cd_ind",
+                            placeholder="Ej.: entregar en mano al Secretario")
+        b1, b2 = st.columns(2)
+        if b1.button("💾 Guardar cambios", key=p + "cd_ok", width="stretch"):
+            db.solicitar_entrega(int(r["id"]), dest, desp, ind, K.usuario())
+            db.asociar_dependencia(clave, dest)
+            st.toast(f"Encargo actualizado → {dest}", icon="🚚")
+            st.rerun()
+        if b2.button("✋ No encargar (lo lleva usted / queda aquí)", key=p + "cd_no", width="stretch"):
+            db.cancelar_entrega(int(r["id"]), K.usuario())
+            st.rerun()
+
+
 def _resultado(m, r, p):
     doc = st.session_state.get(p + "_doc")
     if not doc:
@@ -514,12 +559,36 @@ def _resultado(m, r, p):
                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=p + "dl")
         st.caption(f"Hoja {'media oficio' if m.hoja == 'media' else 'oficio'} · quedó registrado en el historial del expediente.")
         desp = m.despacho(doc["v"]) if m.despacho else None
+        auto = doc.get("auto")
+        if auto is not None:
+            pend = bool(r.get("entrega_pendiente"))
+            st.markdown(f'<div class="tr-listo">✅ Quedó <b>TRAMITADO</b> por {ui.esc(r.get("tramitado_por") or K.usuario())}'
+                        + (f' y <b>encargado al comisionista</b> → {ui.esc(r.get("entrega_destino"))}. Ya le aparece en «Para entregar»; '
+                           'cuando lo entregue se asienta solo la salida con quién lo recibió.' if pend else '.')
+                        + ' No hace falta cargarlo en Trámite ni en Movimiento.</div>', unsafe_allow_html=True)
+            if pend:
+                _cambiar_encargo(r, p, doc.get("clave"), desp)
+            else:
+                st.caption("No se pudo saber a qué dependencia va. Elíjala una vez y el sistema la recuerda para las próximas notas.")
+                dest_c, ind = K.ui_encargo(r, p, doc.get("destino"))
+                if dest_c and st.button("🚚 Encargar la entrega al comisionista", key=p + "enc", type="primary", width="stretch"):
+                    db.solicitar_entrega(int(r["id"]), dest_c, desp, ind, K.usuario())
+                    db.asociar_dependencia(doc.get("clave"), dest_c)
+                    st.toast(f"Entrega encargada → {dest_c}", icon="🚚")
+                    st.rerun()
+            if auto.get("tramito") and st.button("↩️ Deshacer (no estaba terminado)", key=p + "undo", width="stretch"):
+                db.cancelar_entrega(int(r["id"]), K.usuario())
+                db.marcar_tramitado([int(r["id"])], None, "Deshecho desde Tramitar", db.ahora(), K.usuario(), K.usuario(), revertir=True)
+                doc["auto"] = None
+                st.rerun()
+            return
         if bool(r.get("tramitado")):
             st.markdown('<div class="tr-listo">✅ El expediente ya figura como TRAMITADO. Puede seguir generando documentos.</div>',
                         unsafe_allow_html=True)
             dest_c, ind = K.ui_encargo(r, p, doc.get("destino"))
             if dest_c and st.button("🚚 Encargar la entrega al comisionista", key=p + "enc", width="stretch"):
                 db.solicitar_entrega(int(r["id"]), dest_c, desp, ind, K.usuario())
+                db.asociar_dependencia(doc.get("clave"), dest_c)
                 st.toast(f"Entrega encargada → {dest_c}", icon="🚚")
                 st.rerun()
             return
@@ -534,6 +603,7 @@ def _resultado(m, r, p):
             db.marcar_tramitado([int(r["id"])], acc, det, ahora, u, u)
             if dest_c:  # la salida la registra el comisionista al entregarlo
                 db.solicitar_entrega(int(r["id"]), dest_c, desp, ind, u)
+                db.asociar_dependencia(doc.get("clave"), dest_c)
             st.session_state.pop(p + "_doc", None)
             st.toast(f"Expediente {r['identificador']} TRAMITADO", icon="✅")
             st.rerun()
