@@ -112,12 +112,24 @@ def render():
             import auth
 
             if auth.puede("editar"):
-                with st.expander("🗑️ Corregir: eliminar un movimiento cargado por error"):
-                    opc = {int(m["id"]): f"{ui.fmt_fecha(m['fecha_hora'], True)} · {m['tipo']} ➜ {m['destino']}" for _, m in movs.iterrows()}
-                    mid = st.selectbox("Movimiento", list(opc), format_func=opc.get, key="del_mov")
-                    if st.button("Eliminar movimiento", key="del_mov_btn"):
-                        db.eliminar_movimiento(mid, K.usuario())
-                        st.rerun()
+                with st.expander("🗑️ Corregir: eliminar movimientos o trámites cargados por error"):
+                    st.caption("Tilde los que quiere borrar. Después el sistema recalcula solo dónde está el expediente, su estado y "
+                               "si figura como tramitado, según lo que quede en la hoja de ruta. Queda registrado en la auditoría.")
+                    elegidos = []
+                    for _, m in movs.iterrows():
+                        txt = (f"{ui.fmt_fecha(m['fecha_hora'], True)} · **{m['tipo']}** · {m['origen'] or '—'} ➜ {m['destino'] or '—'}"
+                               + (f" · {m['observaciones'][:60]}" if isinstance(m.get("observaciones"), str) and m["observaciones"] else ""))
+                        if st.checkbox(txt, key=f"del_mov_{m['id']}"):
+                            elegidos.append(int(m["id"]))
+                    if elegidos:
+                        conf = st.checkbox(f"Confirmo que quiero eliminar {len(elegidos)} registro(s) de la hoja de ruta", key=f"del_conf_{exp_id}")
+                        if st.button(f"🗑️ Eliminar {len(elegidos)} seleccionado(s)", key=f"del_mov_btn_{exp_id}", type="primary", disabled=not conf):
+                            db.eliminar_movimientos(elegidos, K.usuario())
+                            for i in elegidos:
+                                st.session_state.pop(f"del_mov_{i}", None)
+                            st.session_state.pop(f"del_conf_{exp_id}", None)
+                            st.toast(f"Se eliminaron {len(elegidos)} registro(s) y se recalculó el expediente", icon="🗑️")
+                            st.rerun()
 
     with t2:
         K.form_movimiento(r, f"ficha_{exp_id}")

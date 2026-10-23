@@ -665,9 +665,49 @@ def marcar_tramitado(ids, accion, detalle, fecha_hora, tramito, usuario="", reve
 
 
 def eliminar_movimiento(mov_id, usuario=""):
-    ejecutar("DELETE FROM movimientos WHERE id = %s", (mov_id,))
-    log(usuario, "BAJA MOVIMIENTO", str(mov_id))
+    eliminar_movimientos([mov_id], usuario)
+
+
+def eliminar_movimientos(ids, usuario=""):
+    """Borra movimientos cargados por error y recalcula el estado del expediente con los que quedan."""
+    ids = [int(i) for i in ids]
+    if not ids:
+        return
+    with conexion() as c, c.cursor() as cur:
+        afectados = set()
+        for i in ids:
+            cur.execute("SELECT expediente_id, tipo, destino FROM movimientos WHERE id = %s", (i,))
+            f = cur.fetchone()
+            if f:
+                afectados.add(f[0])
+                cur.execute("DELETE FROM movimientos WHERE id = %s", (i,))
+                log(usuario, "BAJA MOVIMIENTO", f"{i} ({f[1]} → {f[2]}) exp {f[0]}")
+        for e in afectados:
+            _recalcular(cur, e)
     invalidar()
+
+
+def _recalcular(cur, exp_id):
+    """Rehace ubicación, estado, despacho y marca de tramitado a partir de la hoja de ruta que quedó."""
+    cur.execute("SELECT tipo, destino, despacho, fecha_hora, entregado_por, observaciones FROM movimientos "
+                "WHERE expediente_id = %s ORDER BY fecha_hora, id", (exp_id,))
+    ubic, estado, despacho = C.DEP_PROPIA, "EN TRÁMITE", None
+    tram = {"tramitado": False, "fecha_tramite": None, "tramitado_por": None, "accion_tramite": None, "detalle_tramite": None}
+    for tipo, dest, desp, fh, por, obs in cur.fetchall():
+        if tipo == "TRÁMITE":
+            if str(obs or "").startswith("Se anula la marca"):
+                tram = {"tramitado": False, "fecha_tramite": None, "tramitado_por": None, "accion_tramite": None, "detalle_tramite": None}
+                estado = "EN TRÁMITE" if estado == "TRAMITADO" else estado
+            else:
+                tram = {"tramitado": True, "fecha_tramite": fh, "tramitado_por": por, "accion_tramite": desp, "detalle_tramite": obs}
+                estado = "TRAMITADO" if estado not in ("REMITIDO", "RESUELTO", "ARCHIVADO") else estado
+        elif tipo in C.ESTADO_POR_MOVIMIENTO:
+            ubic = dest or ubic
+            estado = C.ESTADO_POR_MOVIMIENTO[tipo]
+            despacho = desp or despacho
+            if tipo == "REINGRESO":
+                tram = {"tramitado": False, "fecha_tramite": None, "tramitado_por": None, "accion_tramite": None, "detalle_tramite": None}
+    _update(cur, "expedientes", {"ubicacion_actual": ubic, "estado": estado, "despacho": despacho, **tram, "actualizado_en": ahora()}, exp_id)
 
 
 def guardar_curso(curso, personal=None, curso_id=None, usuario=""):
