@@ -13,7 +13,8 @@ import requests
 
 LT_URL = "https://api.languagetool.org/v2/check"
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
-GEMINI_MODELOS = ["gemini-flash-latest", "gemini-3.5-flash-lite"]
+GEMINI_MODELOS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-3.5-flash-lite"]  # lectura de fotos
+GEMINI_RAPIDOS = ["gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-flash-latest"]  # corrección de textos
 
 # (patrón, reemplazo) — se respeta mayúsculas si el original estaba en mayúsculas
 DICCIONARIO = [
@@ -138,34 +139,46 @@ PROMPT = ("Sos corrector de estilo de notas administrativas de la Policía de Tu
           "sin comillas ni comentarios.\n\nTexto:\n")
 
 
-def _gemini(parts, json_out=False, timeout=60):
+def _gemini(parts, json_out=False, timeout=90, rapido=True):
+    """Prueba los modelos en orden; si uno tarda o falla, pasa al siguiente."""
     key = _secret("GEMINI_API_KEY")
     if not key:
         raise RuntimeError("Falta GEMINI_API_KEY en Secrets (es gratuita: aistudio.google.com → Get API key).")
-    modelos = [_secret("GEMINI_MODEL")] + GEMINI_MODELOS if _secret("GEMINI_MODEL") else GEMINI_MODELOS
-    cfg = {"temperature": 0.2}
-    if json_out:
-        cfg["responseMimeType"] = "application/json"
+    base = GEMINI_RAPIDOS if rapido else GEMINI_MODELOS
+    modelos = ([_secret("GEMINI_MODEL")] if _secret("GEMINI_MODEL") else []) + base
     ultimo = ""
-    for m in modelos:
-        r = requests.post(GEMINI_URL.format(m=m), headers={"x-goog-api-key": key, "Content-Type": "application/json"},
-                          json={"contents": [{"parts": parts}], "generationConfig": cfg}, timeout=timeout)
-        if r.status_code == 200:
+    for m in dict.fromkeys(modelos):
+        for pensar in (True, False):
+            cfg = {"temperature": 0.2}
+            if json_out:
+                cfg["responseMimeType"] = "application/json"
+            if pensar:  # respuesta más rápida: sin "razonamiento" largo
+                cfg["thinkingConfig"] = {"thinkingBudget": 0} if "2.5" in m else {"thinkingLevel": "low"}
             try:
-                return r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-            except (KeyError, IndexError):
-                ultimo = "Gemini no devolvió texto (puede que las imágenes no se lean bien)."
-                continue
-        if r.status_code == 429:
-            raise RuntimeError("Se alcanzó el límite gratuito de Gemini por ahora. Intente en unos minutos.")
-        ultimo = r.json().get("error", {}).get("message", r.text[:200]) if r.headers.get("content-type", "").startswith("application/json") else r.text[:200]
-    raise RuntimeError(f"Gemini no respondió: {ultimo}")
+                r = requests.post(GEMINI_URL.format(m=m), headers={"x-goog-api-key": key, "Content-Type": "application/json"},
+                                  json={"contents": [{"parts": parts}], "generationConfig": cfg}, timeout=timeout)
+            except (requests.Timeout, requests.ConnectionError):
+                ultimo = f"{m} tardó demasiado en responder"
+                break  # siguiente modelo
+            if r.status_code == 200:
+                try:
+                    return "".join(p.get("text", "") for p in r.json()["candidates"][0]["content"]["parts"]).strip()
+                except (KeyError, IndexError):
+                    ultimo = "Gemini no devolvió texto (puede que las imágenes no se lean bien)."
+                    break
+            if r.status_code == 429:
+                raise RuntimeError("Se alcanzó el límite gratuito de Gemini por ahora. Intente en unos minutos.")
+            ultimo = r.json().get("error", {}).get("message", r.text[:200]) if r.headers.get("content-type", "").startswith("application/json") else r.text[:200]
+            if r.status_code == 400 and pensar and "think" in ultimo.lower():
+                continue  # el modelo no admite esa opción: reintentar sin ella
+            break
+    raise RuntimeError(f"Gemini no respondió ({ultimo}). Intente nuevamente en unos segundos.")
 
 
 def gemini_mejorar(texto: str, sensible=False) -> str:
     if sensible:
         raise PermissionError("Este documento contiene datos personales: no se envía a servicios de IA externos.")
-    return _gemini([{"text": PROMPT + texto}], timeout=40)
+    return _gemini([{"text": PROMPT + texto}], timeout=45, rapido=True)
 
 
 def preparar_archivo(nombre: str, datos: bytes):
@@ -215,7 +228,7 @@ def gemini_desde_fotos(archivos, modelo_nombre, modelo_desc, campos, exp_txt):
     lista = "\n".join(f"- {k}: {lab}" + (f" · {ay}" if ay else "") for k, lab, ay in campos)
     parts = [{"text": PROMPT_FOTOS.format(exp=exp_txt, modelo=modelo_nombre, desc=modelo_desc, campos=lista)}]
     parts += [{"inline_data": {"mime_type": mime, "data": base64.b64encode(b).decode()}} for mime, b in archivos]
-    txt = _gemini(parts, json_out=True, timeout=120)
+    txt = _gemini(parts, json_out=True, timeout=150, rapido=False)
     try:
         d = json.loads(txt.strip().removeprefix("```json").removesuffix("```"))
     except json.JSONDecodeError:
