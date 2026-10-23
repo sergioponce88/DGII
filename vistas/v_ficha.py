@@ -216,7 +216,7 @@ def render():
                 prio = c1.selectbox("Prioridad", C.PRIORIDADES, index=K.idx(C.PRIORIDADES, r["prioridad"]))
                 ft = c2.date_input("Fecha término", r["fecha_termino"].date() if pd.notna(r["fecha_termino"]) else None, format="DD/MM/YYYY")
                 est = c3.selectbox("Estado", C.ESTADOS, index=K.idx(C.ESTADOS, r["estado"]))
-                desp = c4.selectbox("Despacho", C.DESPACHOS, index=K.idx(C.DESPACHOS, r["despacho"] or ""))
+                desp = K.campo_despacho(c4, "Despacho", f"fe_desp_{r['id']}", r["despacho"])
                 d1, d2, d3 = st.columns([2, 2, 1])
                 ubic = d1.selectbox("Ubicación actual", lista_dep, index=K.idx(lista_dep, r["ubicacion_actual"]))
                 dest_ops = [None] + lista_dep

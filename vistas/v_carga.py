@@ -145,7 +145,7 @@ def validar(df_std, sec=None):
             avisos.append(f"estado '{g('estado')}' → EN TRÁMITE")
             estado = "EN TRÁMITE"
         desp_raw = _txt(g("despacho"))
-        desp = _match(desp_raw, [d for d in C.DESPACHOS if d], None) if desp_raw else None
+        desp = _match(desp_raw, [d for d in K.despachos() if d], None) if desp_raw else None
         if desp_raw and not desp:
             desp = desp_raw.upper()
         prio = "URGENTE TRÁMITE" if "URG" in _norm(_txt(g("prioridad")) or "") else "NORMAL"
@@ -290,7 +290,7 @@ def render():
                 "nro_exp_origen": st.column_config.TextColumn("N° origen"),
                 "prioridad": st.column_config.SelectboxColumn("Prioridad", options=C.PRIORIDADES),
                 "estado": st.column_config.SelectboxColumn("Estado", options=C.ESTADOS),
-                "despacho": st.column_config.SelectboxColumn("Despacho", options=[d for d in C.DESPACHOS if d]),
+                "despacho": st.column_config.SelectboxColumn("Despacho", options=[d for d in K.despachos() if d]),
                 "destino": st.column_config.SelectboxColumn("🎯 Destino", options=lista_dep, width="medium"),
                 "ubicacion_actual": st.column_config.SelectboxColumn("Ubicación", options=lista_dep, width="medium"),
             },

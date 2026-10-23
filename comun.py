@@ -179,6 +179,57 @@ def boton_nueva_dependencia(key, seleccionar_en=None):
                     st.rerun()
 
 
+def despachos():
+    """Despachos / resoluciones: los fijos + los agregados con ➕ (Configuración: despachos_extra)."""
+    extra = [x.strip().upper() for x in str(db.get_config().get("despachos_extra") or "").split("|") if x.strip()]
+    return C.DESPACHOS + [x for x in extra if x not in C.DESPACHOS]
+
+
+def agregar_despacho(nombre):
+    n = " ".join(str(nombre or "").split()).upper()
+    if not n or n in despachos():
+        return n
+    extra = [x for x in str(db.get_config().get("despachos_extra") or "").split("|") if x.strip()]
+    db.set_config({"despachos_extra": "|".join(extra + [n])})
+    return n
+
+
+def campo_despacho(col, label, key, defecto="", vacio="— Sin indicar —"):
+    """Selector de despacho: elija de la lista o escriba uno nuevo (queda guardado para la próxima)."""
+    nuevo = st.session_state.pop(f"_sel_{key}", None)
+    ops = despachos()
+    defecto = (defecto or "").strip().upper()
+    if defecto and defecto not in ops:
+        ops = ops + [defecto]
+    if nuevo is not None and nuevo in ops:
+        st.session_state[key] = nuevo
+        extra = {}
+    else:
+        extra = {"index": idx(ops, defecto)}
+    v = col.selectbox(label, ops, key=key, accept_new_options=True, **extra,
+                      format_func=lambda d: d or vacio, help="Si no está, escríbalo y presione Enter, o agréguelo con ➕")
+    v = " ".join(str(v or "").split()).upper()
+    if v and v not in ops:
+        agregar_despacho(v)
+    return v
+
+
+def boton_nuevo_despacho(key, seleccionar_en=None):
+    """Popover ➕ para agregar un despacho / resolución que falta en la lista."""
+    with st.popover("➕ Despacho", help="Agregar un despacho o resolución que no está en la lista"):
+        with st.form(f"ndp_{key}", clear_on_submit=True):
+            nombre = st.text_input("Nuevo despacho / resolución", placeholder="Ej: PARA SU CONOCIMIENTO Y EFECTOS")
+            if st.form_submit_button("➕ Agregar"):
+                if not nombre.strip():
+                    st.error("Escriba el despacho.")
+                else:
+                    n = agregar_despacho(nombre)
+                    if seleccionar_en:
+                        st.session_state[f"_sel_{seleccionar_en}"] = n
+                    st.toast(f"Despacho agregado: {n}", icon="➕")
+                    st.rerun()
+
+
 def preselect(key):
     """Aplica la selección pendiente de una dependencia recién agregada (antes de crear el widget)."""
     v = st.session_state.pop(f"_sel_{key}", None)
@@ -191,10 +242,12 @@ def form_movimiento(exp, key):
     """Formulario de registro de movimiento (salida / ingreso / pase / archivo)."""
     lista_dep = deps()
     ub = exp.get("ubicacion_actual") or C.DEP_PROPIA
-    c_a, c_b = st.columns([6, 1], vertical_alignment="bottom")
-    c_a.caption("¿El destino no está en la lista? Agréguelo con ➕")
+    c_a, c_b, c_c = st.columns([5, 1, 2], vertical_alignment="bottom")
+    c_a.caption("¿Falta la dependencia o el despacho? Agréguelos con ➕")
     with c_b:
         boton_nueva_dependencia(f"mov_{key}")
+    with c_c:
+        boton_nuevo_despacho(f"mov_{key}", seleccionar_en=f"dp_{key}")
     with st.form(f"fmov_{key}", clear_on_submit=True):
         c1, c2 = st.columns(2)
         import auth
@@ -207,7 +260,7 @@ def form_movimiento(exp, key):
         destino = c2.selectbox("Destino ➜", lista_dep, index=idx(lista_dep, defecto_dest), key=f"de_{key}")
         c3, c4 = st.columns(2)
         origen = c3.selectbox("Desde", lista_dep, index=idx(lista_dep, ub), key=f"or_{key}")
-        despacho = c4.selectbox("Despacho / Resolución", C.DESPACHOS, index=idx(C.DESPACHOS, exp.get("despacho") or ""), key=f"dp_{key}")
+        despacho = campo_despacho(c4, "Despacho / Resolución", f"dp_{key}", exp.get("despacho"))
         c5, c6 = st.columns(2)
         f = c5.date_input("Fecha", db.hoy(), format="DD/MM/YYYY", key=f"fe_{key}")
         h = c6.time_input("Hora", db.ahora().time().replace(second=0), step=300, key=f"ho_{key}")
@@ -265,14 +318,16 @@ def form_reingreso(exp, key):
     if int(num(exp.get("reingresos"))):
         st.caption(f"Este expediente ya reingresó {int(num(exp.get('reingresos')))} vez/veces.")
     lista_dep = deps()
-    c_a, c_b = st.columns([6, 1], vertical_alignment="bottom")
-    c_a.caption("¿De dónde vuelve? Si no está en la lista, agréguela con ➕")
+    c_a, c_b, c_c = st.columns([5, 1, 2], vertical_alignment="bottom")
+    c_a.caption("¿Falta la dependencia o el despacho? Agréguelos con ➕")
     with c_b:
         boton_nueva_dependencia(f"rei_{key}")
+    with c_c:
+        boton_nuevo_despacho(f"rei_{key}", seleccionar_en=f"rp_{key}")
     with st.form(f"frei_{key}", clear_on_submit=True):
         c1, c2 = st.columns(2)
         desde = c1.selectbox("Vuelve desde", lista_dep, index=idx(lista_dep, ub if ub != C.DEP_PROPIA else exp.get("destino")), key=f"rd_{key}")
-        despacho = c2.selectbox("Vuelve con (despacho / resolución)", C.DESPACHOS, format_func=lambda d: d or "— Sin indicar —", key=f"rp_{key}")
+        despacho = campo_despacho(c2, "Vuelve con (despacho / resolución)", f"rp_{key}")
         c3, c4 = st.columns(2)
         f = c3.date_input("Fecha de reingreso", db.hoy(), format="DD/MM/YYYY", key=f"rf_{key}")
         h = c4.time_input("Hora", db.ahora().time().replace(second=0), step=300, key=f"rh_{key}")
@@ -325,8 +380,7 @@ def form_tramite(exp, key):
         elif (exp.get("ubicacion_actual") or C.DEP_PROPIA) == C.DEP_PROPIA:
             with st.expander("🚚 Encargar la entrega al comisionista"):
                 dest, ind = ui_encargo(exp, f"ft_{key}", exp.get("destino"))
-                desp = st.selectbox("Despacho con el que sale", C.DESPACHOS, index=idx(C.DESPACHOS, exp.get("despacho") or ""),
-                                    format_func=lambda d: d or "— Sin indicar —", key=f"enc_desp_{key}")
+                desp = campo_despacho(st, "Despacho con el que sale", f"enc_desp_{key}", exp.get("despacho"))
                 if dest and st.button("🚚 Encargar", key=f"enc_ok_{key}", type="primary"):
                     db.solicitar_entrega(int(exp["id"]), dest, desp, ind, usuario())
                     st.toast(f"Entrega encargada → {dest}", icon="🚚")

@@ -127,8 +127,7 @@ def _formulario(r, yo):
         destino = c2.selectbox("Destino ➜", lista_dep, index=K.idx(lista_dep, dest_def))
         c3, c4 = st.columns(2)
         c3.text_input("Desde", C.DEP_PROPIA, disabled=True)
-        despacho = c4.selectbox("Despacho / Resolución", C.DESPACHOS, index=K.idx(C.DESPACHOS, r.get("entrega_despacho") or r.get("despacho") or ""),
-                                format_func=lambda d: d or "— Sin indicar —")
+        despacho = K.campo_despacho(c4, "Despacho / Resolución", f"com_desp_{r['id']}", r.get("entrega_despacho") or r.get("despacho"))
         c5, c6 = st.columns(2)
         f = c5.date_input("Fecha", db.hoy(), format="DD/MM/YYYY")
         h = c6.time_input("Hora", db.ahora().time().replace(second=0), step=60)

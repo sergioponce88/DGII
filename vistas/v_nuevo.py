@@ -101,7 +101,7 @@ def render():
         a1, a2, a3 = st.columns(3)
         f_ing = a1.date_input("Fecha de ingreso / inicio", db.hoy(), format="DD/MM/YYYY")
         h_ing = a2.time_input("Hora", db.ahora().time().replace(second=0), step=300)
-        despacho = a3.selectbox("Sale con", C.DESPACHOS, format_func=lambda d: d or "— A definir —")
+        despacho = K.campo_despacho(a3, "Sale con", "n_desp", vacio="— A definir —")
         b1, b2 = st.columns(2)
         nro_org = b1.text_input("N° de expediente / nota de origen", placeholder="Ej: J-1234/26")
         iniciador = b2.text_input("Iniciador / causante", placeholder="Jerarquía, apellido y nombre o dependencia")
