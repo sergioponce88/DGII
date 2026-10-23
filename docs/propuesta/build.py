@@ -178,7 +178,8 @@ def armar():
     s += h1("Resumen ejecutivo")
     s += [Paragraph("<b>Qué se propone:</b> informatizar progresivamente la gestión administrativa de oficinas, áreas y divisiones de la Policía "
                     "de Tucumán —divisiones, departamentos y Unidades Regionales— mediante sistemas web propios, <b>comenzando por un relevamiento "
-                    "con referentes de cada área</b> y pruebas piloto graduales.", st["lead"]), Spacer(1, 4),
+                    "con referentes de cada área</b> y pruebas piloto graduales, para que el trabajo <b>administrativo y operativo</b> quede registrado "
+                    "como datos útiles para el análisis y la toma de decisiones.", st["lead"]), Spacer(1, 4),
           kpis([("4", "sistemas propios<br/>en uso o desarrollo"), ("$0", "en licencias<br/>de software"), ("Web", "PC y celular,<br/>sin instalar nada"),
                 ("Propio", "personal para desarrollo<br/>y capacitación")]),
           Spacer(1, 8),
@@ -245,7 +246,9 @@ def armar():
         "Asegurar la <b>trazabilidad</b>: quién hizo qué, cuándo y con qué resultado.",
         "Normalizar la documentación con <b>membretes y modelos institucionales</b> únicos.",
         "Reducir tiempos de búsqueda, redacción y respuesta, en especial ante requerimientos judiciales.",
+        "Registrar el trabajo <b>administrativo y operativo</b> de forma estructurada, para contar con <b>datos confiables</b> y analizarlos.",
         "Generar <b>estadísticas e indicadores</b> para la planificación y el control de gestión.",
+        "Evitar la <b>transcripción repetida</b> de los mismos datos en las distintas piezas de un procedimiento.",
         "Capacitar al personal en el uso de herramientas digitales, con formación breve y práctica.",
         "Conformar una <b>mesa de trabajo</b> con referentes de las divisiones y Unidades Regionales para relevar, priorizar y acompañar la implementación.",
         "Resguardar los datos personales conforme a la normativa vigente."])
@@ -255,6 +258,7 @@ def armar():
     s += [tabla(["Dimensión", "Ventajas"], [
         ["<b>Operativa</b>", "Ubicación inmediata de cada expediente; menos tiempo de búsqueda y de redacción; consulta desde el celular."],
         ["<b>De gestión</b>", "Indicadores, informes y gráficos al día para la toma de decisiones del Comando."],
+        ["<b>Análisis de datos</b>", "La actividad administrativa y operativa queda registrada de manera uniforme y puede analizarse por área, zona, período o tipo."],
         ["<b>De control</b>", "Registro de cada acción con usuario, fecha y hora; alertas de vencimientos; responsables identificados."],
         ["<b>Documental</b>", "Notas, pases, cédulas y actas con formato único, sin errores repetidos y con autoridades actualizadas."],
         ["<b>Económica</b>", "Sin licencias; uso del equipamiento existente; ahorro de papel, impresiones y horas de trabajo."],
@@ -263,7 +267,7 @@ def armar():
         ["<b>Institucional</b>", "Imagen de una Policía moderna, ordenada y transparente; continuidad aunque cambie el personal."]],
         [32 * mm, ANCHO - 32 * mm], VERDE),
         Spacer(1, 6),
-        caja("Los beneficios concretos (tiempos, cantidades, vencimientos evitados) se medirán con los indicadores propuestos en el punto 12, "
+        caja("Los beneficios concretos (tiempos, cantidades, vencimientos evitados) se medirán con los indicadores propuestos en el punto 15, "
              "para que la Superioridad pueda evaluar resultados con datos.", "tip")]
 
     # 5. Alcance
@@ -307,8 +311,27 @@ def armar():
           caja("Se sugiere comenzar con <b>una comisaría piloto por Unidad Regional</b> y su jefatura de zona, relevando primero qué libros, "
                "planillas y notas utilizan, para adaptar el sistema a su forma de trabajo.", "tip")]
 
+    # Datos
+    s += h1("7. Del registro al análisis de datos: lo administrativo y lo operativo")
+    s += [pj("Cada nota, expediente, oficio, servicio, procedimiento o intervención contiene información valiosa. Mientras se registre en papel "
+             "o en archivos sueltos, esa información se pierde para el análisis. Si se registra de manera <b>estructurada y uniforme</b>, "
+             "se transforma en <b>datos</b> que permiten conocer la realidad de la Institución con precisión."),
+          tabla(["Tipo de trabajo", "Qué conviene registrar", "Qué permite analizar"], [
+              ["<b>Administrativo</b>", "Expedientes, notas, oficios, plazos, respuestas, personal, licencias, bienes.",
+               "Tiempos de trámite, cargas de trabajo, vencimientos, cumplimiento ante la Justicia."],
+              ["<b>Operativo</b>", "Servicios, procedimientos, intervenciones, móviles, recursos empleados, resultados, zonas y horarios.",
+               "Distribución de recursos, demanda por zona y franja horaria, resultados y necesidades de refuerzo."]],
+              [36 * mm, (ANCHO - 36 * mm) / 2, (ANCHO - 36 * mm) / 2]),
+          Spacer(1, 6)]
+    s += lista(["<b>Calidad del dato</b>: formularios con opciones y validaciones evitan errores, abreviaturas distintas y campos vacíos.",
+                "<b>Registro en el momento</b>: se carga cuando ocurre, desde el celular, y no al final de la jornada.",
+                "<b>Un solo origen</b>: el mismo dato alimenta los documentos, los partes y las estadísticas, sin volver a copiarlo.",
+                "<b>Tableros</b> por oficina, comisaría, zona, Unidad Regional y provincia, para que cada nivel vea lo que necesita."])
+    s += [caja("Un buen análisis depende de un buen registro: por eso es fundamental que tanto el trabajo <b>administrativo</b> como el "
+               "<b>operativo</b> queden registrados de manera completa y uniforme desde el inicio.", "ok")]
+
     # 6. Caso testigo
-    s += h1("7. Caso testigo: Sistema de Expedientes de la D.G.I.I.")
+    s += h1("8. Caso testigo: Sistema de Expedientes de la D.G.I.I.")
     s += [caja("El manejo de expedientes se presenta <b>a modo de ejemplo</b>. No se trata de replicar este sistema en todas las áreas, sino de "
                "aplicar el mismo método: <b>analizar el flujo de trabajo de cada lugar</b> y desarrollar la herramienta que esa área necesita.", "ojo"),
           pj("El Sistema de Registro, Control y Tramitación de Expedientes muestra en la práctica lo que se puede lograr con ese método:"),
@@ -325,7 +348,7 @@ def armar():
                      (I("doc_oj_respuesta.png"), "Respuesta a oficio judicial")], cols=3, alto=58 * mm)]
 
     # 7. Modelo tecnológico y costos
-    s += h1("8. Modelo tecnológico y costos")
+    s += h1("9. Modelo tecnológico y costos")
     s += [imagen(I("arquitectura.png"), pie="Figura 5. Componentes de los sistemas.", alto_max=85 * mm),
           Spacer(1, 4),
           tabla(["Componente", "Herramienta", "Costo actual"], [
@@ -346,7 +369,7 @@ def armar():
                "sería la infraestructura, sin pago de licencias.", "ok")]
 
     # 8. Seguridad
-    s += h1("9. Seguridad y protección de datos")
+    s += h1("10. Seguridad y protección de datos")
     s += lista(["<b>Acceso personal</b> con legajo y clave; las claves se guardan cifradas y nadie puede verlas.",
                 "<b>Roles y permisos</b> según jerarquía y función: cada usuario ve y hace solo lo que le corresponde.",
                 "<b>Auditoría</b> de todas las acciones (usuario, fecha, hora y detalle).",
@@ -360,7 +383,7 @@ def armar():
                "sistemas: responsables de cada base de datos, alta y baja de usuarios, respaldos periódicos y confidencialidad.", "tip")]
 
     # 10. Cómo empezar
-    s += h1("10. Cómo empezar: trabajo conjunto con las divisiones")
+    s += h1("11. Cómo empezar: trabajo conjunto con las divisiones")
     s += [Paragraph("No se propone por ahora crear estructuras nuevas, sino <b>comenzar a trabajar</b>: conocer cómo funciona cada división "
                     "y cada Unidad Regional, identificar qué conviene informatizar primero y probarlo en pequeño, con resultados medibles.", st["lead"]),
           imagen(PI("ruta.png"), pie="Figura 6. Ruta de trabajo propuesta: el análisis es el paso clave.", alto_max=48 * mm)]
@@ -401,7 +424,7 @@ def armar():
              "con la información que surja de los pilotos.")]
 
     # 10. Capacitación
-    s += h1("11. Capacitación del personal")
+    s += h1("12. Capacitación del personal")
     s += [pj("Los sistemas están diseñados para que su uso sea intuitivo: funcionan como cualquier aplicación del celular. Aun así, la "
              "capacitación es clave para la adopción. Se propone una formación <b>breve, práctica y por perfil</b>, dictada por personal propio "
              "en el lugar de trabajo."),
@@ -423,19 +446,38 @@ def armar():
                "sin traslados ni contrataciones externas.", "ok")]
 
     # 11. Implementación
-    s += h1("12. Plan de implementación por etapas")
+    s += h1("13. Plan de implementación por etapas")
     s += [tabla(["Etapa", "Acciones", "Plazo orientativo"], [
         ["<b>1. Piloto</b> (en curso)", "Sistemas en funcionamiento en la D.G.I.I. y el I.E.S.P.; piloto de Medicina Legal.", "En marcha"],
         ["<b>2. Evaluación</b>", "Medición de indicadores, encuesta a usuarios, demostración a la Superioridad.", "60 a 90 días"],
         ["<b>3. Mesa de trabajo y análisis</b>", "Referentes por división y Unidad Regional; entrevistas y análisis del flujo de trabajo de cada área; priorización.", "Según disponga la Superioridad"],
         ["<b>4. Pilotos</b>", "Una o dos divisiones priorizadas (por ejemplo D-1, D-5 o Asuntos Internos) y una comisaría piloto por Unidad Regional.", "6 a 12 meses"],
-        ["<b>5. Extensión</b>", "Extensión a otras oficinas y comisarías; servidor propio y cuentas institucionales; capacitación permanente.", "Mediano plazo"]],
+        ["<b>5. Extensión</b>", "Extensión a otras oficinas y comisarías; servidor propio y cuentas institucionales; capacitación permanente.", "Mediano plazo"],
+        ["<b>6. Visión a futuro</b>", "Análisis de la tarea del oficial de turno como complemento de la plataforma de denuncias digitales.", "A evaluar"]],
         [42 * mm, ANCHO - 82 * mm, 40 * mm]),
         Spacer(1, 4),
         caja("Los plazos son orientativos y dependen de las prioridades y recursos que disponga la Superioridad. Cada etapa se evalúa antes de iniciar la siguiente.", "tip")]
 
     # 12. Riesgos e indicadores
-    s += h1("13. Riesgos, mitigaciones e indicadores")
+    # Visión a futuro
+    s += h1("14. Visión a futuro: la tarea del oficial de turno")
+    s += [Paragraph("Como línea de trabajo futura, se propone estudiar la <b>sistematización de la tarea del oficial de turno</b> en las "
+                    "comisarías, como <b>complemento de la plataforma de denuncias digitales</b> y no en reemplazo de ella.", st["lead"]),
+          pj("Hoy, en un mismo procedimiento, el oficial transcribe una y otra vez los mismos datos —personas, documentos, domicilios, lugar, "
+             "fecha y hora, elementos secuestrados, intervinientes, fiscalía— en actas, constancias, notas, partes y en la causa que se eleva a "
+             "la Justicia provincial. Cada transcripción insume tiempo y abre la posibilidad de errores u omisiones."),
+          imagen(PI("dato_unico.png"), pie="Figura 8. Dato único: la información del procedimiento se carga una vez y se reutiliza.")]
+    s += h2("Qué se lograría")
+    s += lista(["<b>Carga guiada y única</b> de los datos del procedimiento, desde la PC o el celular.",
+                "<b>Generación automática</b> de actas, constancias, notas y elevaciones con esos mismos datos, en los formatos vigentes.",
+                "<b>Documentación rápida, efectiva y sin errores</b>: los datos son idénticos en todas las piezas de la causa.",
+                "<b>Reducción del tiempo</b> que el oficial dedica a transcribir, que puede destinarse a la tarea policial.",
+                "<b>Datos operativos</b> disponibles para la jefatura de zona, la Unidad Regional y la Superioridad."])
+    s += [caja("Esta línea requiere un análisis específico del trabajo en comisarías y debe coordinarse con los organismos responsables de "
+               "la plataforma de denuncias digitales y con el Ministerio Público, respetando la normativa procesal vigente. Se plantea como "
+               "<b>visión a futuro</b>, a evaluar a partir de los resultados de las primeras etapas.", "ojo")]
+
+    s += h1("15. Riesgos, mitigaciones e indicadores")
     s += [tabla(["Riesgo", "Mitigación"], [
         ["Dependencia de una sola persona", "Mesa de trabajo y referentes por área, código documentado y guardado en repositorios, manuales."],
         ["Resistencia al cambio", "Capacitación práctica, convivencia inicial con el libro físico y mejoras según la opinión de los usuarios."],
@@ -452,19 +494,21 @@ def armar():
                 "Grado de satisfacción de los usuarios (encuesta breve)."])
 
     # 13. Petitorio
-    s += h1("14. Lo que se solicita a la Superioridad")
+    s += h1("16. Lo que se solicita a la Superioridad")
     s += [pj("Para avanzar con la presente propuesta, se solicita respetuosamente:")]
     s += [P.pasos([(1, "<b>Aval institucional</b> para la continuidad y extensión de los sistemas desarrollados."),
                    (2, "<b>Designación de referentes</b> en las divisiones y en las cinco Unidades Regionales, para conformar una mesa de trabajo."),
                    (3, "<b>Autorización para realizar entrevistas y analizar el flujo de trabajo</b> de esas áreas (procesos, libros y modelos de documentos)."),
                    (4, "<b>Autorización de pruebas piloto</b> en las áreas que se prioricen (incluida una comisaría por Unidad Regional) y de los espacios de capacitación."),
                    (5, "Uso de <b>cuentas institucionales</b> y, a mediano plazo, de un <b>servidor propio</b> para alojar los sistemas."),
-                   (6, "Una <b>demostración práctica</b> ante la Superioridad de los sistemas en funcionamiento.")])]
+                   (6, "Una <b>demostración práctica</b> ante la Superioridad de los sistemas en funcionamiento."),
+                   (7, "Tener presente, como <b>línea futura</b>, el análisis de la tarea del oficial de turno en coordinación con los organismos responsables.")])]
     s += h2("Conclusión")
     s += [pj("La informatización de la gestión administrativa no es un objetivo a futuro: ya está ocurriendo en la Institución, con resultados "
              "concretos, personal propio y sin costo de licencias. Comenzar a trabajar junto a las divisiones y las Unidades Regionales, "
              "<b>analizando en cada caso su flujo de trabajo</b>, "
-             "permitirá multiplicar esos resultados en todas las oficinas y comisarías, con orden, seguridad y continuidad, en "
+             "permitirá multiplicar esos resultados en todas las oficinas y comisarías, registrar el trabajo administrativo y operativo como datos "
+             "útiles para decidir y, a futuro, aliviar la tarea del oficial de turno, con orden, seguridad y continuidad, en "
              "beneficio de la Policía de Tucumán y de la comunidad a la que sirve."),
           caja("Los sistemas y esta propuesta <b>se irán optimizando en forma continua</b>, incorporando las necesidades y sugerencias de cada área.", "ok"),
           firma()]
