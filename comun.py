@@ -34,6 +34,42 @@ def usuario():
     return auth.nombre_completo(u) if u else "SIN IDENTIFICAR"
 
 
+def personas():
+    """Personal conocido para autocompletar: usuarios activos + nombres ya usados en la hoja de ruta (más usados primero)."""
+    import auth
+
+    try:
+        u = auth.df_usuarios()
+        u = u[u["activo"].fillna(True).astype(bool)]
+        base = [auth.nombre_completo(r) for r in u.to_dict("records")]
+    except Exception:
+        base = []
+    try:
+        h = db.leer("SELECT x, COUNT(*) AS n FROM (SELECT entregado_por AS x FROM movimientos UNION ALL "
+                    "SELECT recibido_por FROM movimientos UNION ALL SELECT tramitado_por FROM expedientes) t "
+                    "WHERE x IS NOT NULL AND TRIM(x) <> '' GROUP BY x ORDER BY n DESC LIMIT 400")
+        hist = [str(x).strip().upper() for x in h["x"]]
+    except Exception:
+        hist = []
+    vistos, out = set(), []
+    for n in base + hist:
+        if n and n not in vistos and n != "SIN IDENTIFICAR":
+            vistos.add(n)
+            out.append(n)
+    return out
+
+
+def campo_persona(col, label, key, defecto=None, ayuda=None):
+    """Selector con búsqueda: elija del personal cargado o escriba uno nuevo (queda para la próxima)."""
+    ops = personas()
+    defecto = (defecto or "").strip().upper() or None
+    if defecto and defecto not in ops:
+        ops = [defecto] + ops
+    v = col.selectbox(label, ops, index=ops.index(defecto) if defecto else None, key=key, accept_new_options=True,
+                      placeholder="Escriba para buscar o cargue grado, apellido y nombre", help=ayuda)
+    return (v or "").strip().upper()
+
+
 def ir_a(pagina, exp_id=None):
     st.session_state["_goto"] = pagina
     if exp_id is not None:
@@ -161,8 +197,8 @@ def form_movimiento(exp, key):
         f = c5.date_input("Fecha", db.hoy(), format="DD/MM/YYYY", key=f"fe_{key}")
         h = c6.time_input("Hora", db.ahora().time().replace(second=0), step=300, key=f"ho_{key}")
         c7, c8 = st.columns(2)
-        entrega = c7.text_input("Quién lo lleva / entrega", key=f"en_{key}")
-        recibe = c8.text_input("Quién lo recibe", key=f"re_{key}")
+        entrega = campo_persona(c7, "Quién lo lleva / entrega", f"en_{key}", defecto=usuario())
+        recibe = campo_persona(c8, "Quién lo recibe", f"re_{key}")
         c9, c10, c11 = st.columns([1, 1, 2])
         fojas = c9.number_input("Fojas", min_value=0, value=num(exp.get("fojas")), step=1, key=f"fo_{key}")
         urgente = c10.checkbox("⚡ Urgente trámite", value=exp.get("prioridad") == "URGENTE TRÁMITE", key=f"ur_{key}")
@@ -226,8 +262,8 @@ def form_reingreso(exp, key):
         f = c3.date_input("Fecha de reingreso", db.hoy(), format="DD/MM/YYYY", key=f"rf_{key}")
         h = c4.time_input("Hora", db.ahora().time().replace(second=0), step=300, key=f"rh_{key}")
         c5, c6 = st.columns(2)
-        trae = c5.text_input("Quién lo trae", key=f"rt_{key}")
-        recibe = c6.text_input("Quién lo recibe", value=usuario(), key=f"rr_{key}")
+        trae = campo_persona(c5, "Quién lo trae", f"rt_{key}")
+        recibe = campo_persona(c6, "Quién lo recibe", f"rr_{key}", defecto=usuario())
         c7, c8, c9 = st.columns([1, 1, 2])
         fojas = c7.number_input("Fojas actuales", min_value=0, value=num(exp.get("fojas")), step=1, key=f"rfo_{key}")
         urgente = c8.checkbox("⚡ Urgente", key=f"ru_{key}")
@@ -299,7 +335,7 @@ def form_tramite(exp, key):
     with st.form(f"ftr_{key}", clear_on_submit=True):
         c1, c2 = st.columns(2)
         accion = c1.selectbox("¿Qué se hizo?", C.ACCIONES_TRAMITE, key=f"tr_ac_{key}")
-        quien = c2.text_input("Tramitado por", value=usuario(), key=f"tr_q_{key}")
+        quien = campo_persona(c2, "Tramitado por", f"tr_q_{key}", defecto=usuario())
         c3, c4 = st.columns(2)
         f = c3.date_input("Fecha", db.hoy(), format="DD/MM/YYYY", key=f"tr_f_{key}")
         h = c4.time_input("Hora", db.ahora().time().replace(second=0), step=300, key=f"tr_h_{key}")

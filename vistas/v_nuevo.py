@@ -112,8 +112,8 @@ def render():
         fojas = d3.number_input("Fojas", min_value=0, value=0, step=1)
         ubic = d4.selectbox("Ubicación actual", lista_dep, index=K.idx(lista_dep, C.DEP_PROPIA))
         e1, e2, e3 = st.columns(3)
-        entrega = e1.text_input("Entregado por (quien lo trae)")
-        recibe = e2.text_input("Recibido por", value=K.usuario())
+        entrega = K.campo_persona(e1, "Entregado por (quien lo trae)", "n_entrega")
+        recibe = K.campo_persona(e2, "Recibido por", "n_recibe", defecto=K.usuario())
         import auth
 
         estado = e3.selectbox("Estado", C.ESTADOS if auth.puede("tramitar") else [x for x in C.ESTADOS if x != "TRAMITADO"])
