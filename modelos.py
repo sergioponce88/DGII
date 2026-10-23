@@ -4,6 +4,7 @@ Cada Modelo declara sus campos (el formulario se arma solo en vistas/v_tramitar.
 función render(v, ctx) que devuelve el documento. ctx trae: exp (expediente), act (datos de la
 actuación/sumario), cfg (configuración), aut (autoridades por clave), hoy.
 """
+import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from typing import Callable
@@ -101,7 +102,9 @@ def nota_base(ctx, v, cuerpo, asunto=None, cierre=CIERRE):
 
 
 def parrafos(texto):
-    return [p.strip() for p in _s(texto).split("\n") if p.strip()]
+    """Párrafos del texto libre, con las expresiones de estilo de la Dirección («de autos», no «de los autos»)."""
+    t = re.sub(r"\b([Dd]e|[Ee]n) los autos\b(?! caratulados)", r"\1 autos", _s(texto))
+    return [p.strip() for p in t.split("\n") if p.strip()]
 
 
 def act_txt(ctx, corto=False):

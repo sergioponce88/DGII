@@ -20,6 +20,8 @@ GEMINI_RAPIDOS = ["gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-f
 DICCIONARIO = [
     (r"\bJefe de Polic[ií]a de la Provincia de la Provincia\b", "Jefe de Policía de la Provincia"),
     (r"\bTergo el agrado\b", "Tengo el agrado"),
+    (r"\bde los autos\b(?! caratulados)", "de autos"),
+    (r"\ben los autos\b(?! caratulados)", "en autos"),
     (r"\bAtendo al estado\b", "Atento al estado"),
     (r"\bAse mismo\b", "Asimismo"),
     (r"\bAs[ií] mismo\b", "Asimismo"),
