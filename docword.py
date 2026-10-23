@@ -17,7 +17,7 @@ from docx.shared import Cm, Inches, Pt, RGBColor
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 LOGO_POL = os.path.join(AQUI, "assets", "logo_policia.png")
-LOGO_IESP = os.path.join(AQUI, "assets", "logo_iesp.png")
+LOGO_DGII = os.path.join(AQUI, "assets", "logo_dgii.png")
 NAVY = RGBColor(0x0F, 0x1E, 0x3C)
 GRIS = RGBColor(0x55, 0x5F, 0x6D)
 FUENTE = "Arial"
@@ -131,7 +131,7 @@ class Doc:
         t = h.add_table(rows=1, cols=3, width=Cm(16.5))
         t.alignment = WD_TABLE_ALIGNMENT.CENTER
         fijar_anchos(t, (Cm(2.6), Cm(11.3), Cm(2.6)))
-        for c, logo in ((t.rows[0].cells[0], LOGO_POL), (t.rows[0].cells[2], LOGO_IESP)):
+        for c, logo in ((t.rows[0].cells[0], LOGO_POL), (t.rows[0].cells[2], LOGO_DGII)):
             if os.path.exists(logo):
                 pr = c.paragraphs[0]
                 pr.alignment = WD_ALIGN_PARAGRAPH.CENTER
