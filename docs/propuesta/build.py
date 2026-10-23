@@ -134,9 +134,11 @@ class Doc(BaseDocTemplate):
 
 def firma():
     est = ParagraphStyle("f", parent=st["p"], alignment=1, leading=13, fontSize=9.5)
-    t = Table([[Paragraph("______________________________<br/><b>Comisario Abogado RODRÍGUEZ Julio</b><br/>Policía de Tucumán", est),
-                Paragraph("______________________________<br/><b>Oficial Auxiliar PONCE Sergio</b><br/>Auxiliar de Secretaría Académica<br/>"
-                          "I.E.S.P. “G.J.F.S.M.”", est)]], colWidths=[ANCHO / 2, ANCHO / 2])
+    # El de mayor antigüedad / jerarquía firma a la derecha
+    t = Table([[Paragraph("______________________________<br/><b>Oficial Auxiliar PONCE Sergio</b><br/>Auxiliar de Secretaría Académica<br/>"
+                          "I.E.S.P. “G.J.F.S.M.”", est),
+                Paragraph("______________________________<br/><b>Comisario Abogado RODRÍGUEZ Julio</b><br/>Policía de Tucumán", est)]],
+              colWidths=[ANCHO / 2, ANCHO / 2])
     t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
     return KeepTogether([Spacer(1, 14), t])
 
