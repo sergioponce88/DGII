@@ -32,7 +32,7 @@ NAVY, AZUL, TINTA, GRIS, AMARILLO, VERDE = B.NAVY, B.AZUL, B.TINTA, B.GRIS, B.AM
 W, H, M, ANCHO = B.W, B.H, B.M, B.ANCHO
 st = P.st
 Titulo, caja, tabla, imagen, lista, kpis, h1, h2, p = P.Titulo, P.caja, P.tabla, P.imagen, P.lista, P.kpis, P.h1, P.h2, P.p
-AUTOR = "Oficial Auxiliar Ponce Sergio – I.E.S.P."
+AUTOR = "Crio. Abog. Rodríguez Julio y Of. Aux. Ponce Sergio"
 HOY = date.today()
 FECHA = f"{MESES[HOY.month - 1].capitalize()} de {HOY.year}"
 
@@ -89,11 +89,12 @@ def portada(c, doc):
     c.drawCentredString(W / 2, H - 178.3 * mm, "Sin costo de licencias · con personal propio")
     c.setFillColor(colors.white)
     c.setFont("S", 10)
-    c.drawCentredString(W / 2, 64 * mm, "Elevada a consideración del Comando Superior por")
+    c.drawCentredString(W / 2, 70 * mm, "Elevada a consideración del Comando Superior por")
     c.setFont("SB", 13)
-    c.drawCentredString(W / 2, 57 * mm, "Oficial Auxiliar PONCE Sergio")
+    c.drawCentredString(W / 2, 62 * mm, "Comisario Abogado RODRÍGUEZ Julio")
+    c.drawCentredString(W / 2, 55 * mm, "Oficial Auxiliar PONCE Sergio")
     c.setFont("S", 10)
-    c.drawCentredString(W / 2, 51.5 * mm, "Instituto de Enseñanza Superior de Policía “Grl. José Francisco de San Martín”")
+    c.drawCentredString(W / 2, 48.5 * mm, "Derecho · Gestión administrativa y sumarial · Desarrollo de sistemas")
     c.setFillColor(colors.HexColor("#CBD5E1"))
     c.drawCentredString(W / 2, 32 * mm, f"San Miguel de Tucumán · {FECHA}")
     c.restoreState()
@@ -132,10 +133,12 @@ class Doc(BaseDocTemplate):
 
 
 def firma():
-    return KeepTogether([Spacer(1, 10), Table([[Paragraph(
-        "______________________________<br/><b>Oficial Auxiliar PONCE Sergio</b><br/>Auxiliar de Secretaría Académica<br/>"
-        "Instituto de Enseñanza Superior de Policía “G.J.F.S.M.”", ParagraphStyle("f", parent=st["p"], alignment=1, leading=14))]],
-        colWidths=[80 * mm], hAlign="RIGHT")])
+    est = ParagraphStyle("f", parent=st["p"], alignment=1, leading=13, fontSize=9.5)
+    t = Table([[Paragraph("______________________________<br/><b>Comisario Abogado RODRÍGUEZ Julio</b><br/>Policía de Tucumán", est),
+                Paragraph("______________________________<br/><b>Oficial Auxiliar PONCE Sergio</b><br/>Auxiliar de Secretaría Académica<br/>"
+                          "I.E.S.P. “G.J.F.S.M.”", est)]], colWidths=[ANCHO / 2, ANCHO / 2])
+    t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
+    return KeepTogether([Spacer(1, 14), t])
 
 
 # ───────────────────────── Contenido ─────────────────────────
@@ -149,10 +152,13 @@ def armar():
           Paragraph("<b>Ref.:</b> Propuesta para iniciar la informatización de oficinas, áreas, divisiones y Unidades Regionales "
                     "de la Policía de Tucumán.-", st["p"]), Spacer(1, 6),
           Paragraph("De mi mayor consideración:", st["p"]),
-          Paragraph("Tengo el agrado de dirigirme a Usted, por la vía jerárquica correspondiente, a fin de elevar a su consideración la presente "
+          Paragraph("Tenemos el agrado de dirigirnos a Usted, por la vía jerárquica correspondiente, a fin de elevar a su consideración la presente "
                     "propuesta, cuyo objeto es comenzar a extender a las distintas oficinas, áreas, divisiones y Unidades Regionales de la Institución la experiencia de "
                     "informatización que ya se encuentra en funcionamiento en la Dirección General de Institutos e Instrucción y en el "
                     "Instituto de Enseñanza Superior de Policía “Grl. José Francisco de San Martín”.", st["carta"]),
+          Paragraph("La propuesta surge del trabajo conjunto de un <b>abogado</b> y de un <b>oficial con formación en desarrollo de sistemas</b>, "
+                    "ambos con experiencia en lo <b>sumarial y lo administrativo</b>: una combinación que permite que las herramientas sean, a la "
+                    "vez, prácticas para el personal y jurídicamente sólidas.", st["carta"]),
           Paragraph("Esta iniciativa busca <b>complementar la tarea de excelencia</b> que viene demostrando la Policía de Tucumán, reconocida "
                     "por los medios de comunicación, reflejada en las estadísticas y destacada por el Gobierno de la Provincia y por los "
                     "Ministerios de Seguridad provincial y nacional, aportando herramientas que acompañen ese trabajo y lo potencien.", st["carta"]),
@@ -165,12 +171,12 @@ def armar():
           Paragraph("Si bien se toma como ejemplo el manejo de expedientes, cada oficina tiene su propio circuito de trabajo. Por ello, el "
                     "<b>análisis previo</b> de cada área —mediante entrevistas con su personal y el estudio de su flujo de trabajo— es el paso "
                     "fundamental para determinar qué informatizar y cómo, y para que el sistema que se implemente responda a sus necesidades reales.", st["carta"]),
-          Paragraph("La presente no pretende ser una propuesta cerrada: quedo <b>abierto a las ideas, observaciones y propuestas</b> que formule "
+          Paragraph("La presente no pretende ser una propuesta cerrada: quedamos <b>abiertos a las ideas, observaciones y propuestas</b> que formule "
                     "la Superioridad o que surjan de las distintas áreas, ya que de eso se trata: de evaluar en conjunto qué puede mejorarse y "
                     "de optimizar el trabajo de la Institución.", st["carta"]),
-          Paragraph("Quedo a disposición para ampliar la información, realizar una demostración práctica de los sistemas en funcionamiento y "
+          Paragraph("Quedamos a disposición para ampliar la información, realizar una demostración práctica de los sistemas en funcionamiento y "
                     "colaborar en la etapa que la Superioridad estime pertinente.", st["carta"]),
-          Paragraph("Sin otro particular, saludo a Usted con atenta y distinguida consideración y respeto.-", st["carta"]),
+          Paragraph("Sin otro particular, saludamos a Usted con atenta y distinguida consideración y respeto.-", st["carta"]),
           firma()]
 
     s += [PageBreak(), Paragraph("Índice", st["h1"]), Spacer(1, 6)]
@@ -230,6 +236,19 @@ def armar():
 
     # 2. Antecedentes
     s += h1("2. Antecedentes: lo que ya funciona")
+    s += h2("Quiénes impulsan la propuesta")
+    s += [tabla(["Integrante", "Aporte"], [
+        ["<b>Comisario Abogado RODRÍGUEZ Julio</b>", "Formación jurídica y experiencia en lo sumarial y administrativo: validez legal de las actuaciones, "
+                                                     "normativa procesal y reglamentaria, protección de datos y relación con el Ministerio Público Fiscal."],
+        ["<b>Oficial Auxiliar PONCE Sergio</b><br/>Auxiliar de Secretaría Académica, I.E.S.P.", "Experiencia en lo sumarial y administrativo como "
+                                                     "instructor y en la tramitación de expedientes; análisis de procesos y desarrollo de los sistemas en funcionamiento."]],
+        [60 * mm, ANCHO - 60 * mm]),
+        Spacer(1, 4),
+        caja("La <b>combinación de profesiones</b> es la fortaleza del proyecto: el conocimiento jurídico asegura que cada documento y cada "
+             "registro respeten la normativa y tengan validez; el conocimiento técnico y la experiencia en la tarea diaria aseguran que el sistema "
+             "sea simple, rápido y realmente útil para el personal. Ambos comparten la experiencia en lo sumarial y lo administrativo, que es "
+             "donde más tiempo se pierde hoy y donde más se puede ganar.", "ok")]
+    s += h2("Sistemas en funcionamiento")
     s += [pj("La propuesta no parte de cero. Con personal propio y sin costo se desarrollaron los siguientes sistemas, que hoy constituyen "
              "la experiencia piloto de esta iniciativa:"),
           tabla(["Sistema", "Área", "Qué resuelve", "Estado"], [
