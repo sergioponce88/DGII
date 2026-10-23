@@ -25,6 +25,7 @@ from vistas import (  # noqa: E402
     v_libro,
     v_movimiento,
     v_tramitar,
+    v_comision,
     v_nuevo,
     v_panel,
 )
@@ -132,7 +133,10 @@ def _desde_movil():
     st.session_state["nav"] = st.session_state["nav_m"]
 
 
-PAGINAS_OK = [p for p in K.PAGINAS if (p != K.PAG_CONFIG or auth.puede("configurar")) and (p != K.PAG_TRAMITAR or auth.puede("tramitar"))]
+if auth.rol() == "COMISIONISTA":  # el comisionista solo ve sus entregas
+    PAGINAS_OK = [K.PAG_COMISION]
+else:
+    PAGINAS_OK = [p for p in K.PAGINAS if (p != K.PAG_CONFIG or auth.puede("configurar")) and (p != K.PAG_TRAMITAR or auth.puede("tramitar"))]
 if st.session_state.get("nav") not in PAGINAS_OK:
     st.session_state["nav"] = PAGINAS_OK[0]
 st.session_state.setdefault("nav", PAGINAS_OK[0])
@@ -155,7 +159,7 @@ with st.sidebar:
     _u = auth.actual()
     st.markdown(f"<div style='font-size:.82rem;line-height:1.35'>👤 <b>{ui.esc(K.usuario())}</b><br>"
                 f"<span style='color:#94A3B8'>Legajo {ui.esc(_u['legajo'])} · {ui.esc(_u.get('funcion') or '')}</span><br>"
-                f"{ui.chip(_u['rol'], C.PALETA[0] if _u['rol'] == 'ADMINISTRADOR' else (C.PALETA[2] if _u['rol'] == 'OFICIAL' else C.PALETA[3]), False)}</div>",
+                f"{ui.chip(_u['rol'], C.PALETA[0] if _u['rol'] == 'ADMINISTRADOR' else (C.PALETA[2] if _u['rol'] == 'OFICIAL' else (C.PALETA[6] if _u['rol'] == 'COMISIONISTA' else C.PALETA[3])), False)}</div>",
                 unsafe_allow_html=True)
     with st.expander("🔑 Cambiar mi clave"):
         with st.form("mi_clave", clear_on_submit=True):
@@ -191,6 +195,7 @@ VISTAS = {
     K.PAG_NUEVO: v_nuevo.render,
     K.PAG_MOV: v_movimiento.render,
     K.PAG_TRAMITAR: v_tramitar.render,
+    K.PAG_COMISION: v_comision.render,
     K.PAG_LIBRO: v_libro.render,
     K.PAG_FICHA: v_ficha.render,
     K.PAG_CURSOS: v_cursos.render,

@@ -163,6 +163,13 @@ ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS accion_tramite TEXT;
 ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS detalle_tramite TEXT;
 ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS destino TEXT;
 ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS reingresos INTEGER DEFAULT 0;
+-- Encargo al comisionista: el oficial deja el expediente listo para entregar
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS entrega_pendiente BOOLEAN DEFAULT FALSE;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS entrega_destino TEXT;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS entrega_despacho TEXT;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS entrega_indicaciones TEXT;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS entrega_solicitada_por TEXT;
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS entrega_solicitada_en TIMESTAMP;
 
 CREATE TABLE IF NOT EXISTS movimientos (
     id SERIAL PRIMARY KEY,
@@ -888,3 +895,30 @@ def df_documentos(exp_id):
               "ORDER BY generado_en DESC, id DESC", (int(exp_id),))
     df["generado_en"] = pd.to_datetime(df["generado_en"], errors="coerce")
     return df
+
+
+# ───────────────────────── Comisión: entregas a cargo del comisionista ─────────────────────────
+def solicitar_entrega(exp_id, destino, despacho=None, indicaciones=None, usuario=""):
+    """El oficial deja el expediente para que el comisionista lo lleve a destino."""
+    with conexion() as c, c.cursor() as cur:
+        _update(cur, "expedientes", {"entrega_pendiente": True, "entrega_destino": destino, "entrega_despacho": despacho or None,
+                                     "entrega_indicaciones": (indicaciones or "").strip() or None, "entrega_solicitada_por": usuario,
+                                     "entrega_solicitada_en": ahora(), "actualizado_en": ahora()}, exp_id)
+    log(usuario, "ENCARGO DE ENTREGA", f"{exp_id} → {destino}")
+    invalidar()
+
+
+def cancelar_entrega(exp_id, usuario=""):
+    with conexion() as c, c.cursor() as cur:
+        _update(cur, "expedientes", {"entrega_pendiente": False, "actualizado_en": ahora()}, exp_id)
+    log(usuario, "CANCELA ENTREGA", str(exp_id))
+    invalidar()
+
+
+def registrar_entrega(exp_id, mov, nuevo_estado, usuario=""):
+    """El comisionista asienta la entrega: movimiento con quién lo recibe y se cierra el encargo."""
+    registrar_movimiento(exp_id, mov, nuevo_estado, usuario)
+    with conexion() as c, c.cursor() as cur:
+        _update(cur, "expedientes", {"entrega_pendiente": False}, exp_id)
+    log(usuario, "ENTREGA", f"{exp_id} → {mov.get('destino')} ({mov.get('recibido_por')})")
+    invalidar()

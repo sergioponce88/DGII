@@ -15,16 +15,18 @@ import streamlit as st
 import catalogos as C
 import db
 
-ROLES = ["ADMINISTRADOR", "OFICIAL", "SUBOFICIAL"]
+ROLES = ["ADMINISTRADOR", "OFICIAL", "SUBOFICIAL", "COMISIONISTA"]
 PERMISOS = {
-    "ADMINISTRADOR": {"cargar", "mover", "tramitar", "editar", "eliminar", "configurar"},
-    "OFICIAL": {"cargar", "mover", "tramitar", "editar"},
-    "SUBOFICIAL": {"cargar", "mover"},
+    "ADMINISTRADOR": {"cargar", "mover", "tramitar", "editar", "eliminar", "configurar", "entregar"},
+    "OFICIAL": {"cargar", "mover", "tramitar", "editar", "entregar"},
+    "SUBOFICIAL": {"cargar", "mover", "entregar"},
+    "COMISIONISTA": {"entregar"},
 }
 DESCRIPCION_ROL = {
     "ADMINISTRADOR": "Todo el sistema + configuración y usuarios",
     "OFICIAL": "Carga, movimientos, trámite y edición de expedientes",
     "SUBOFICIAL": "Carga de expedientes, movimientos y PDF",
+    "COMISIONISTA": "Solo entrega de expedientes tramitados: registra quién los recibe en cada dependencia",
 }
 ITER = 200_000
 

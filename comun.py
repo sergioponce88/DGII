@@ -16,6 +16,7 @@ PAG_PANEL = "📊 Panel de Control"
 PAG_NUEVO = "➕ Nuevo Expediente"
 PAG_MOV = "🔁 Movimiento Rápido"
 PAG_TRAMITAR = "📝 Tramitar"
+PAG_COMISION = "🚚 Comisión (entregas)"
 PAG_LIBRO = "📚 Libro de Registro"
 PAG_FICHA = "🔎 Ficha de Expediente"
 PAG_CURSOS = "🎓 Actividades y Personal"
@@ -23,7 +24,7 @@ PAG_ALERTAS = "🔔 Alertas y Agenda"
 PAG_CARGA = "📥 Carga Masiva"
 PAG_INFORMES = "📈 Informes"
 PAG_CONFIG = "⚙️ Configuración"
-PAGINAS = [PAG_PANEL, PAG_NUEVO, PAG_MOV, PAG_TRAMITAR, PAG_LIBRO, PAG_FICHA, PAG_CURSOS, PAG_ALERTAS, PAG_CARGA, PAG_INFORMES, PAG_CONFIG]
+PAGINAS = [PAG_PANEL, PAG_NUEVO, PAG_MOV, PAG_TRAMITAR, PAG_COMISION, PAG_LIBRO, PAG_FICHA, PAG_CURSOS, PAG_ALERTAS, PAG_CARGA, PAG_INFORMES, PAG_CONFIG]
 
 
 def usuario():
@@ -263,6 +264,22 @@ def form_tramite(exp, key):
 
         if not auth.puede("tramitar"):
             return
+        if bool(exp.get("entrega_pendiente")):
+            ui.alerta("🚚", f"Encargado al comisionista → {exp.get('entrega_destino') or '—'}",
+                      f"Pedido por {exp.get('entrega_solicitada_por') or '—'} · {ui.fmt_fecha(exp.get('entrega_solicitada_en'), True)}",
+                      C.STATUS["warning"])
+            if st.button("Cancelar el encargo", key=f"enc_cancel_{key}"):
+                db.cancelar_entrega(int(exp["id"]), usuario())
+                st.rerun()
+        elif (exp.get("ubicacion_actual") or C.DEP_PROPIA) == C.DEP_PROPIA:
+            with st.expander("🚚 Encargar la entrega al comisionista"):
+                dest, ind = ui_encargo(exp, f"ft_{key}", exp.get("destino"))
+                desp = st.selectbox("Despacho con el que sale", C.DESPACHOS, index=idx(C.DESPACHOS, exp.get("despacho") or ""),
+                                    format_func=lambda d: d or "— Sin indicar —", key=f"enc_desp_{key}")
+                if dest and st.button("🚚 Encargar", key=f"enc_ok_{key}", type="primary"):
+                    db.solicitar_entrega(int(exp["id"]), dest, desp, ind, usuario())
+                    st.toast(f"Entrega encargada → {dest}", icon="🚚")
+                    st.rerun()
         with st.expander("↺ Anular la marca de tramitado"):
             motivo = st.text_input("Motivo", key=f"anu_m_{key}")
             if st.button("Anular", key=f"anu_b_{key}"):
@@ -468,3 +485,32 @@ def calcular_alertas():
 
     al.sort(key=lambda a: (NIVELES[a["nivel"]][2], a["fecha"] if pd.notna(a["fecha"]) else h))
     return al
+
+
+# ───────────────────────── Encargo de entrega al comisionista ─────────────────────────
+def dep_parecida(texto, lista):
+    """Dependencia de la lista que más palabras comparte con el texto (p. ej. el cargo del destinatario)."""
+    import re as _re
+
+    pal = lambda t: {w for w in _re.findall(r"[A-ZÁÉÍÓÚÑ0-9]{3,}", str(t or "").upper()) if w not in {"DEL", "LOS", "LAS", "POLICIA", "POLICÍA"}}  # noqa: E731
+    p = pal(texto)
+    mejor = max(lista, key=lambda d: len(p & pal(d)), default=None) if p else None
+    return mejor if mejor and p & pal(mejor) else None
+
+
+def ui_encargo(exp, key, destino_texto=None, activo=True):
+    """Casilla «Encargar la entrega al comisionista» + destino. Devuelve (destino o None, indicaciones)."""
+    if bool(exp.get("entrega_pendiente")):
+        st.caption(f"🚚 Ya está encargado al comisionista → {exp.get('entrega_destino') or '—'}")
+        return None, None
+    lista = [d for d in deps() if d != C.DEP_PROPIA]
+    if not lista:
+        return None, None
+    enc = st.checkbox("🚚 Encargar la entrega al comisionista (él registra quién lo recibe)", value=activo, key=f"{key}_enc_chk")
+    if not enc:
+        return None, None
+    defecto = dep_parecida(destino_texto, lista) or exp.get("destino")
+    c1, c2 = st.columns([1, 1])
+    dest = c1.selectbox("Llevar a", lista, index=idx(lista, defecto), key=f"{key}_enc_dest")
+    ind = c2.text_input("Indicaciones para el comisionista (opcional)", key=f"{key}_enc_ind", placeholder="Ej.: entregar en mano al Secretario")
+    return dest, ind

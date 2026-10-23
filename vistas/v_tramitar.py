@@ -513,24 +513,27 @@ def _resultado(m, r, p):
         st.download_button("⬇️ Descargar Word para imprimir", doc["bytes"], file_name=doc["nombre"], type="primary", width="stretch",
                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=p + "dl")
         st.caption(f"Hoja {'media oficio' if m.hoja == 'media' else 'oficio'} · quedó registrado en el historial del expediente.")
+        desp = m.despacho(doc["v"]) if m.despacho else None
         if bool(r.get("tramitado")):
             st.markdown('<div class="tr-listo">✅ El expediente ya figura como TRAMITADO. Puede seguir generando documentos.</div>',
                         unsafe_allow_html=True)
+            dest_c, ind = K.ui_encargo(r, p, doc.get("destino"))
+            if dest_c and st.button("🚚 Encargar la entrega al comisionista", key=p + "enc", width="stretch"):
+                db.solicitar_entrega(int(r["id"]), dest_c, desp, ind, K.usuario())
+                st.toast(f"Entrega encargada → {dest_c}", icon="🚚")
+                st.rerun()
             return
         c1, c2 = st.columns(2)
         acc = c1.selectbox("¿Qué se hizo?", C.ACCIONES_TRAMITE,
                            index=C.ACCIONES_TRAMITE.index(m.accion) if m.accion in C.ACCIONES_TRAMITE else 0, key=p + "acc")
         det = c2.text_input("Detalle", f"{m.nombre}" + (f" → {doc['destino']}" if doc.get("destino") else ""), key=p + "det")
-        salida = bool(m.destino and doc.get("destino"))
-        reg_sal = st.checkbox(f"Registrar también la SALIDA hacia {doc.get('destino')}", value=salida, disabled=not salida, key=p + "sal")
+        dest_c, ind = K.ui_encargo(r, p, doc.get("destino"), activo=bool(m.destino and doc.get("destino")))
         if st.button("✅ Marcar como TRAMITADO", key=p + "ok", type="primary", width="stretch"):
             ahora = db.ahora()
             u = K.usuario()
             db.marcar_tramitado([int(r["id"])], acc, det, ahora, u, u)
-            if reg_sal:
-                desp = m.despacho(doc["v"]) if m.despacho else None
-                db.registrar_movimiento(int(r["id"]), {"fecha_hora": ahora, "tipo": "SALIDA", "origen": C.DEP_PROPIA, "destino": doc["destino"],
-                                                       "despacho": desp, "entregado_por": u, "observaciones": det}, "REMITIDO", u)
+            if dest_c:  # la salida la registra el comisionista al entregarlo
+                db.solicitar_entrega(int(r["id"]), dest_c, desp, ind, u)
             st.session_state.pop(p + "_doc", None)
             st.toast(f"Expediente {r['identificador']} TRAMITADO", icon="✅")
             st.rerun()

@@ -45,6 +45,19 @@ def render():
         ]
     )
 
+    # Comisión: lo que está encargado y lo que ya entregaron hoy los comisionistas
+    pend = e[e["entrega_pendiente"].fillna(False).astype(bool)] if "entrega_pendiente" in e.columns else e.iloc[0:0]
+    ent = mov_hoy[mov_hoy["tipo"].isin(["SALIDA", "DEVOLUCIÓN", "PASE INTERNO"]) & mov_hoy["recibido_por"].notna()] if not mov_hoy.empty else mov_hoy
+    if len(pend) or len(ent):
+        with st.expander(f"🚚 Comisión · {len(pend)} para entregar · {len(ent)} entregados hoy", expanded=bool(len(ent))):
+            for _, m in ent.head(15).iterrows():
+                st.markdown(f"<small>✅ {ui.fmt_fecha(m['fecha_hora'], True)} · <b>{ui.esc(m['identificador'])}</b> → {ui.esc(m['destino'])} · "
+                            f"recibió <b>{ui.esc(m.get('recibido_por') or '—')}</b> · llevó {ui.esc(m.get('entregado_por') or '—')}</small>",
+                            unsafe_allow_html=True)
+            for _, r in pend.head(15).iterrows():
+                st.markdown(f"<small>📦 <b>{ui.esc(r['identificador'])}</b> → {ui.esc(r.get('entrega_destino') or '—')} · "
+                            f"encargado por {ui.esc(r.get('entrega_solicitada_por') or '—')}</small>", unsafe_allow_html=True)
+
     alertas = K.calcular_alertas()
     top = [a for a in alertas if a["nivel"] in ("critical", "serious")][:3]
     if top:
