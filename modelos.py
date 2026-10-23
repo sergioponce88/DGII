@@ -73,7 +73,7 @@ def intro(ctx, v, objeto="el presente expediente", fin="para su conocimiento e i
     verbo = v.get("verbo") if v.get("verbo") and v.get("verbo") != "automático" else VERBOS.get(a.get("relacion"), "remito")
     car = _s(ctx["cfg"].get("firmante_caracter")) or "en mi carácter de Director General de Institutos e Instrucción"
     fojas = int(v.get("fojas") or 0)
-    pre = f"En un cómputo de (- {fojas:02d} -) fojas útiles, " if fojas else ""
+    pre = f"En un cómputo de ({fojas:02d}) fojas útiles, " if fojas else ""
     car = car[0].lower() + car[1:] if pre else car[0].upper() + car[1:]
     return f"{pre}{car}, {verbo} a Usted {objeto} {fin}"
 
@@ -291,7 +291,7 @@ RELACIONES = Modelo(
 
 # ───────────────────────── 4. Sanción disciplinaria (visto bueno) ─────────────────────────
 def r_sancion(v, ctx):
-    cuerpo = [f"Con el **VISTO BUENO** de esta Dirección General, {('en un cómputo de (- %02d -) fojas útiles, ' % int(v['fojas'])) if int(v.get('fojas') or 0) else ''}"
+    cuerpo = [f"Con el **VISTO BUENO** de esta Dirección General, {('en un cómputo de (%02d) fojas útiles, ' % int(v['fojas'])) if int(v.get('fojas') or 0) else ''}"
               f"elevo a Usted adjunto a la presente la **Planilla de Sanción Disciplinaria** del {_s(v.get('sancionado')) or '________'}"
               + (f", impuesta por {_s(v.get('impuesta_por'))}" if _s(v.get("impuesta_por")) else "")
               + (f", consistente en {_s(v.get('sancion'))}" if _s(v.get("sancion")) else "")

@@ -225,6 +225,7 @@ CONFIG_DEFAULT = {
     "firmante_caracter": "en mi carácter de Director General de Institutos e Instrucción y Rector del Instituto de Enseñanza "
                          "Superior de Policía “Grl. José Francisco de San Martín”",
     "doc_lema": "Dirección General de Institutos e Instrucción · Policía de Tucumán",
+    "ia_datos_personales": "NO",  # permitir Gemini en documentos con datos personales
 }
 
 # Libreta de autoridades para las notas: (clave, tratamiento, cargo, titular, saludo, relación)

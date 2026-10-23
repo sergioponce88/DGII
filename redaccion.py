@@ -138,25 +138,86 @@ PROMPT = ("Sos corrector de estilo de notas administrativas de la Policía de Tu
           "sin comillas ni comentarios.\n\nTexto:\n")
 
 
-def gemini_mejorar(texto: str, sensible=False) -> str:
-    if sensible:
-        raise PermissionError("Este documento contiene datos personales: no se envía a servicios de IA externos.")
+def _gemini(parts, json_out=False, timeout=60):
     key = _secret("GEMINI_API_KEY")
     if not key:
         raise RuntimeError("Falta GEMINI_API_KEY en Secrets (es gratuita: aistudio.google.com → Get API key).")
     modelos = [_secret("GEMINI_MODEL")] + GEMINI_MODELOS if _secret("GEMINI_MODEL") else GEMINI_MODELOS
+    cfg = {"temperature": 0.2}
+    if json_out:
+        cfg["responseMimeType"] = "application/json"
     ultimo = ""
     for m in modelos:
         r = requests.post(GEMINI_URL.format(m=m), headers={"x-goog-api-key": key, "Content-Type": "application/json"},
-                          json={"contents": [{"parts": [{"text": PROMPT + texto}]}],
-                                "generationConfig": {"temperature": 0.2}}, timeout=40)
+                          json={"contents": [{"parts": parts}], "generationConfig": cfg}, timeout=timeout)
         if r.status_code == 200:
             try:
                 return r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
             except (KeyError, IndexError):
-                ultimo = "Gemini no devolvió texto."
+                ultimo = "Gemini no devolvió texto (puede que las imágenes no se lean bien)."
                 continue
         if r.status_code == 429:
             raise RuntimeError("Se alcanzó el límite gratuito de Gemini por ahora. Intente en unos minutos.")
         ultimo = r.json().get("error", {}).get("message", r.text[:200]) if r.headers.get("content-type", "").startswith("application/json") else r.text[:200]
     raise RuntimeError(f"Gemini no respondió: {ultimo}")
+
+
+def gemini_mejorar(texto: str, sensible=False) -> str:
+    if sensible:
+        raise PermissionError("Este documento contiene datos personales: no se envía a servicios de IA externos.")
+    return _gemini([{"text": PROMPT + texto}], timeout=40)
+
+
+def preparar_archivo(nombre: str, datos: bytes):
+    """Fotos → JPEG liviano (máx. 1600 px); PDF tal cual. Devuelve (mime, bytes)."""
+    import io
+
+    if nombre.lower().endswith(".pdf"):
+        return "application/pdf", datos
+    from PIL import Image, ImageOps
+
+    im = ImageOps.exif_transpose(Image.open(io.BytesIO(datos))).convert("RGB")
+    im.thumbnail((1600, 1600))
+    buf = io.BytesIO()
+    im.save(buf, format="JPEG", quality=80)
+    return "image/jpeg", buf.getvalue()
+
+
+PROMPT_FOTOS = """Sos oficial de la Dirección General de Institutos e Instrucción de la Policía de Tucumán (Argentina) y redactás la
+tramitación de un expediente. Te adjunto fotos/escaneos de las fojas del expediente.
+
+Datos del expediente en el sistema: {exp}
+Documento a redactar: {modelo} — {desc}
+
+Leé las fojas y redactá el contenido de estos campos (clave: descripción · ejemplo de estilo):
+{campos}
+
+Reglas:
+- Registro formal administrativo-policial argentino, claro y conciso, como en las notas de la Dirección.
+- Usá SOLO datos que figuren en las fojas o en los datos del expediente; NO inventes nombres, fechas, lugares, números ni artículos.
+  Si un dato no se lee o no figura, escribí ________ en su lugar.
+- No incluyas saludos, encabezados, referencias al expediente ni firma: solo el contenido de cada campo.
+- Si un campo no corresponde según lo leído, devolvelo vacío "".
+- Agregá además la clave "_resumen" con un resumen de 1 a 3 líneas de lo que pide el expediente.
+Respondé SOLO un objeto JSON con esas claves."""
+
+
+def gemini_desde_fotos(archivos, modelo_nombre, modelo_desc, campos, exp_txt):
+    """archivos: [(mime, bytes)] · campos: [(clave, etiqueta, ayuda)] → dict clave → texto propuesto."""
+    import base64
+    import json
+
+    if not archivos:
+        raise ValueError("Agregue al menos una foto o PDF del expediente.")
+    total = sum(len(b) for _, b in archivos)
+    if total > 18 * 1024 * 1024:
+        raise ValueError("Las fotos superan el máximo (18 MB). Suba menos fojas o fotos más livianas.")
+    lista = "\n".join(f"- {k}: {lab}" + (f" · {ay}" if ay else "") for k, lab, ay in campos)
+    parts = [{"text": PROMPT_FOTOS.format(exp=exp_txt, modelo=modelo_nombre, desc=modelo_desc, campos=lista)}]
+    parts += [{"inline_data": {"mime_type": mime, "data": base64.b64encode(b).decode()}} for mime, b in archivos]
+    txt = _gemini(parts, json_out=True, timeout=120)
+    try:
+        d = json.loads(txt.strip().removeprefix("```json").removesuffix("```"))
+    except json.JSONDecodeError:
+        raise RuntimeError("Gemini no devolvió un resultado válido. Intente de nuevo o con fotos más nítidas.")
+    return {k: (str(v).strip() if v is not None else "") for k, v in d.items()}

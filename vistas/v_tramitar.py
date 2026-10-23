@@ -338,6 +338,7 @@ def _formulario(m, r, ctx):
     _init(m, ctx, p)
 
     _h(3, "Complete los datos", " · a la derecha ve cómo queda la nota")
+    _fotos_ia(m, r, ctx, p)
     izq, der = st.columns([1.1, 1], gap="large")
     with izq:
         if not m.campos:
@@ -392,6 +393,58 @@ def _formulario(m, r, ctx):
     return {"completo": not faltan, "doc": bool(st.session_state.get(p + "_doc"))}
 
 
+# ───────────────────────── Completar desde fotos (Gemini) ─────────────────────────
+def _ia_permitida(m, ctx):
+    return RD.gemini_disponible() and (not m.sensible or ctx["cfg"].get("ia_datos_personales") == "SI")
+
+
+def _fotos_ia(m, r, ctx, p):
+    campos = [c for c in m.campos if c.ia]
+    if not campos:
+        return
+    with st.expander("📷 Completar con fotos del expediente (IA)", expanded=False):
+        if not RD.gemini_disponible():
+            st.info("Para leer las fojas con IA hay que activar Gemini (gratis): ⚙️ Configuración → 📝 Notas y autoridades.")
+            return
+        if not _ia_permitida(m, ctx):
+            st.caption("🔒 Este documento lleva datos personales y la configuración no permite enviarlos a IA externa. "
+                       "El administrador puede habilitarlo en ⚙️ Configuración → 📝 Notas y autoridades.")
+            return
+        st.caption("Saque fotos de las fojas (o suba el PDF). La IA las lee y propone el texto de: "
+                   + ", ".join(c.label.split(" (")[0] for c in campos) + ". Usted revisa y corrige antes de generar el Word.")
+        arch = st.file_uploader("Fotos o PDF de las fojas", type=["jpg", "jpeg", "png", "webp", "pdf"], accept_multiple_files=True,
+                                key=p + "fotos", label_visibility="collapsed")
+        if st.button("🤖 Leer fojas y proponer el texto", key=p + "ia_go", type="primary", width="stretch", disabled=not arch):
+            e = ctx["exp"]
+            exp_txt = (f"N° {e.get('identificador')}; tipo: {e.get('tipo')}; asunto: {e.get('asunto') or '—'}; "
+                       f"origen: {e.get('dependencia_origen') or '—'}; fojas: {e.get('fojas') or '—'}")
+            try:
+                with st.spinner("Leyendo las fojas… puede tardar unos segundos"):
+                    archivos = [RD.preparar_archivo(a.name, a.getvalue()) for a in arch]
+                    st.session_state[p + "_ia"] = RD.gemini_desde_fotos(
+                        archivos, m.nombre, m.descripcion, [(c.key, c.label, c.ayuda) for c in campos], exp_txt)
+            except Exception as ex:
+                st.error(str(ex))
+        prop = st.session_state.get(p + "_ia")
+        if prop:
+            if prop.get("_resumen"):
+                st.markdown(f'<div class="tr-listo">📄 {ui.esc(prop["_resumen"])}</div>', unsafe_allow_html=True)
+            usar = {}
+            for c in campos:
+                if prop.get(c.key):
+                    st.markdown(f"**{c.label}** — propuesta")
+                    st.markdown(f'<div class="tr-g" style="text-transform:none;letter-spacing:0;font-weight:500;color:#E2E8F0;'
+                                f'background:rgba(15,23,42,.6);border:1px solid #334155;border-radius:8px;padding:8px 10px">'
+                                f'{ui.esc(prop[c.key])}</div>', unsafe_allow_html=True)
+                    usar[c.key] = prop[c.key]
+            if not usar:
+                st.caption("La IA no encontró contenido para estos campos. Pruebe con fotos más nítidas.")
+            elif st.button("✔️ Usar estos textos en el formulario", key=p + "ia_ok", type="primary", width="stretch"):
+                st.session_state[p + "_aplicar"] = usar
+                st.session_state.pop(p + "_ia", None)
+                st.rerun()
+
+
 # ───────────────────────── Redacción ─────────────────────────
 def _revisar(m, p, campos):
     rev = {}
@@ -426,18 +479,18 @@ def _panel_revision(m, p):
             if d["err"]:
                 st.caption(d["err"])
             aplicar[k] = RD.revisar_local(RD.aplicar(d["orig"], elegidas))[0]
-            if not m.sensible and RD.gemini_disponible():
+            if _ia_permitida(m, {"cfg": db.get_config()}):
                 if st.button("🤖 Mejorar con Gemini", key=f"{p}gem_{k}"):
                     try:
                         with st.spinner("Gemini está revisando…"):
-                            st.session_state[f"{p}gemtxt_{k}"] = RD.gemini_mejorar(aplicar[k], m.sensible)
+                            st.session_state[f"{p}gemtxt_{k}"] = RD.gemini_mejorar(aplicar[k], False)
                     except Exception as e:
                         st.error(str(e))
                 if st.session_state.get(f"{p}gemtxt_{k}"):
                     st.text_area("Propuesta de Gemini (puede editarla)", key=f"{p}gemtxt_{k}", height=140)
                     aplicar[k] = st.session_state.get(f"{p}gemtxt_{k}") or aplicar[k]
-            elif m.sensible:
-                st.caption("🔒 Documento con datos personales: no se envía a IA externa.")
+            elif m.sensible and RD.gemini_disponible():
+                st.caption("🔒 Documento con datos personales: no se envía a IA externa (configurable por el administrador).")
         c1, c2 = st.columns(2)
         if c1.button("✔️ Aplicar correcciones", key=p + "apl", type="primary", width="stretch"):
             st.session_state[p + "_aplicar"] = aplicar

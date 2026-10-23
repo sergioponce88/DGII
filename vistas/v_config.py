@@ -265,9 +265,13 @@ def _tramitacion(cfg):
         fc = c4.text_input("Cargo del firmante", cfg.get("firmante_cargo") or "")
         car = st.text_area("Fórmula «en mi carácter de…»", cfg.get("firmante_caracter") or "", height=70)
         lema = st.text_input("Pie de página de los documentos", cfg.get("doc_lema") or "")
+        ia_pers = st.toggle("Permitir IA (Gemini) en documentos con datos personales (sumarios, oficios, notificaciones)",
+                            value=cfg.get("ia_datos_personales") == "SI",
+                            help="En el nivel gratuito, Google puede usar lo enviado para mejorar sus productos. Recomendado: desactivado.")
         if st.form_submit_button("💾 Guardar"):
             db.set_config({"elevar_a": elevar, "sec_ref": sec.strip(), "firmante_nombre": fn.strip(), "firmante_cargo": fc.strip(),
-                           "firmante_caracter": car.strip(), "doc_lema": lema.strip()})
+                           "firmante_caracter": car.strip(), "doc_lema": lema.strip(),
+                           "ia_datos_personales": "SI" if ia_pers else "NO"})
             st.toast("Configuración de notas guardada", icon="✅")
             st.rerun()
 
@@ -296,7 +300,8 @@ def _tramitacion(cfg):
         "- **Diccionario propio** de errores frecuentes: siempre activo, no envía datos.\n"
         "- **LanguageTool**: ortografía y gramática, gratis (hasta ~20 revisiones por minuto).\n"
         f"- **Google Gemini**: mejora de redacción · {'✅ configurado' if redaccion.gemini_disponible() else '⚪ sin configurar'}. "
-        "Se usa solo en notas sin datos personales (nunca en sumarios, actuaciones, notificaciones ni sanciones).")
+        "Mejora la redacción y **lee las fotos de las fojas** para proponer el fundamento y demás textos. "
+        "Por defecto solo en notas sin datos personales.")
     if not redaccion.gemini_disponible():
         with st.expander("Cómo activar Gemini (gratis)"):
             st.markdown("1. Entre a **aistudio.google.com** con una cuenta de Google y toque **Get API key → Create API key**.\n"
