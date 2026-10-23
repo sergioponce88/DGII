@@ -19,10 +19,14 @@ def render():
         auth.aviso_sin_permiso("la configuración")
         return
     cfg = db.get_config()
-    tu, t1, t2, t3, t5, t4 = st.tabs(["👥 Usuarios", "📖 Libro y alertas", "🏢 Dependencias y colores", "🗂️ Tipos de expediente", "☁️ Google Drive", "💾 Respaldo y auditoría"])
+    tu, tn, t1, t2, t3, t5, t4 = st.tabs(["👥 Usuarios", "📝 Notas y autoridades", "📖 Libro y alertas", "🏢 Dependencias y colores",
+                                          "🗂️ Tipos de expediente", "☁️ Google Drive", "💾 Respaldo y auditoría"])
 
     with tu:
         _usuarios()
+
+    with tn:
+        _tramitacion(cfg)
 
     with t5:
         _drive(cfg)
@@ -240,3 +244,62 @@ def _usuarios():
                         st.rerun()
                     except ValueError as e:
                         st.error(str(e))
+
+
+def _tramitacion(cfg):
+    """Firmante, destino de las elevaciones, libreta de autoridades e IA de redacción."""
+    import redaccion
+
+    aut = db.df_autoridades(False)
+    sup = aut[aut["relacion"] == "SUPERIOR"]
+    ui.seccion("✍️ Firma y elevaciones")
+    with st.form("cfg_tram"):
+        c1, c2 = st.columns(2)
+        claves = sup["clave"].tolist() or ["SUBJEFE"]
+        etiqueta = dict(zip(aut["clave"], aut["cargo"]))
+        elevar = c1.selectbox("Las elevaciones van a", claves, index=claves.index(cfg.get("elevar_a")) if cfg.get("elevar_a") in claves else 0,
+                              format_func=lambda k: etiqueta.get(k, k), help="Depende de la gestión: Jefatura o Subjefatura de Policía")
+        sec = c2.text_input("Secretaría en la referencia", cfg.get("sec_ref") or "Sec. D.G.I.I.")
+        c3, c4 = st.columns(2)
+        fn = c3.text_input("Firmante (grado y nombre)", cfg.get("firmante_nombre") or "", placeholder="Crio. Insp. APELLIDO NOMBRE")
+        fc = c4.text_input("Cargo del firmante", cfg.get("firmante_cargo") or "")
+        car = st.text_area("Fórmula «en mi carácter de…»", cfg.get("firmante_caracter") or "", height=70)
+        lema = st.text_input("Pie de página de los documentos", cfg.get("doc_lema") or "")
+        if st.form_submit_button("💾 Guardar"):
+            db.set_config({"elevar_a": elevar, "sec_ref": sec.strip(), "firmante_nombre": fn.strip(), "firmante_cargo": fc.strip(),
+                           "firmante_caracter": car.strip(), "doc_lema": lema.strip()})
+            st.toast("Configuración de notas guardada", icon="✅")
+            st.rerun()
+
+    ui.seccion("📇 Libreta de autoridades")
+    st.caption("Destinatarios de las notas. **Relación** define el verbo: SUPERIOR → *elevo*, PAR → *remito*, INTERNO → *pase*. "
+               "Actualice los titulares cuando cambia la gestión.")
+    ed = st.data_editor(
+        aut[["clave", "tratamiento", "cargo", "titular", "saludo", "relacion", "activa"]], num_rows="dynamic", width="stretch", hide_index=True,
+        key="ed_aut",
+        column_config={
+            "clave": st.column_config.TextColumn("Clave", help="Identificador corto, sin espacios (ej. ESC_SUPERIOR)"),
+            "tratamiento": st.column_config.SelectboxColumn("Tratamiento", options=["Al Señor", "Señor", "Señora", "A la Señora"]),
+            "cargo": st.column_config.TextColumn("Cargo", width="large"),
+            "titular": st.column_config.TextColumn("Grado y nombre del titular", width="medium"),
+            "saludo": st.column_config.SelectboxColumn("Su …", options=["Despacho", "Oficina"]),
+            "relacion": st.column_config.SelectboxColumn("Relación", options=C.RELACIONES_AUT),
+            "activa": st.column_config.CheckboxColumn("Activa"),
+        })
+    if st.button("💾 Guardar autoridades"):
+        db.guardar_autoridades(ed, K.usuario())
+        st.toast("Autoridades actualizadas", icon="✅")
+        st.rerun()
+
+    ui.seccion("✨ Ayuda de redacción (gratuita)")
+    st.markdown(
+        "- **Diccionario propio** de errores frecuentes: siempre activo, no envía datos.\n"
+        "- **LanguageTool**: ortografía y gramática, gratis (hasta ~20 revisiones por minuto).\n"
+        f"- **Google Gemini**: mejora de redacción · {'✅ configurado' if redaccion.gemini_disponible() else '⚪ sin configurar'}. "
+        "Se usa solo en notas sin datos personales (nunca en sumarios, actuaciones, notificaciones ni sanciones).")
+    if not redaccion.gemini_disponible():
+        with st.expander("Cómo activar Gemini (gratis)"):
+            st.markdown("1. Entre a **aistudio.google.com** con una cuenta de Google y toque **Get API key → Create API key**.\n"
+                        "2. En Streamlit: **Manage app → Settings → Secrets**, agregue una línea:\n\n"
+                        "```toml\nGEMINI_API_KEY = \"su-clave\"\n```\n"
+                        "3. Guarde: la app se reinicia sola. No pegue la clave en ningún chat.")

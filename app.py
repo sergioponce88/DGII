@@ -24,6 +24,7 @@ from vistas import (  # noqa: E402
     v_informes,
     v_libro,
     v_movimiento,
+    v_tramitar,
     v_nuevo,
     v_panel,
 )
@@ -131,7 +132,7 @@ def _desde_movil():
     st.session_state["nav"] = st.session_state["nav_m"]
 
 
-PAGINAS_OK = [p for p in K.PAGINAS if p != K.PAG_CONFIG or auth.puede("configurar")]
+PAGINAS_OK = [p for p in K.PAGINAS if (p != K.PAG_CONFIG or auth.puede("configurar")) and (p != K.PAG_TRAMITAR or auth.puede("tramitar"))]
 if st.session_state.get("nav") not in PAGINAS_OK:
     st.session_state["nav"] = PAGINAS_OK[0]
 st.session_state.setdefault("nav", PAGINAS_OK[0])
@@ -189,6 +190,7 @@ VISTAS = {
     K.PAG_PANEL: v_panel.render,
     K.PAG_NUEVO: v_nuevo.render,
     K.PAG_MOV: v_movimiento.render,
+    K.PAG_TRAMITAR: v_tramitar.render,
     K.PAG_LIBRO: v_libro.render,
     K.PAG_FICHA: v_ficha.render,
     K.PAG_CURSOS: v_cursos.render,

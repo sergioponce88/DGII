@@ -15,6 +15,7 @@ LOGO_IESP = "assets/logo_iesp.png"
 PAG_PANEL = "📊 Panel de Control"
 PAG_NUEVO = "➕ Nuevo Expediente"
 PAG_MOV = "🔁 Movimiento Rápido"
+PAG_TRAMITAR = "📝 Tramitar"
 PAG_LIBRO = "📚 Libro de Registro"
 PAG_FICHA = "🔎 Ficha de Expediente"
 PAG_CURSOS = "🎓 Actividades y Personal"
@@ -22,7 +23,7 @@ PAG_ALERTAS = "🔔 Alertas y Agenda"
 PAG_CARGA = "📥 Carga Masiva"
 PAG_INFORMES = "📈 Informes"
 PAG_CONFIG = "⚙️ Configuración"
-PAGINAS = [PAG_PANEL, PAG_NUEVO, PAG_MOV, PAG_LIBRO, PAG_FICHA, PAG_CURSOS, PAG_ALERTAS, PAG_CARGA, PAG_INFORMES, PAG_CONFIG]
+PAGINAS = [PAG_PANEL, PAG_NUEVO, PAG_MOV, PAG_TRAMITAR, PAG_LIBRO, PAG_FICHA, PAG_CURSOS, PAG_ALERTAS, PAG_CARGA, PAG_INFORMES, PAG_CONFIG]
 
 
 def usuario():
@@ -266,6 +267,10 @@ def form_tramite(exp, key):
     if not auth.puede("tramitar"):
         auth.aviso_sin_permiso("la marca de tramitado")
         return
+    if st.button("📝 Tramitar con modelos (nota en Word)", key=f"ir_tram_{key}", type="primary", width="stretch"):
+        st.session_state["tram_sel"] = int(exp["id"])
+        ir_a(PAG_TRAMITAR, exp["id"])
+    st.caption("…o registre manualmente lo realizado:")
     with st.form(f"ftr_{key}", clear_on_submit=True):
         c1, c2 = st.columns(2)
         accion = c1.selectbox("¿Qué se hizo?", C.ACCIONES_TRAMITE, key=f"tr_ac_{key}")

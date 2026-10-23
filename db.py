@@ -260,6 +260,50 @@ CREATE TABLE IF NOT EXISTS usuarios (
     creado_en TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS autoridades (
+    id SERIAL PRIMARY KEY,
+    clave TEXT UNIQUE NOT NULL,
+    tratamiento TEXT DEFAULT 'Señor',
+    cargo TEXT NOT NULL,
+    titular TEXT,
+    saludo TEXT DEFAULT 'Despacho',
+    relacion TEXT DEFAULT 'PAR',
+    activa BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS actuaciones (
+    id SERIAL PRIMARY KEY,
+    expediente_id INTEGER UNIQUE NOT NULL REFERENCES expedientes (id) ON DELETE CASCADE,
+    clase TEXT,
+    numero TEXT,
+    origen TEXT DEFAULT 'INICIADA EN LA DIRECCIÓN',
+    causa TEXT,
+    causante TEXT,
+    causante_lp TEXT,
+    victima TEXT,
+    ocurrido TEXT,
+    interviene TEXT,
+    hecho TEXT,
+    instructor TEXT,
+    instructor_lp TEXT,
+    instructor_funcion TEXT,
+    secretario TEXT,
+    secretario_lp TEXT,
+    actualizado_en TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS documentos (
+    id SERIAL PRIMARY KEY,
+    expediente_id INTEGER NOT NULL REFERENCES expedientes (id) ON DELETE CASCADE,
+    modelo TEXT NOT NULL,
+    titulo TEXT,
+    destino TEXT,
+    datos TEXT,
+    generado_por TEXT,
+    generado_en TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS ix_doc_exp ON documentos (expediente_id);
+
 CREATE TABLE IF NOT EXISTS auditoria (
     id SERIAL PRIMARY KEY,
     fecha TIMESTAMP DEFAULT NOW(),
@@ -294,6 +338,9 @@ def init_db(version=VERSION_ESQUEMA):
                 cur.execute("UPDATE tipos_expediente SET es_curso = TRUE WHERE nombre = %s", (nom,))
             cur.execute("UPDATE cursos SET tipo_actividad = 'CURSO' WHERE tipo_actividad IS NULL")
             cur.execute("INSERT INTO config (clave, valor) VALUES ('mig_actividades_v1', 'OK') ON CONFLICT DO NOTHING")
+        for fila in C.AUTORIDADES_SEED:
+            cur.execute("INSERT INTO autoridades (clave, tratamiento, cargo, titular, saludo, relacion) "
+                        "VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (clave) DO NOTHING", fila)
         cur.execute("SELECT COUNT(*) FROM tipos_expediente")
         if cur.fetchone()[0] == 0:
             for n, g, o, ec in C.TIPOS_SEED:
@@ -762,8 +809,63 @@ def registrar_adjunto(exp_id, nombre, drive_id, link, n_bytes, paginas, descripc
 
 
 def respaldo_completo():
-    tablas = ["expedientes", "movimientos", "adjuntos", "usuarios", "cursos", "personal_curso", "eventos", "dependencias", "tipos_expediente", "config", "auditoria"]
+    tablas = ["expedientes", "movimientos", "adjuntos", "usuarios", "cursos", "personal_curso", "eventos", "dependencias", "tipos_expediente", "config", "auditoria", "autoridades", "actuaciones", "documentos"]
     out = {t: leer(f"SELECT * FROM {t} ORDER BY 1") for t in tablas}
     out["usuarios"] = out["usuarios"].drop(columns=["clave_hash"], errors="ignore")
     out["config"] = out["config"][~out["config"]["clave"].str.startswith("gdrive_refresh")]  # nunca exportar credenciales
     return out
+
+
+# ───────────────────────── Tramitación: autoridades, actuaciones y documentos ─────────────────────────
+@st.cache_data(ttl=300, show_spinner=False)
+def df_autoridades(solo_activas=True):
+    return leer("SELECT * FROM autoridades" + (" WHERE activa" if solo_activas else "") + " ORDER BY id")
+
+
+def guardar_autoridades(df, usuario=""):
+    campos = ["clave", "tratamiento", "cargo", "titular", "saludo", "relacion", "activa"]
+    with conexion() as c, c.cursor() as cur:
+        for _, r in df.iterrows():
+            clave = str(r.get("clave") or "").strip().upper().replace(" ", "_")
+            if not clave or not str(r.get("cargo") or "").strip():
+                continue
+            vals = [clave] + [_py(r.get(k)) for k in campos[1:]]
+            vals[-1] = bool(vals[-1]) if vals[-1] is not None else True
+            cur.execute(
+                "INSERT INTO autoridades (clave, tratamiento, cargo, titular, saludo, relacion, activa) VALUES (%s,%s,%s,%s,%s,%s,%s) "
+                "ON CONFLICT (clave) DO UPDATE SET tratamiento = EXCLUDED.tratamiento, cargo = EXCLUDED.cargo, titular = EXCLUDED.titular, "
+                "saludo = EXCLUDED.saludo, relacion = EXCLUDED.relacion, activa = EXCLUDED.activa", vals)
+    log(usuario, "AUTORIDADES", f"{len(df)} filas")
+    invalidar()
+
+
+def get_actuacion(exp_id):
+    df = leer("SELECT * FROM actuaciones WHERE expediente_id = %s", (int(exp_id),))
+    return {} if df.empty else df.iloc[0].to_dict()
+
+
+ACT_CAMPOS = ["clase", "numero", "origen", "causa", "causante", "causante_lp", "victima", "ocurrido", "interviene", "hecho",
+              "instructor", "instructor_lp", "instructor_funcion", "secretario", "secretario_lp"]
+
+
+def guardar_actuacion(exp_id, datos, usuario=""):
+    vals = {k: (str(datos.get(k)).strip() or None) if datos.get(k) is not None else None for k in ACT_CAMPOS}
+    cols = ", ".join(vals)
+    ph = ", ".join(["%s"] * len(vals))
+    upd = ", ".join(f"{k} = EXCLUDED.{k}" for k in vals)
+    ejecutar(f"INSERT INTO actuaciones (expediente_id, {cols}) VALUES (%s, {ph}) "
+             f"ON CONFLICT (expediente_id) DO UPDATE SET {upd}, actualizado_en = NOW()", [int(exp_id)] + list(vals.values()))
+    log(usuario, "ACTUACIÓN", str(exp_id))
+
+
+def registrar_documento(exp_id, modelo, titulo, destino, datos_json, usuario=""):
+    ejecutar("INSERT INTO documentos (expediente_id, modelo, titulo, destino, datos, generado_por) VALUES (%s, %s, %s, %s, %s, %s)",
+             (int(exp_id), modelo, titulo, destino, datos_json, usuario))
+    log(usuario, "DOCUMENTO", f"{exp_id} {modelo}")
+
+
+def df_documentos(exp_id):
+    df = leer("SELECT id, modelo, titulo, destino, datos, generado_por, generado_en FROM documentos WHERE expediente_id = %s "
+              "ORDER BY generado_en DESC, id DESC", (int(exp_id),))
+    df["generado_en"] = pd.to_datetime(df["generado_en"], errors="coerce")
+    return df
