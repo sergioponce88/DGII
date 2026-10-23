@@ -457,7 +457,7 @@ def calcular_alertas():
     abiertos = exp[~exp["estado"].isin(C.ESTADOS_CERRADOS)] if not exp.empty else exp
     for _, e in abiertos.iterrows():
         txt = f"{e['tipo']} · {e.get('asunto') or ''} · 📍 {e.get('ubicacion_actual') or '—'}"
-        if pd.notna(e["fecha_termino"]):
+        if pd.notna(e["fecha_termino"]) and not bool(e.get("tramitado")):  # tramitado = el plazo ya se cumplió
             d = (e["fecha_termino"] - h).days
             if d < 0:
                 add("critical", f"VENCIDO hace {-d} d · Exp. {e['identificador']}", txt, e["fecha_termino"], e["id"], e.get("ubicacion_actual"), "Vencimientos")
@@ -466,11 +466,22 @@ def calcular_alertas():
         ref = e["ult_mov"] if pd.notna(e["ult_mov"]) else e["fecha_ingreso"]
         if pd.notna(ref):
             ds = (h - ref.normalize()).days
-            lim = 2 if e["prioridad"] == "URGENTE TRÁMITE" else n_est
-            if ds > lim:
-                add("serious" if e["prioridad"] == "URGENTE TRÁMITE" else "info",
-                    f"{ds} días sin movimiento · Exp. {e['identificador']}" + (" ⚡" if e["prioridad"] == "URGENTE TRÁMITE" else ""),
-                    txt, ref, e["id"], e.get("ubicacion_actual"), "Estancados")
+            urg = e["prioridad"] == "URGENTE TRÁMITE"
+            en_casa = (e.get("ubicacion_actual") or C.DEP_PROPIA) == C.DEP_PROPIA
+            tram = bool(e.get("tramitado"))
+            if en_casa and not tram:
+                # Lo único que depende de la Dirección: está acá y todavía no se tramitó
+                if ds > (2 if urg else n_est):
+                    add("serious" if urg else "info", f"{ds} días sin tramitar · Exp. {e['identificador']}" + (" ⚡" if urg else ""),
+                        txt, ref, e["id"], e.get("ubicacion_actual"), "Estancados")
+            elif en_casa and tram and ds > 3:
+                pend = " · encargado al comisionista" if bool(e.get("entrega_pendiente")) else " · falta encargar la entrega"
+                add("info", f"Tramitado hace {ds} días y sigue en la Dirección · Exp. {e['identificador']}", txt + pend, ref, e["id"],
+                    e.get("ubicacion_actual"), "Para entregar")
+            elif not en_casa and ds > 2 * n_est:
+                # Ya salió: solo un recordatorio informativo si pasa mucho tiempo sin que vuelva ni se mueva
+                add("info", f"{ds} días en {e.get('ubicacion_actual')} sin novedades · Exp. {e['identificador']}", txt, ref, e["id"],
+                    e.get("ubicacion_actual"), "Fuera de la Dirección")
 
     ev = db.df_eventos()
     for _, v in ev[~ev["completado"].astype(bool)].iterrows() if not ev.empty else []:

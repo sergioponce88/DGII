@@ -260,7 +260,7 @@ def tarjeta_expediente(r, mapa=None, detalle=True):
     c_ub = color_dep(ub, mapa)
     d = dias_desde(r.get("ult_mov") if pd.notna(r.get("ult_mov")) else r.get("fecha_ingreso"))
     venc = ""
-    if pd.notna(r.get("fecha_termino")) and r.get("estado") not in C.ESTADOS_CERRADOS:
+    if pd.notna(r.get("fecha_termino")) and r.get("estado") not in C.ESTADOS_CERRADOS and not bool(r.get("tramitado")):
         dv = (pd.Timestamp(r["fecha_termino"]) - pd.Timestamp(db.hoy())).days
         col = C.STATUS["critical"] if dv < 0 else (C.STATUS["warning"] if dv <= 2 else C.STATUS["ok"])
         txt = f"VENCIDO hace {-dv} d" if dv < 0 else (f"Vence en {dv} d" if dv else "VENCE HOY")

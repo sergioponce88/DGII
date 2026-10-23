@@ -22,7 +22,7 @@ def _agenda():
     for _, v in ev[~ev["completado"].astype(bool)].iterrows() if not ev.empty else []:
         filas.append(dict(item=f"📌 {v['titulo']}", ini=v["fecha"], fin=v["fecha"] + pd.Timedelta(days=1), cat="Evento", det=v.get("lugar") or ""))
     exp = db.df_expedientes()
-    vto = exp[exp["fecha_termino"].notna() & ~exp["estado"].isin(C.ESTADOS_CERRADOS)] if not exp.empty else exp
+    vto = exp[exp["fecha_termino"].notna() & ~exp["estado"].isin(C.ESTADOS_CERRADOS) & ~exp["tramitado"]] if not exp.empty else exp
     for _, e in vto.iterrows():
         filas.append(dict(item=f"⏱ Exp. {e['identificador']}", ini=e["fecha_termino"], fin=e["fecha_termino"] + pd.Timedelta(days=1), cat="Vencimiento", det=e["tipo"]))
     df = pd.DataFrame(filas)

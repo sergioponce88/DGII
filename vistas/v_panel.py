@@ -24,7 +24,7 @@ def render():
     e = exp[exp["anio"] == anio]
     h = pd.Timestamp(db.hoy())
     abiertos = e[~e["estado"].isin(C.ESTADOS_CERRADOS)]
-    vencidos = abiertos[abiertos["fecha_termino"].notna() & (abiertos["fecha_termino"] < h)]
+    vencidos = abiertos[abiertos["fecha_termino"].notna() & (abiertos["fecha_termino"] < h) & ~abiertos["tramitado"]]
     urg = abiertos[abiertos["prioridad"] == "URGENTE TRÁMITE"]
     movs = db.df_movimientos()
     mov_hoy = movs[movs["fecha_hora"].dt.normalize() == h] if not movs.empty else movs
