@@ -163,6 +163,9 @@ def armar():
           Paragraph("Si bien se toma como ejemplo el manejo de expedientes, cada oficina tiene su propio circuito de trabajo. Por ello, el "
                     "<b>análisis previo</b> de cada área —mediante entrevistas con su personal y el estudio de su flujo de trabajo— es el paso "
                     "fundamental para determinar qué informatizar y cómo, y para que el sistema que se implemente responda a sus necesidades reales.", st["carta"]),
+          Paragraph("La presente no pretende ser una propuesta cerrada: quedo <b>abierto a las ideas, observaciones y propuestas</b> que formule "
+                    "la Superioridad o que surjan de las distintas áreas, ya que de eso se trata: de evaluar en conjunto qué puede mejorarse y "
+                    "de optimizar el trabajo de la Institución.", st["carta"]),
           Paragraph("Quedo a disposición para ampliar la información, realizar una demostración práctica de los sistemas en funcionamiento y "
                     "colaborar en la etapa que la Superioridad estime pertinente.", st["carta"]),
           Paragraph("Sin otro particular, saludo a Usted con atenta y distinguida consideración y respeto.-", st["carta"]),
@@ -548,7 +551,8 @@ def armar():
 
     # 13. Petitorio
     s += h1("16. Lo que se solicita a la Superioridad")
-    s += [pj("Para avanzar con la presente propuesta, se solicita respetuosamente:")]
+    s += [pj("Para avanzar con la presente propuesta —que queda abierta a las modificaciones e ideas que la Superioridad estime "
+             "convenientes—, se solicita respetuosamente:")]
     s += [P.pasos([(1, "<b>Aval institucional</b> para la continuidad y extensión de los sistemas desarrollados."),
                    (2, "<b>Designación de referentes</b> en las divisiones y en las cinco Unidades Regionales, para conformar una mesa de trabajo."),
                    (3, "<b>Autorización para realizar entrevistas y analizar el flujo de trabajo</b> de esas áreas (procesos, libros y modelos de documentos)."),
@@ -564,7 +568,9 @@ def armar():
              "útiles para decidir y, a futuro, facilitar la tarea del oficial de turno —con registro de datos, imágenes, videos y audios del "
              "procedimiento— para cumplir con mayor agilidad lo que exige la Justicia, con orden, seguridad y continuidad, en "
              "beneficio de la Policía de Tucumán y de la comunidad a la que sirve."),
-          caja("Los sistemas y esta propuesta <b>se irán optimizando en forma continua</b>, incorporando las necesidades y sugerencias de cada área.", "ok"),
+          caja("Esta propuesta está <b>abierta a las ideas y propuestas de la Superioridad</b> y de cada área. Su espíritu es evaluar en conjunto "
+               "qué puede mejorarse y optimizar el trabajo de la Institución: los sistemas y este documento <b>se irán ajustando</b> con cada "
+               "aporte que se reciba.", "ok"),
           firma()]
     return s
 
