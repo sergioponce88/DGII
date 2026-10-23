@@ -462,7 +462,7 @@ def armar():
     # Visión a futuro
     s += h1("14. Visión a futuro: la tarea del oficial de turno")
     s += [Paragraph("Como línea de trabajo futura, se propone estudiar la <b>sistematización de la tarea del oficial de turno</b> en las "
-                    "comisarías, como <b>complemento de la plataforma de denuncias digitales</b> del Ministerio Público Fiscal y no en reemplazo de ella. "
+                    "comisarías —oficial y auxiliar de turno—, como <b>complemento de la plataforma de denuncias digitales</b> del Ministerio Público Fiscal y no en reemplazo de ella. "
                     "Es, probablemente, donde la informatización más facilitaría el trabajo policial.", st["lead"])]
     s += h2("Situación actual")
     s += [pj("La plataforma de denuncias digitales del Ministerio Público Fiscal de Tucumán responde a las necesidades de la investigación "
@@ -473,11 +473,29 @@ def armar():
              "fecha y hora, elementos secuestrados, intervinientes, fiscalía— en actas, constancias, notas, partes y en la causa que se eleva a "
              "la Justicia provincial. Cada transcripción insume tiempo y abre la posibilidad de errores u omisiones."),
           imagen(PI("dato_unico.png"), pie="Figura 8. Dato único: la información del procedimiento, incluido el material audiovisual, se registra una vez y se reutiliza.")]
+    s += h2("Las notas según el tipo de delito")
+    s += [pj("Cada tipo de delito exige un conjunto propio de notas, actas y comunicaciones. Hoy el oficial o auxiliar de turno las confecciona "
+             "a partir de <b>archivos de Word</b>: abre un modelo anterior, borra, vuelve a tipear los mismos datos en cada pieza y adapta el "
+             "texto. Es una tarea que <b>lleva mucho tiempo</b> y en la que el error puede ocurrir en cualquier momento: un DNI mal copiado, "
+             "un nombre distinto entre una nota y otra, una fecha o una carátula que quedó del caso anterior."),
+          tabla(["Hoy (archivos de Word)", "Con un sistema de modelos por delito"], [
+              ["Se busca el modelo de un caso anterior.", "Se elige el <b>tipo de delito</b> y el sistema propone el conjunto de notas que corresponde."],
+              ["Se reescriben los mismos datos en cada nota.", "Los datos se cargan <b>una sola vez</b> y completan todas las piezas."],
+              ["Quedan datos del caso anterior por descuido.", "Cada documento se arma desde cero con los datos del procedimiento actual."],
+              ["Cada oficial usa su propia versión del modelo.", "Modelos <b>únicos y actualizados</b> para toda la Institución."],
+              ["Errores de tipeo y de redacción.", "Validaciones, corrector y redacción asistida."],
+              ["No queda registro de lo producido.", "Cada nota queda asociada al procedimiento, con fecha y responsable."]],
+              [ANCHO / 2, ANCHO / 2]),
+          Spacer(1, 6),
+          caja("Es el mismo método que ya funciona en la Dirección General de Institutos e Instrucción, donde el oficial elige el tipo de "
+               "tramitación y obtiene la nota lista para imprimir. El conjunto de notas de cada tipo de delito surgiría del <b>análisis con las "
+               "comisarías</b> y de los modelos que hoy utilizan, validados por quienes realizan la tarea.", "tip")]
     s += h2("Qué se lograría")
     s += lista(["<b>Registro guiado y único</b> de los datos del procedimiento, en el lugar del hecho, desde el celular.",
                 "<b>Registro de imágenes, videos y audios</b> del hecho, con fecha, hora y ubicación, asociados al procedimiento, para documentar "
                 "con precisión lo ocurrido.",
                 "<b>Generación automática</b> de actas, constancias, notas y elevaciones con esos mismos datos, en los formatos vigentes.",
+                "<b>Modelos de notas por tipo de delito</b>: al elegir el delito, el sistema propone las piezas que corresponden, sin retipear.",
                 "<b>Documentación rápida, efectiva y sin errores</b>: los datos son idénticos en todas las piezas de la causa.",
                 "<b>Reducción del tiempo</b> que el oficial dedica a transcribir, que puede destinarse a la tarea policial.",
                 "<b>Información propia de la Policía</b>, disponible para la jefatura de zona, la Unidad Regional y la Superioridad, y para el análisis operativo.",
