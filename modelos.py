@@ -203,10 +203,10 @@ def _despacho_opinion(v):
 
 
 ELEVACION = Modelo(
-    "elevacion", "Elevación solicitando autorización", "⬆️", "Notas y pases",
+    "elevacion", "Elevación solicitando autorización", "📤", "Notas y pases",
     "A Jefatura o Subjefatura (según configuración) con la opinión de la Dirección.",
     [C_fecha(), C_destino(clave_elevacion, "Elevar a"), C_fojas(),
-     Campo("fundamento", "Fundamento (qué se solicita, quién, cuándo, dónde)", "area", "", ia=True,
+     Campo("fundamento", "Fundamento (qué se solicita, quién, cuándo, dónde)", "area", "", ia=True, requerido=True,
            ayuda="Ej.: Teniéndose en cuenta la invitación de… para que personal de… participe en… desde el… en…"),
      Campo("opinion", "Opinión de la Dirección", "select", "FAVORABLE", OPINIONES),
      Campo("motivo", "Motivo / complemento de la opinión", "area", "", ia=True,
@@ -255,7 +255,7 @@ PASE_COMPANIA = _pase("pase_compania", "Pase a Compañía (cumplimiento)", "🪖
                       "COMPANIA", "cumplimiento")
 PASE_GABINETE = _pase("pase_gabinete", "Pase al Gabinete Interdisciplinario", "🧠", "Solicitud de intervención del gabinete.",
                       "GABINETE", "gabinete", True, "vuelva para trámites ulteriores")
-PASE_ORIGEN = _pase("pase_origen", "Pase a origen / otra dependencia", "↩️", "Devolución al origen o pase a cualquier dependencia.",
+PASE_ORIGEN = _pase("pase_origen", "Pase a origen / otra dependencia", "🔄", "Devolución al origen o pase a cualquier dependencia.",
                     None, "devolucion")
 
 

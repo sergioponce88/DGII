@@ -380,3 +380,88 @@ def _borde_inferior(p, color, sz):
 
 def _borde_superior(p, color, sz):
     _borde_parrafo(p, "top", color, sz)
+
+
+# ───────────────────────── Vista previa HTML (pantalla) ─────────────────────────
+def _b64(ruta):
+    import base64
+
+    try:
+        from PIL import Image
+
+        im = Image.open(ruta)
+        im.thumbnail((110, 110))
+        buf = io.BytesIO()
+        im.save(buf, format="PNG", optimize=True)
+        return base64.b64encode(buf.getvalue()).decode()
+    except OSError:
+        return ""
+
+
+_LOGOS = {}
+
+
+def _esc(t):
+    return (t or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _p_html(p):
+    from docx.enum.text import WD_ALIGN_PARAGRAPH as A
+
+    al = {A.CENTER: "center", A.RIGHT: "right", A.JUSTIFY: "justify"}.get(p.alignment, "left")
+    ind = "text-indent:3.2em;" if p.paragraph_format.first_line_indent else ""
+    partes = []
+    for r in p.runs:
+        t = _esc(r.text).replace("\n", "<br>")
+        if not t:
+            if 'w:br' in r._r.xml and 'type="page"' in r._r.xml:
+                return '<div class="pb">— nueva página —</div>'
+            continue
+        if r.font.bold:
+            t = f"<b>{t}</b>"
+        if r.font.underline:
+            t = f"<u>{t}</u>"
+        if r.font.size and r.font.size.pt >= 14:
+            t = f'<span style="font-size:{r.font.size.pt / 12:.2f}em">{t}</span>'
+        partes.append(t)
+    txt = "".join(partes)
+    if not txt.strip():
+        return '<div style="height:.5em"></div>'
+    return f'<p style="text-align:{al};{ind}">{txt}</p>'
+
+
+def preview_html(doc: "Doc") -> str:
+    """HTML aproximado del documento (orden real de párrafos y tablas) para mostrar en pantalla."""
+    from docx.table import Table
+    from docx.text.paragraph import Paragraph
+
+    if not _LOGOS:
+        _LOGOS["pol"], _LOGOS["dgii"] = _b64(LOGO_POL), _b64(LOGO_DGII)
+    sec = doc.d.sections[0]
+    media = sec.page_height < Inches(8)
+    out = []
+    if sec.header.tables:
+        out.append(
+            '<div class="mh">'
+            + (f'<img src="data:image/png;base64,{_LOGOS["pol"]}">' if _LOGOS["pol"] else "<span></span>")
+            + '<div><small>POLICÍA DE TUCUMÁN</small><b>DIRECCIÓN GENERAL DE INSTITUTOS E INSTRUCCIÓN</b>'
+              '<i>Instituto de Enseñanza Superior de Policía “Grl. José Francisco de San Martín”</i></div>'
+            + (f'<img src="data:image/png;base64,{_LOGOS["dgii"]}">' if _LOGOS["dgii"] else "<span></span>")
+            + "</div>")
+    for el in doc.d.element.body.iterchildren():
+        tag = el.tag.rsplit("}", 1)[-1]
+        if tag == "p":
+            out.append(_p_html(Paragraph(el, doc.d)))
+        elif tag == "tbl":
+            t = Table(el, doc.d)
+            celdas = []
+            for fila in t.rows:
+                for c in fila.cells:
+                    celdas.append("".join(_p_html(p) for p in c.paragraphs))
+            oscuro = "1F3A6E" in el.xml and 'w:fill="1F3A6E"' in el.xml
+            clase = "bx dk" if oscuro else ("bx ref" if "EEF2F8" in el.xml else "bx")
+            if len(t.columns) > 1 and not oscuro and "EEF2F8" not in el.xml:
+                out.append('<div class="bx2">' + "".join(f"<div>{c}</div>" for c in celdas) + "</div>")
+            else:
+                out.append(f'<div class="{clase}">' + "".join(celdas) + "</div>")
+    return f'<div class="paper{" media" if media else ""}">' + "".join(out) + "</div>"
