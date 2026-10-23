@@ -160,6 +160,9 @@ def armar():
           Paragraph("En ese marco, se propone <b>comenzar a trabajar</b> junto a las distintas divisiones y Unidades Regionales: designar "
                     "referentes, relevar sus procesos y necesidades, y avanzar con pruebas piloto graduales, de modo que la Superioridad "
                     "cuente con información concreta para decidir los pasos siguientes.", st["carta"]),
+          Paragraph("Si bien se toma como ejemplo el manejo de expedientes, cada oficina tiene su propio circuito de trabajo. Por ello, el "
+                    "<b>análisis previo</b> de cada área —mediante entrevistas con su personal y el estudio de su flujo de trabajo— es el paso "
+                    "fundamental para determinar qué informatizar y cómo, y para que el sistema que se implemente responda a sus necesidades reales.", st["carta"]),
           Paragraph("Quedo a disposición para ampliar la información, realizar una demostración práctica de los sistemas en funcionamiento y "
                     "colaborar en la etapa que la Superioridad estime pertinente.", st["carta"]),
           Paragraph("Sin otro particular, saludo a Usted con atenta y distinguida consideración y respeto.-", st["carta"]),
@@ -184,6 +187,8 @@ def armar():
                                   "vencimientos que se pasan y ausencia de estadísticas confiables."],
               ["<b>Solución</b>", "Sistemas web con usuario y clave, roles por jerarquía, registro de cada acción, documentos normalizados en Word/PDF, "
                                   "alertas, informes y ayuda de redacción con inteligencia artificial gratuita."],
+              ["<b>Método</b>", "Cada sistema nace del <b>análisis del flujo de trabajo</b> del área, con entrevistas a su personal. El sistema de "
+                                "expedientes es un ejemplo: no se impone un modelo único, se diseña a medida de cada lugar."],
               ["<b>Evidencia</b>", "Sistemas ya en funcionamiento en la D.G.I.I. y el I.E.S.P. (expedientes, legajos académicos, gabinete interdisciplinario) "
                                    "y un piloto en desarrollo para Medicina Legal."],
               ["<b>Costo</b>", "Sin licencias. Infraestructura en la nube en planes gratuitos, equipamiento existente y personal propio. Para la escala "
@@ -267,6 +272,8 @@ def armar():
              "cuente con el sistema que necesita. La implementación es <b>gradual</b> y comienza por las áreas con mayor volumen administrativo."),
           imagen(PI("mapa.png"), pie="Figura 2. Áreas en funcionamiento, en desarrollo y a relevar, sobre una plataforma común.")]
     s += [PageBreak(), Titulo("Áreas y procesos susceptibles de informatizar", 1),
+          pj("La tabla siguiente es <b>orientativa</b>: los procesos concretos de cada área y la forma de informatizarlos surgirán del análisis "
+             "y las entrevistas que se realicen en cada una."),
           tabla(["Área", "Procesos a informatizar", "Resultado esperado"], [
               ["Mesas de Entradas", "Libro de registro, pases, reingresos, digitalización, notas normalizadas.", "Ubicación inmediata y trámites en término."],
               ["Dpto. Personal (D-1)", "Legajos, licencias, francos, sanciones, destinos, vencimientos de documentación.", "Información del personal al día y consultable."],
@@ -302,7 +309,9 @@ def armar():
 
     # 6. Caso testigo
     s += h1("7. Caso testigo: Sistema de Expedientes de la D.G.I.I.")
-    s += [pj("El Sistema de Registro, Control y Tramitación de Expedientes muestra en la práctica lo que se propone extender:"),
+    s += [caja("El manejo de expedientes se presenta <b>a modo de ejemplo</b>. No se trata de replicar este sistema en todas las áreas, sino de "
+               "aplicar el mismo método: <b>analizar el flujo de trabajo de cada lugar</b> y desarrollar la herramienta que esa área necesita.", "ojo"),
+          pj("El Sistema de Registro, Control y Tramitación de Expedientes muestra en la práctica lo que se puede lograr con ese método:"),
           *lista(["Libro de mesa de entradas digital con la misma numeración del libro físico (N° / folio / orden).",
                   "Seguimiento de salidas, ingresos, pases y reingresos, con aviso por WhatsApp.",
                   "Tramitación asistida: el oficial elige el modelo, completa un formulario breve y obtiene la nota en Word con membrete institucional "
@@ -354,7 +363,19 @@ def armar():
     s += h1("10. Cómo empezar: trabajo conjunto con las divisiones")
     s += [Paragraph("No se propone por ahora crear estructuras nuevas, sino <b>comenzar a trabajar</b>: conocer cómo funciona cada división "
                     "y cada Unidad Regional, identificar qué conviene informatizar primero y probarlo en pequeño, con resultados medibles.", st["lead"]),
-          imagen(PI("ruta.png"), pie="Figura 6. Ruta de trabajo propuesta.", alto_max=48 * mm)]
+          imagen(PI("ruta.png"), pie="Figura 6. Ruta de trabajo propuesta: el análisis es el paso clave.", alto_max=48 * mm)]
+    s += h2("El análisis: punto de partida de todo sistema")
+    s += [pj("Ningún sistema se implementa sin antes <b>comprender cómo trabaja el área</b>. El análisis del flujo de trabajo es la etapa "
+             "fundamental: evita desarrollar herramientas que no se usan, detecta los verdaderos problemas y asegura que el personal reconozca "
+             "en el sistema su propia forma de trabajar. Se realiza en el lugar, con el personal que hace la tarea todos los días."),
+          imagen(PI("analisis.png"), pie="Figura 7. Preguntas que guían el análisis del flujo de trabajo de cada área.", alto_max=60 * mm)]
+    s += lista(["<b>Entrevistas</b> con el jefe del área y con el personal que realiza cada tarea (carga, redacción, control, firma).",
+                "<b>Observación del circuito real</b>: cómo llega cada trámite, qué se hace, quién interviene, a dónde va y en qué plazo.",
+                "<b>Recolección de documentos</b>: libros, planillas, modelos de notas, actas y formularios que se usan.",
+                "<b>Identificación de problemas</b>: demoras, errores repetidos, información que se pierde, controles que dependen de la memoria.",
+                "<b>Propuesta a medida</b>, validada con el área antes de desarrollar, y ajustada durante el piloto según la opinión de los usuarios."])
+    s += [caja("Así se construyó el sistema de expedientes de la D.G.I.I.: a partir de los modelos reales que utilizan los oficiales y de la "
+               "explicación de cada tramitación por parte de quienes la realizan. Ese mismo método se aplicaría en cada división y Unidad Regional.", "tip")]
     s += h2("Mesa de trabajo de informatización")
     s += [pj("Se sugiere convocar una <b>mesa de trabajo</b> integrada por un referente de cada división y Unidad Regional que se incorpore, "
              "junto con el personal que desarrolló los sistemas existentes. Sus integrantes mantienen sus funciones habituales y se reúnen "
@@ -364,8 +385,8 @@ def armar():
                 "Acompañar las pruebas piloto y la capacitación en su área.",
                 "Recoger las opiniones de los usuarios y proponer mejoras.",
                 "Informar periódicamente a la Superioridad los avances y resultados."])
-    s += h2("Relevamiento por división")
-    s += [pj("Para cada área se propone relevar, con un formulario breve, la siguiente información:"),
+    s += h2("Guía de relevamiento por área")
+    s += [pj("Como complemento de las entrevistas, se propone completar para cada área una guía breve con la siguiente información:"),
           tabla(["Qué se releva", "Para qué"], [
               ["Trámites y documentos que se producen (y cuántos por mes)", "Dimensionar el trabajo y priorizar."],
               ["Libros, planillas y registros que se llevan", "Definir qué se digitaliza y con qué formato."],
@@ -406,7 +427,7 @@ def armar():
     s += [tabla(["Etapa", "Acciones", "Plazo orientativo"], [
         ["<b>1. Piloto</b> (en curso)", "Sistemas en funcionamiento en la D.G.I.I. y el I.E.S.P.; piloto de Medicina Legal.", "En marcha"],
         ["<b>2. Evaluación</b>", "Medición de indicadores, encuesta a usuarios, demostración a la Superioridad.", "60 a 90 días"],
-        ["<b>3. Mesa de trabajo y relevamiento</b>", "Referentes por división y Unidad Regional; relevamiento de procesos; priorización.", "Según disponga la Superioridad"],
+        ["<b>3. Mesa de trabajo y análisis</b>", "Referentes por división y Unidad Regional; entrevistas y análisis del flujo de trabajo de cada área; priorización.", "Según disponga la Superioridad"],
         ["<b>4. Pilotos</b>", "Una o dos divisiones priorizadas (por ejemplo D-1, D-5 o Asuntos Internos) y una comisaría piloto por Unidad Regional.", "6 a 12 meses"],
         ["<b>5. Extensión</b>", "Extensión a otras oficinas y comisarías; servidor propio y cuentas institucionales; capacitación permanente.", "Mediano plazo"]],
         [42 * mm, ANCHO - 82 * mm, 40 * mm]),
@@ -435,13 +456,14 @@ def armar():
     s += [pj("Para avanzar con la presente propuesta, se solicita respetuosamente:")]
     s += [P.pasos([(1, "<b>Aval institucional</b> para la continuidad y extensión de los sistemas desarrollados."),
                    (2, "<b>Designación de referentes</b> en las divisiones y en las cinco Unidades Regionales, para conformar una mesa de trabajo."),
-                   (3, "<b>Autorización para relevar</b> los procesos, libros y modelos de documentos de esas áreas."),
+                   (3, "<b>Autorización para realizar entrevistas y analizar el flujo de trabajo</b> de esas áreas (procesos, libros y modelos de documentos)."),
                    (4, "<b>Autorización de pruebas piloto</b> en las áreas que se prioricen (incluida una comisaría por Unidad Regional) y de los espacios de capacitación."),
                    (5, "Uso de <b>cuentas institucionales</b> y, a mediano plazo, de un <b>servidor propio</b> para alojar los sistemas."),
                    (6, "Una <b>demostración práctica</b> ante la Superioridad de los sistemas en funcionamiento.")])]
     s += h2("Conclusión")
     s += [pj("La informatización de la gestión administrativa no es un objetivo a futuro: ya está ocurriendo en la Institución, con resultados "
-             "concretos, personal propio y sin costo de licencias. Comenzar a trabajar junto a las divisiones y las Unidades Regionales "
+             "concretos, personal propio y sin costo de licencias. Comenzar a trabajar junto a las divisiones y las Unidades Regionales, "
+             "<b>analizando en cada caso su flujo de trabajo</b>, "
              "permitirá multiplicar esos resultados en todas las oficinas y comisarías, con orden, seguridad y continuidad, en "
              "beneficio de la Policía de Tucumán y de la comunidad a la que sirve."),
           caja("Los sistemas y esta propuesta <b>se irán optimizando en forma continua</b>, incorporando las necesidades y sugerencias de cada área.", "ok"),
