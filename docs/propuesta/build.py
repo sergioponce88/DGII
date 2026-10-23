@@ -490,6 +490,26 @@ def armar():
           caja("Es el mismo método que ya funciona en la Dirección General de Institutos e Instrucción, donde el oficial elige el tipo de "
                "tramitación y obtiene la nota lista para imprimir. El conjunto de notas de cada tipo de delito surgiría del <b>análisis con las "
                "comisarías</b> y de los modelos que hoy utilizan, validados por quienes realizan la tarea.", "tip")]
+    s += h2("De la información a las actuaciones procesales")
+    s += [pj("El valor central de esta línea está en <b>obtener bien la información desde el inicio</b> y convertirla, de manera directa, en las "
+             "<b>actuaciones procesales</b> que el oficial firma y eleva al Ministerio Público Fiscal: actas, declaraciones, constancias, notas, "
+             "informes y la elevación del sumario. Cuando el dato se registra una vez, correctamente, todas las piezas salen completas, "
+             "coherentes entre sí y <b>sin errores</b>."),
+          Table([[Paragraph("<b>1. Obtener</b><br/>datos, imágenes, videos y audios en el lugar del hecho", st["cel"]),
+                  Paragraph("<b>2. Registrar</b><br/>una sola vez, con validaciones", st["cel"]),
+                  Paragraph("<b>3. Generar</b><br/>las actuaciones procesales automáticamente", st["cel"]),
+                  Paragraph("<b>4. Firmar y elevar</b><br/>al Ministerio Público Fiscal", st["cel"])]],
+                colWidths=[ANCHO / 4] * 4,
+                style=TableStyle([("BACKGROUND", (0, 0), (0, 0), colors.HexColor("#DBEAFE")), ("BACKGROUND", (1, 0), (1, 0), colors.HexColor("#DCFCE7")),
+                                  ("BACKGROUND", (2, 0), (2, 0), colors.HexColor("#FEF3C7")), ("BACKGROUND", (3, 0), (3, 0), colors.HexColor("#EDE9FE")),
+                                  ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#CBD5E1")), ("INNERGRID", (0, 0), (-1, -1), 0.6, colors.white),
+                                  ("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("TOPPADDING", (0, 0), (-1, -1), 8), ("BOTTOMPADDING", (0, 0), (-1, -1), 8)])),
+          Spacer(1, 6),
+          pj("Hoy, confeccionar un <b>sumario procesal completo</b> —sea por un delito grave o de cualquier índole— demanda al oficial muchas horas "
+             "de redacción y transcripción. Con la carga única y la generación automática de las piezas, el objetivo es que ese mismo sumario "
+             "pueda confeccionarse <b>en la mitad del tiempo o menos</b>, y llegar al Ministerio Público Fiscal completo y sin errores."),
+          caja("La reducción de tiempos se <b>medirá en las pruebas piloto</b>, comparando el tiempo actual de confección de un sumario con el "
+               "tiempo utilizando el sistema, para presentar a la Superioridad resultados concretos.", "ok")]
     s += h2("Qué se lograría")
     s += lista(["<b>Registro guiado y único</b> de los datos del procedimiento, en el lugar del hecho, desde el celular.",
                 "<b>Registro de imágenes, videos y audios</b> del hecho, con fecha, hora y ubicación, asociados al procedimiento, para documentar "
@@ -518,7 +538,8 @@ def armar():
         ["Límites de los planes gratuitos", "Plan de migración a servidores institucionales, sin cambiar los sistemas."]],
         [52 * mm, ANCHO - 52 * mm], colors.HexColor("#C2410C"))]
     s += h2("Indicadores de seguimiento")
-    s += lista(["Tiempo promedio para ubicar un expediente.",
+    s += lista(["Tiempo de confección de un sumario procesal completo (antes y después).",
+                "Tiempo promedio para ubicar un expediente.",
                 "Tiempo desde el ingreso hasta la tramitación.",
                 "Cantidad de expedientes vencidos o fuera de término.",
                 "Cantidad de documentos generados con los modelos normalizados.",
