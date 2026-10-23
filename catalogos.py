@@ -219,7 +219,7 @@ CONFIG_DEFAULT = {
     # Tramitación (documentos Word)
     "elevar_a": "SUBJEFE",
     "sec_ref": "Sec. D.G.I.I.",
-    "firmante_nombre": "",
+    "firmante_nombre": "Crio. Grl. CLAUDIO NÉSTOR DADIN",
     "firmante_cargo": "Director General de Institutos e Instrucción",
     "firmante_caracter": "en mi carácter de Director General de Institutos e Instrucción y Rector del Instituto de Enseñanza "
                          "Superior de Policía “Grl. José Francisco de San Martín”",

@@ -338,6 +338,9 @@ def init_db(version=VERSION_ESQUEMA):
                 cur.execute("UPDATE tipos_expediente SET es_curso = TRUE WHERE nombre = %s", (nom,))
             cur.execute("UPDATE cursos SET tipo_actividad = 'CURSO' WHERE tipo_actividad IS NULL")
             cur.execute("INSERT INTO config (clave, valor) VALUES ('mig_actividades_v1', 'OK') ON CONFLICT DO NOTHING")
+        # El Director firma siempre los asuntos de la Dirección (se completa si quedó vacío)
+        cur.execute("UPDATE config SET valor = %s WHERE clave = 'firmante_nombre' AND COALESCE(valor, '') = ''",
+                    (C.CONFIG_DEFAULT["firmante_nombre"],))
         for fila in C.AUTORIDADES_SEED:
             cur.execute("INSERT INTO autoridades (clave, tratamiento, cargo, titular, saludo, relacion) "
                         "VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (clave) DO NOTHING", fila)
