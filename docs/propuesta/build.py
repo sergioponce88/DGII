@@ -36,7 +36,7 @@ AUTOR = "Oficial Auxiliar Ponce Sergio – I.E.S.P."
 HOY = date.today()
 FECHA = f"{MESES[HOY.month - 1].capitalize()} de {HOY.year}"
 
-st["carta"] = ParagraphStyle("carta", parent=st["p"], fontSize=10.5, leading=16, firstLineIndent=28, alignment=4)
+st["carta"] = ParagraphStyle("carta", parent=st["p"], fontSize=9.8, leading=13.6, firstLineIndent=28, alignment=4, spaceAfter=3)
 st["just"] = ParagraphStyle("just", parent=st["p"], alignment=4)
 
 
@@ -133,7 +133,7 @@ class Doc(BaseDocTemplate):
 
 
 def firma():
-    return KeepTogether([Spacer(1, 24), Table([[Paragraph(
+    return KeepTogether([Spacer(1, 10), Table([[Paragraph(
         "______________________________<br/><b>Oficial Auxiliar PONCE Sergio</b><br/>Auxiliar de Secretaría Académica<br/>"
         "Instituto de Enseñanza Superior de Policía “G.J.F.S.M.”", ParagraphStyle("f", parent=st["p"], alignment=1, leading=14))]],
         colWidths=[80 * mm], hAlign="RIGHT")])
@@ -154,6 +154,9 @@ def armar():
                     "propuesta, cuyo objeto es comenzar a extender a las distintas oficinas, áreas, divisiones y Unidades Regionales de la Institución la experiencia de "
                     "informatización que ya se encuentra en funcionamiento en la Dirección General de Institutos e Instrucción y en el "
                     "Instituto de Enseñanza Superior de Policía “Grl. José Francisco de San Martín”.", st["carta"]),
+          Paragraph("Esta iniciativa busca <b>complementar la tarea de excelencia</b> que viene demostrando la Policía de Tucumán, reconocida "
+                    "por los medios de comunicación, reflejada en las estadísticas y destacada por el Gobierno de la Provincia y por los "
+                    "Ministerios de Seguridad provincial y nacional, aportando herramientas que acompañen ese trabajo y lo potencien.", st["carta"]),
           Paragraph("Los sistemas desarrollados con personal propio demuestran que es posible ordenar la gestión administrativa, contar con "
                     "trazabilidad completa de los expedientes, producir documentación normalizada y obtener estadísticas para la toma de "
                     "decisiones, <b>sin costo de licencias</b> y utilizando el equipamiento existente.", st["carta"]),
@@ -218,7 +221,10 @@ def armar():
                 "Ausencia de <b>estadísticas</b> para planificar y para informar a la Superioridad.",
                 "Dependencia de personas: cuando alguien se traslada, se pierde parte del conocimiento de la oficina."])
     s += h2("Por qué ahora")
-    s += [pj("Los procesos de modernización del Estado avanzan hacia la gestión digital, la trazabilidad y la transparencia. Hoy existen "
+    s += [pj("La Policía de Tucumán atraviesa un momento de reconocimiento por su labor: los medios, las estadísticas, el Gobierno de la "
+             "Provincia y los Ministerios de Seguridad provincial y nacional destacan su trabajo. La informatización propuesta busca "
+             "<b>complementar y sostener esa excelencia</b>, liberando tiempo del personal y ordenando la información que respalda cada resultado."),
+          pj("Los procesos de modernización del Estado avanzan hacia la gestión digital, la trazabilidad y la transparencia. Hoy existen "
              "herramientas tecnológicas de uso libre y gratuito que permiten desarrollar sistemas a medida con recursos propios, accesibles "
              "desde el celular, sin necesidad de grandes inversiones. La Institución cuenta además con personal joven formado en informática "
              "y con capacidad de adaptación, lo que hace viable una transformación progresiva y sostenida.")]
@@ -562,7 +568,8 @@ def armar():
                    (7, "Tener presente, como <b>línea futura</b>, el análisis de la tarea del oficial de turno en coordinación con los organismos responsables.")])]
     s += h2("Conclusión")
     s += [pj("La informatización de la gestión administrativa no es un objetivo a futuro: ya está ocurriendo en la Institución, con resultados "
-             "concretos, personal propio y sin costo de licencias. Comenzar a trabajar junto a las divisiones y las Unidades Regionales, "
+             "concretos, personal propio y sin costo de licencias, y viene a complementar la tarea de excelencia que la Policía de Tucumán "
+             "demuestra y que es destacada públicamente. Comenzar a trabajar junto a las divisiones y las Unidades Regionales, "
              "<b>analizando en cada caso su flujo de trabajo</b>, "
              "permitirá multiplicar esos resultados en todas las oficinas y comisarías, registrar el trabajo administrativo y operativo como datos "
              "útiles para decidir y, a futuro, facilitar la tarea del oficial de turno —con registro de datos, imágenes, videos y audios del "
