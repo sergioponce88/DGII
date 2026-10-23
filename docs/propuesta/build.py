@@ -1,4 +1,4 @@
-"""Propuesta institucional de informatización y creación de un Área de Sistemas (PDF A4).
+"""Propuesta institucional para iniciar la informatización de divisiones y Unidades Regionales (PDF A4).
 
 Uso (desde la raíz del repo):
     IMG=docs/presentacion/img PIMG=docs/propuesta/img MIMG=<imágenes del manual> \
@@ -81,8 +81,8 @@ def portada(c, doc):
     c.drawCentredString(W / 2, H - 142 * mm, "TRANSFORMACIÓN DIGITAL")
     c.setFont("S", 12.5)
     c.setFillColor(colors.HexColor("#CBD5E1"))
-    c.drawCentredString(W / 2, H - 154 * mm, "de oficinas, áreas y divisiones de la Policía de Tucumán")
-    c.drawCentredString(W / 2, H - 161 * mm, "y creación de un Área de Sistemas y Transformación Digital")
+    c.drawCentredString(W / 2, H - 154 * mm, "de oficinas, áreas, divisiones y Unidades Regionales")
+    c.drawCentredString(W / 2, H - 161 * mm, "de la Policía de Tucumán")
     c.setFillColor(AMARILLO)
     c.roundRect(W / 2 - 58 * mm, H - 182 * mm, 116 * mm, 11 * mm, 5.5 * mm, fill=1, stroke=0)
     c.setFillColor(NAVY)
@@ -147,18 +147,19 @@ def armar():
     s += [Paragraph(f"San Miguel de Tucumán, {HOY.day:02d} de {MESES[HOY.month - 1].capitalize()} de {HOY.year}.-",
                     ParagraphStyle("fr", parent=st["p"], alignment=2)), Spacer(1, 8),
           Paragraph("Al Señor<br/>Jefe de Policía de la Provincia<br/><u>Su Despacho:</u>", st["p"]), Spacer(1, 6),
-          Paragraph("<b>Ref.:</b> Propuesta de informatización de oficinas, áreas y divisiones de la Policía de Tucumán y creación de un "
-                    "Área de Sistemas y Transformación Digital.-", st["p"]), Spacer(1, 6),
+          Paragraph("<b>Ref.:</b> Propuesta para iniciar la informatización de oficinas, áreas, divisiones y Unidades Regionales "
+                    "de la Policía de Tucumán.-", st["p"]), Spacer(1, 6),
           Paragraph("De mi mayor consideración:", st["p"]),
           Paragraph("Tengo el agrado de dirigirme a Usted, por la vía jerárquica correspondiente, a fin de elevar a su consideración la presente "
-                    "propuesta, cuyo objeto es extender a las distintas oficinas, áreas y divisiones de la Institución la experiencia de "
+                    "propuesta, cuyo objeto es comenzar a extender a las distintas oficinas, áreas, divisiones y Unidades Regionales de la Institución la experiencia de "
                     "informatización que ya se encuentra en funcionamiento en la Dirección General de Institutos e Instrucción y en el "
                     "Instituto de Enseñanza Superior de Policía “Grl. José Francisco de San Martín”.", st["carta"]),
           Paragraph("Los sistemas desarrollados con personal propio demuestran que es posible ordenar la gestión administrativa, contar con "
                     "trazabilidad completa de los expedientes, producir documentación normalizada y obtener estadísticas para la toma de "
                     "decisiones, <b>sin costo de licencias</b> y utilizando el equipamiento existente.", st["carta"]),
-          Paragraph("En ese marco, se propone asimismo la <b>creación de un área específica</b> dedicada al desarrollo, la capacitación y el "
-                    "soporte de estos sistemas, que asegure su continuidad institucional, su seguridad y su crecimiento ordenado.", st["carta"]),
+          Paragraph("En ese marco, se propone <b>comenzar a trabajar</b> junto a las distintas divisiones y Unidades Regionales: designar "
+                    "referentes, relevar sus procesos y necesidades, y avanzar con pruebas piloto graduales, de modo que la Superioridad "
+                    "cuente con información concreta para decidir los pasos siguientes.", st["carta"]),
           Paragraph("Quedo a disposición para ampliar la información, realizar una demostración práctica de los sistemas en funcionamiento y "
                     "colaborar en la etapa que la Superioridad estime pertinente.", st["carta"]),
           Paragraph("Sin otro particular, saludo a Usted con atenta y distinguida consideración y respeto.-", st["carta"]),
@@ -173,8 +174,8 @@ def armar():
     # Resumen ejecutivo
     s += h1("Resumen ejecutivo")
     s += [Paragraph("<b>Qué se propone:</b> informatizar progresivamente la gestión administrativa de oficinas, áreas y divisiones de la Policía "
-                    "de Tucumán mediante sistemas web propios, y crear un <b>Área de Sistemas y Transformación Digital</b> que los desarrolle, "
-                    "capacite al personal y les dé soporte.", st["lead"]), Spacer(1, 4),
+                    "de Tucumán —divisiones, departamentos y Unidades Regionales— mediante sistemas web propios, <b>comenzando por un relevamiento "
+                    "con referentes de cada área</b> y pruebas piloto graduales.", st["lead"]), Spacer(1, 4),
           kpis([("4", "sistemas propios<br/>en uso o desarrollo"), ("$0", "en licencias<br/>de software"), ("Web", "PC y celular,<br/>sin instalar nada"),
                 ("Propio", "personal para desarrollo<br/>y capacitación")]),
           Spacer(1, 8),
@@ -188,7 +189,7 @@ def armar():
               ["<b>Costo</b>", "Sin licencias. Infraestructura en la nube en planes gratuitos, equipamiento existente y personal propio. Para la escala "
                                "institucional se recomienda alojarlos en servidores de la Policía."],
               ["<b>Capacitación</b>", "Corta y por perfil (de 2 a 6 horas), dictada por personal propio, con manual y material digital."],
-              ["<b>Se solicita</b>", "Aval de la Superioridad, creación o designación del Área de Sistemas, referentes por área y autorización de pruebas piloto."]],
+              ["<b>Se solicita</b>", "Aval de la Superioridad para comenzar: referentes por división y Unidad Regional, relevamiento de procesos y pruebas piloto."]],
               [30 * mm, ANCHO - 30 * mm])]
 
     # 1. Fundamentación
@@ -232,7 +233,7 @@ def armar():
     s += h1("3. Objetivos")
     s += h2("Objetivo general")
     s += [pj("Impulsar la informatización progresiva de la gestión administrativa de la Policía de Tucumán, mediante sistemas propios, "
-             "seguros y accesibles, y dotar a la Institución de un área específica que garantice su desarrollo, capacitación, soporte y continuidad.")]
+             "seguros y accesibles, comenzando por el trabajo conjunto con cada división y Unidad Regional.")]
     s += h2("Objetivos específicos")
     s += lista([
         "Reemplazar progresivamente libros y planillas por registros digitales con respaldo, sin perder la validez de la documentación en papel.",
@@ -241,7 +242,7 @@ def armar():
         "Reducir tiempos de búsqueda, redacción y respuesta, en especial ante requerimientos judiciales.",
         "Generar <b>estadísticas e indicadores</b> para la planificación y el control de gestión.",
         "Capacitar al personal en el uso de herramientas digitales, con formación breve y práctica.",
-        "Crear el <b>Área de Sistemas y Transformación Digital</b> como responsable técnico y metodológico.",
+        "Conformar una <b>mesa de trabajo</b> con referentes de las divisiones y Unidades Regionales para relevar, priorizar y acompañar la implementación.",
         "Resguardar los datos personales conforme a la normativa vigente."])
 
     # 4. Ventajas
@@ -264,7 +265,7 @@ def armar():
     s += h1("5. Alcance de la propuesta")
     s += [pj("Se propone una plataforma común —con los mismos criterios de acceso, seguridad, diseño y respaldo— sobre la cual cada área "
              "cuente con el sistema que necesita. La implementación es <b>gradual</b> y comienza por las áreas con mayor volumen administrativo."),
-          imagen(PI("mapa.png"), pie="Figura 2. Áreas en funcionamiento, en desarrollo y propuestas, alrededor del Área de Sistemas.")]
+          imagen(PI("mapa.png"), pie="Figura 2. Áreas en funcionamiento, en desarrollo y a relevar, sobre una plataforma común.")]
     s += [PageBreak(), Titulo("Áreas y procesos susceptibles de informatizar", 1),
           tabla(["Área", "Procesos a informatizar", "Resultado esperado"], [
               ["Mesas de Entradas", "Libro de registro, pases, reingresos, digitalización, notas normalizadas.", "Ubicación inmediata y trámites en término."],
@@ -277,14 +278,30 @@ def armar():
               ["Gabinete Interdisciplinario", "Certificados, prórrogas, altas, seguimiento.", "Historial completo de cada caso (en funcionamiento)."],
               ["Relaciones Policiales", "Agenda de eventos, solicitudes de personal, ceremonial.", "Planificación y respuesta coordinada."],
               ["Armería y Tiro", "Asignación de armamento, munición, prácticas de tiro.", "Trazabilidad del material y de la instrucción."],
-              ["Comisarías", "Novedades internas, oficios y requerimientos administrativos.", "Comunicación ordenada con la Superioridad."]],
+              ["Unidades Regionales y comisarías", "Novedades, oficios y requerimientos, personal y servicios, móviles, control de plazos.", "Información consolidada por zona y en toda la provincia."]],
               [36 * mm, 76 * mm, ANCHO - 112 * mm]),
           Spacer(1, 4),
           caja("La informatización <b>complementa</b> y no reemplaza la documentación exigida por la normativa vigente (libros rubricados, "
                "actas, firmas ológrafas): los sistemas registran, ordenan y producen esa documentación, que se sigue imprimiendo y firmando.", "ojo")]
 
+    # Unidades Regionales
+    s += h1("6. Unidades Regionales, jefaturas de zona y comisarías")
+    s += [pj("Las <b>Unidades Regionales</b> —Capital, Norte, Sur, Este y Oeste— tienen a su cargo, a través de las jefaturas de zona, a las "
+             "comisarías de toda la provincia. Son el lugar donde más información se produce y donde más valor tendría un sistema común: "
+             "cada comisaría registra, la jefatura de zona controla, la Unidad Regional consolida y la Superioridad ve el conjunto."),
+          imagen(PI("regionales.png"), pie="Figura 3. Un mismo sistema para las cinco Unidades Regionales, sus jefaturas de zona y comisarías."),
+          tabla(["Nivel", "Qué podría registrar y consultar"], [
+              ["<b>Comisaría</b>", "Mesa de entradas y salidas, oficios y requerimientos judiciales con sus plazos, notas internas con modelos, novedades del servicio, personal y móviles."],
+              ["<b>Jefatura de zona</b>", "Estado de las comisarías a su cargo, pendientes y vencimientos, control de respuestas a la Justicia."],
+              ["<b>Unidad Regional</b>", "Tablero de su jurisdicción, estadísticas de gestión por comisaría y zona, informes a la Superioridad."],
+              ["<b>Jefatura / Subjefatura</b>", "Visión consolidada de las cinco Unidades Regionales para la toma de decisiones."]],
+              [38 * mm, ANCHO - 38 * mm]),
+          Spacer(1, 4),
+          caja("Se sugiere comenzar con <b>una comisaría piloto por Unidad Regional</b> y su jefatura de zona, relevando primero qué libros, "
+               "planillas y notas utilizan, para adaptar el sistema a su forma de trabajo.", "tip")]
+
     # 6. Caso testigo
-    s += h1("6. Caso testigo: Sistema de Expedientes de la D.G.I.I.")
+    s += h1("7. Caso testigo: Sistema de Expedientes de la D.G.I.I.")
     s += [pj("El Sistema de Registro, Control y Tramitación de Expedientes muestra en la práctica lo que se propone extender:"),
           *lista(["Libro de mesa de entradas digital con la misma numeración del libro físico (N° / folio / orden).",
                   "Seguimiento de salidas, ingresos, pases y reingresos, con aviso por WhatsApp.",
@@ -293,14 +310,14 @@ def armar():
                   "Actuaciones administrativas y sumarios guiados paso a paso; oficios judiciales con sus cédulas y respuestas.",
                   "Ayuda de redacción con inteligencia artificial gratuita, con resguardo de los datos personales.",
                   "Actividades, alertas, informes, usuarios por jerarquía, auditoría y respaldos."]),
-          imagen(MI("02_panel.png"), pie="Figura 3. Panel de control con indicadores del año.", alto_max=72 * mm),
+          imagen(MI("02_panel.png"), pie="Figura 4. Panel de control con indicadores del año.", alto_max=72 * mm),
           Spacer(1, 4),
           P.galeria([(I("doc_elevacion.png"), "Elevación generada por el sistema"), (I("doc_caratula.png"), "Carátula de sumario"),
                      (I("doc_oj_respuesta.png"), "Respuesta a oficio judicial")], cols=3, alto=58 * mm)]
 
     # 7. Modelo tecnológico y costos
-    s += h1("7. Modelo tecnológico y costos")
-    s += [imagen(I("arquitectura.png"), pie="Figura 4. Componentes de los sistemas.", alto_max=85 * mm),
+    s += h1("8. Modelo tecnológico y costos")
+    s += [imagen(I("arquitectura.png"), pie="Figura 5. Componentes de los sistemas.", alto_max=85 * mm),
           Spacer(1, 4),
           tabla(["Componente", "Herramienta", "Costo actual"], [
               ["Programación", "Python y Streamlit (software libre)", "Sin costo"],
@@ -320,7 +337,7 @@ def armar():
                "sería la infraestructura, sin pago de licencias.", "ok")]
 
     # 8. Seguridad
-    s += h1("8. Seguridad y protección de datos")
+    s += h1("9. Seguridad y protección de datos")
     s += lista(["<b>Acceso personal</b> con legajo y clave; las claves se guardan cifradas y nadie puede verlas.",
                 "<b>Roles y permisos</b> según jerarquía y función: cada usuario ve y hace solo lo que le corresponde.",
                 "<b>Auditoría</b> de todas las acciones (usuario, fecha, hora y detalle).",
@@ -330,38 +347,40 @@ def armar():
                 "Política de inteligencia artificial: por defecto, los documentos con datos personales <b>no se envían</b> a servicios externos.",
                 "Tratamiento de datos personales conforme a la <b>Ley N° 25.326 de Protección de los Datos Personales</b> y a las disposiciones "
                 "internas que dicte la Superioridad."])
-    s += [caja("Se propone que el Área de Sistemas elabore, para aprobación de la Superioridad, un <b>reglamento interno de uso</b> de los "
+    s += [caja("Se propone elaborar, para aprobación de la Superioridad, un <b>reglamento interno de uso</b> de los "
                "sistemas: responsables de cada base de datos, alta y baja de usuarios, respaldos periódicos y confidencialidad.", "tip")]
 
-    # 9. Área de Sistemas
-    s += h1("9. Creación del Área de Sistemas y Transformación Digital")
-    s += [Paragraph("La experiencia demuestra que los sistemas funcionan y que el personal los adopta. Para que esta transformación "
-                    "<b>no dependa de esfuerzos individuales</b> y pueda crecer de manera ordenada, segura y sostenida en el tiempo, se propone "
-                    "crear un área específica dedicada a ella.", st["lead"])]
-    s += h2("Misión")
-    s += [pj("Diseñar, desarrollar, implementar y mantener los sistemas de gestión de la Policía de Tucumán; capacitar y asistir al personal "
-             "en su uso; y resguardar la información institucional, promoviendo la modernización administrativa de todas las áreas.")]
-    s += h2("Funciones")
-    s += lista(["Relevar los procesos de cada área y proponer su informatización.",
-                "Desarrollar, mantener y mejorar los sistemas con criterios comunes de diseño y seguridad.",
-                "Elaborar los modelos de documentos institucionales y mantener actualizadas las autoridades y normativas.",
-                "Capacitar al personal por perfil y formar referentes (multiplicadores) en cada área.",
-                "Brindar soporte y mesa de ayuda a los usuarios.",
-                "Administrar usuarios, permisos, respaldos y la protección de los datos.",
-                "Producir estadísticas e informes de gestión para el Comando Superior.",
-                "Coordinar con las áreas técnicas existentes (comunicaciones, informática) y con otros organismos del Estado."])
-    s += [imagen(PI("organigrama.png"), pie="Figura 5. Estructura sugerida (a adecuar por la Superioridad).", alto_max=72 * mm)]
-    s += h2("Conformación inicial sugerida")
-    s += [tabla(["Aspecto", "Propuesta"], [
-        ["Dependencia orgánica", "A definir por la Superioridad (Jefatura, Subjefatura o la órbita de la D.G.I.I. por su perfil formativo)."],
-        ["Dotación inicial", "Un núcleo reducido de personal policial con conocimientos de informática, por <b>reasignación de funciones</b>, sin creación de cargos."],
-        ["Perfil", "Oficiales y suboficiales con formación o experiencia en sistemas, programación, redes o gestión administrativa."],
-        ["Referentes", "Un referente por área usuaria, que mantiene sus funciones y actúa como enlace."],
-        ["Equipamiento", "El existente; a futuro, un servidor institucional para alojar los sistemas."],
-        ["Costo", "Sin costo adicional en la etapa inicial."]], [40 * mm, ANCHO - 40 * mm])]
+    # 10. Cómo empezar
+    s += h1("10. Cómo empezar: trabajo conjunto con las divisiones")
+    s += [Paragraph("No se propone por ahora crear estructuras nuevas, sino <b>comenzar a trabajar</b>: conocer cómo funciona cada división "
+                    "y cada Unidad Regional, identificar qué conviene informatizar primero y probarlo en pequeño, con resultados medibles.", st["lead"]),
+          imagen(PI("ruta.png"), pie="Figura 6. Ruta de trabajo propuesta.", alto_max=48 * mm)]
+    s += h2("Mesa de trabajo de informatización")
+    s += [pj("Se sugiere convocar una <b>mesa de trabajo</b> integrada por un referente de cada división y Unidad Regional que se incorpore, "
+             "junto con el personal que desarrolló los sistemas existentes. Sus integrantes mantienen sus funciones habituales y se reúnen "
+             "periódicamente para:")]
+    s += lista(["Relevar los procesos, libros, planillas y modelos de notas de cada área.",
+                "Priorizar qué informatizar primero según volumen de trabajo y beneficio esperado.",
+                "Acompañar las pruebas piloto y la capacitación en su área.",
+                "Recoger las opiniones de los usuarios y proponer mejoras.",
+                "Informar periódicamente a la Superioridad los avances y resultados."])
+    s += h2("Relevamiento por división")
+    s += [pj("Para cada área se propone relevar, con un formulario breve, la siguiente información:"),
+          tabla(["Qué se releva", "Para qué"], [
+              ["Trámites y documentos que se producen (y cuántos por mes)", "Dimensionar el trabajo y priorizar."],
+              ["Libros, planillas y registros que se llevan", "Definir qué se digitaliza y con qué formato."],
+              ["Modelos de notas, actas y formularios", "Incorporarlos como modelos automáticos."],
+              ["Plazos y vencimientos que se controlan", "Configurar alertas."],
+              ["Personal y equipamiento disponible (PC, celulares, conectividad)", "Planificar la implementación y la capacitación."],
+              ["Principales dificultades actuales", "Orientar el sistema a resolver problemas reales."]],
+              [ANCHO / 2, ANCHO / 2])]
+    s += h2("Continuidad")
+    s += [pj("A medida que aumente la cantidad de áreas y usuarios, la propia experiencia indicará qué organización conviene darle a este "
+             "trabajo para asegurar su continuidad, su seguridad y su crecimiento ordenado. Esa evaluación quedará a criterio de la Superioridad, "
+             "con la información que surja de los pilotos.")]
 
     # 10. Capacitación
-    s += h1("10. Capacitación del personal")
+    s += h1("11. Capacitación del personal")
     s += [pj("Los sistemas están diseñados para que su uso sea intuitivo: funcionan como cualquier aplicación del celular. Aun así, la "
              "capacitación es clave para la adopción. Se propone una formación <b>breve, práctica y por perfil</b>, dictada por personal propio "
              "en el lugar de trabajo."),
@@ -383,21 +402,21 @@ def armar():
                "sin traslados ni contrataciones externas.", "ok")]
 
     # 11. Implementación
-    s += h1("11. Plan de implementación por etapas")
+    s += h1("12. Plan de implementación por etapas")
     s += [tabla(["Etapa", "Acciones", "Plazo orientativo"], [
         ["<b>1. Piloto</b> (en curso)", "Sistemas en funcionamiento en la D.G.I.I. y el I.E.S.P.; piloto de Medicina Legal.", "En marcha"],
         ["<b>2. Evaluación</b>", "Medición de indicadores, encuesta a usuarios, demostración a la Superioridad.", "60 a 90 días"],
-        ["<b>3. Creación del Área</b>", "Designación del personal, reglamento interno de uso, referentes por área.", "Según disponga la Superioridad"],
-        ["<b>4. Extensión</b>", "Informatización de 2 o 3 áreas priorizadas por la Superioridad (por ejemplo D-1, D-5, Asuntos Internos).", "6 a 12 meses"],
-        ["<b>5. Institucionalización</b>", "Servidor propio, cuentas institucionales, integración de sistemas, capacitación permanente.", "Mediano plazo"]],
+        ["<b>3. Mesa de trabajo y relevamiento</b>", "Referentes por división y Unidad Regional; relevamiento de procesos; priorización.", "Según disponga la Superioridad"],
+        ["<b>4. Pilotos</b>", "Una o dos divisiones priorizadas (por ejemplo D-1, D-5 o Asuntos Internos) y una comisaría piloto por Unidad Regional.", "6 a 12 meses"],
+        ["<b>5. Extensión</b>", "Extensión a otras oficinas y comisarías; servidor propio y cuentas institucionales; capacitación permanente.", "Mediano plazo"]],
         [42 * mm, ANCHO - 82 * mm, 40 * mm]),
         Spacer(1, 4),
         caja("Los plazos son orientativos y dependen de las prioridades y recursos que disponga la Superioridad. Cada etapa se evalúa antes de iniciar la siguiente.", "tip")]
 
     # 12. Riesgos e indicadores
-    s += h1("12. Riesgos, mitigaciones e indicadores")
+    s += h1("13. Riesgos, mitigaciones e indicadores")
     s += [tabla(["Riesgo", "Mitigación"], [
-        ["Dependencia de una sola persona", "Creación del Área, código documentado y guardado en repositorios, manuales y referentes por área."],
+        ["Dependencia de una sola persona", "Mesa de trabajo y referentes por área, código documentado y guardado en repositorios, manuales."],
         ["Resistencia al cambio", "Capacitación práctica, convivencia inicial con el libro físico y mejoras según la opinión de los usuarios."],
         ["Conectividad", "Funciona con datos móviles y bajo consumo; la documentación impresa sigue siendo válida."],
         ["Seguridad de la información", "Claves cifradas, roles, auditoría, respaldos y reglamento interno de uso."],
@@ -412,18 +431,18 @@ def armar():
                 "Grado de satisfacción de los usuarios (encuesta breve)."])
 
     # 13. Petitorio
-    s += h1("13. Lo que se solicita a la Superioridad")
+    s += h1("14. Lo que se solicita a la Superioridad")
     s += [pj("Para avanzar con la presente propuesta, se solicita respetuosamente:")]
     s += [P.pasos([(1, "<b>Aval institucional</b> para la continuidad y extensión de los sistemas desarrollados."),
-                   (2, "<b>Creación o designación del Área de Sistemas y Transformación Digital</b>, con el personal que la Superioridad determine."),
-                   (3, "<b>Designación de referentes</b> en las áreas que se prioricen para la próxima etapa."),
-                   (4, "<b>Autorización de pruebas piloto</b> en dichas áreas y de los espacios de capacitación correspondientes."),
+                   (2, "<b>Designación de referentes</b> en las divisiones y en las cinco Unidades Regionales, para conformar una mesa de trabajo."),
+                   (3, "<b>Autorización para relevar</b> los procesos, libros y modelos de documentos de esas áreas."),
+                   (4, "<b>Autorización de pruebas piloto</b> en las áreas que se prioricen (incluida una comisaría por Unidad Regional) y de los espacios de capacitación."),
                    (5, "Uso de <b>cuentas institucionales</b> y, a mediano plazo, de un <b>servidor propio</b> para alojar los sistemas."),
                    (6, "Una <b>demostración práctica</b> ante la Superioridad de los sistemas en funcionamiento.")])]
     s += h2("Conclusión")
     s += [pj("La informatización de la gestión administrativa no es un objetivo a futuro: ya está ocurriendo en la Institución, con resultados "
-             "concretos, personal propio y sin costo de licencias. Darle un marco institucional, mediante la creación de un área específica, "
-             "permitirá multiplicar esos resultados en todas las oficinas, áreas y divisiones, con orden, seguridad y continuidad, en "
+             "concretos, personal propio y sin costo de licencias. Comenzar a trabajar junto a las divisiones y las Unidades Regionales "
+             "permitirá multiplicar esos resultados en todas las oficinas y comisarías, con orden, seguridad y continuidad, en "
              "beneficio de la Policía de Tucumán y de la comunidad a la que sirve."),
           caja("Los sistemas y esta propuesta <b>se irán optimizando en forma continua</b>, incorporando las necesidades y sugerencias de cada área.", "ok"),
           firma()]
