@@ -268,6 +268,8 @@ def tarjeta_expediente(r, mapa=None, detalle=True):
     if isinstance(r.get("pdf_link"), str) and r.get("pdf_link"):
         venc += (f'<a href="{esc(r["pdf_link"])}" target="_blank" style="text-decoration:none">'
                  f'{chip("📄 VER PDF", "#60A5FA", punto=False)}</a>')
+    sec = C.SECRETARIAS[C.sec_de(r.get("secretaria"))]
+    venc = chip(f"📖 {sec['sigla']}", sec["color"], punto=False) + venc
     if bool(r.get("tramitado")):
         venc += chip(f"✅ TRAMITADO {fmt_fecha(r.get('fecha_tramite'))}", C.STATUS["ok"], punto=False)
     elif r.get("estado") not in C.ESTADOS_CERRADOS:

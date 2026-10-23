@@ -93,10 +93,12 @@ def _match(valor, opciones, defecto):
     return None
 
 
-def validar(df_std):
+def validar(df_std, sec=None):
     """df_std con columnas estándar → (filas_para_importar, preview, tipos_nuevos, deps_nuevas)."""
     cfg = db.get_config()
-    exist = db.df_expedientes()[["libro", "folio", "orden", "nro_exp", "anio", "identificador"]]
+    sec = C.sec_de(sec)
+    exist = db.df_expedientes()
+    exist = exist[exist["secretaria"].fillna(C.SEC_DEFAULT) == sec][["libro", "folio", "orden", "nro_exp", "anio", "identificador"]]
     clave_db = {(int(a), int(b), int(c)) for a, b, c in exist[["libro", "folio", "orden"]].itertuples(index=False)}
     tipos_cat = set(K.tipos(False))
     deps_cat = set(K.deps(False))
@@ -114,7 +116,7 @@ def validar(df_std):
             if v in (None, "ERR"):
                 err.append(f"{nombre} inválido")
         libro = _int(g("libro"))
-        libro = int(cfg["libro_actual"]) if libro in (None, "ERR") else libro
+        libro = int(C.cfg_libro(cfg, sec, "libro_actual")) if libro in (None, "ERR") else libro
         fing = _fecha(g("fecha_ingreso"))
         if fing in (None, "ERR"):
             err.append("Fecha de ingreso inválida")
@@ -178,7 +180,7 @@ def validar(df_std):
         })
         if not err:
             filas.append(dict(
-                nro_exp=nro, folio=fol, orden=ord_, libro=libro, anio=anio, fecha_ingreso=fing, origen=origen,
+                secretaria=sec, nro_exp=nro, folio=fol, orden=ord_, libro=libro, anio=anio, fecha_ingreso=fing, origen=origen,
                 dependencia_origen=dep, nro_exp_origen=_txt(g("nro_exp_origen")), tipo=tipo, asunto=_txt(g("asunto")),
                 iniciador=(_txt(g("iniciador")) or "").upper() or None, prioridad=prio, fecha_termino=ft, estado=estado,
                 despacho=desp, destino=dest, ubicacion_actual=ub, fojas=fojas, observaciones=_txt(g("observaciones")),
@@ -187,7 +189,7 @@ def validar(df_std):
 
 
 def _vista_previa_e_importar(df_std, key):
-    filas, prev, tn, dn = validar(df_std)
+    filas, prev, tn, dn = validar(df_std, st.session_state.get("cm_sec"))
     ok = int((prev["Validación"] == "OK").sum())
     ex = int((prev["Validación"] == "YA EXISTE").sum())
     er = int((prev["Validación"] == "ERROR").sum())
@@ -224,6 +226,10 @@ def _vista_previa_e_importar(df_std, key):
 
 def render():
     ui.header("Carga Masiva", "Importación del libro de registro · Excel / CSV o transcripción directa")
+    sec = K.elegir_secretaria("cm_sec", "📖 ¿De qué libro son los asientos que va a cargar?")
+    if not sec:
+        st.info("Elija primero el libro: la **Dirección (D.G.I.I.)** y el **I.E.S.P.** tienen numeración independiente.")
+        return
     t1, t2 = st.tabs(["📄 Desde Excel / CSV", "⌨️ Transcripción rápida del libro"])
 
     with t1:
@@ -257,9 +263,9 @@ def render():
         st.caption("Copie el libro tal como está: complete renglón por renglón. La numeración se propone sola según los renglones por folio configurados.")
         c1, c2, c3 = st.columns(3)
         n = c1.number_input("Renglones a transcribir", 1, 200, 10, key="tr_n")
-        base = db.sugerir_numeracion()
+        base = db.sugerir_numeracion(sec=sec)
         fecha_def = c2.date_input("Fecha por defecto", db.hoy(), format="DD/MM/YYYY", key="tr_f")
-        if c3.button("🔄 Regenerar grilla", key="tr_reset") or "tr_df" not in st.session_state or st.session_state.get("tr_n_prev") != n:
+        if c3.button("🔄 Regenerar grilla", key="tr_reset") or "tr_df" not in st.session_state or st.session_state.get("tr_n_prev") != (n, sec):
             filas, num = [], base
             for _ in range(int(n)):
                 filas.append(dict(nro_exp=num["nro_exp"], folio=num["folio"], orden=num["orden"], fecha_ingreso=fecha_def,
@@ -267,7 +273,7 @@ def render():
                                   prioridad="NORMAL", estado="EN TRÁMITE", despacho=None, destino=None, ubicacion_actual=C.DEP_PROPIA))
                 num = db.avanzar(num)
             st.session_state["tr_df"] = pd.DataFrame(filas)
-            st.session_state["tr_n_prev"] = n
+            st.session_state["tr_n_prev"] = (n, sec)
             st.session_state.pop("tr_editor", None)
         lista_dep = K.deps()
         ed = st.data_editor(

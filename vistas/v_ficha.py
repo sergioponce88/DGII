@@ -175,7 +175,10 @@ def render():
             lista_dep = K.deps(False)
             lista_tipos = K.tipos(False)
             with st.form(f"edit_{exp_id}"):
-                st.caption("⚠️ Cambiar N° / folio / orden modifica la identificación del expediente.")
+                st.caption("⚠️ Cambiar el libro o N° / folio / orden modifica la identificación del expediente.")
+                secs = list(C.SECRETARIAS)
+                sec_e = st.radio("📖 Libro", secs, index=secs.index(C.sec_de(r.get("secretaria"))), horizontal=True,
+                                 format_func=lambda k: C.SECRETARIAS[k]["sigla"])
                 n1, n2, n3, n4, n5 = st.columns(5)
                 nro = n1.number_input("N° Exp", 1, value=int(r["nro_exp"]))
                 fol = n2.number_input("Folio", 1, value=int(r["folio"]))
@@ -204,12 +207,12 @@ def render():
                 fojas = d3.number_input("Fojas", 0, value=K.num(r["fojas"]))
                 obs = st.text_area("Observaciones", r["observaciones"] or "", height=60)
                 if st.form_submit_button("💾 Guardar cambios"):
-                    choque = db.conflicto_numeracion(nro, fol, ord_, lib, anio, excluir_id=exp_id)
+                    choque = db.conflicto_numeracion(nro, fol, ord_, lib, anio, excluir_id=exp_id, sec=sec_e)
                     if choque:
                         st.error(f"La numeración choca con el expediente {choque}.")
                     else:
                         db.actualizar_expediente(exp_id, dict(
-                            nro_exp=int(nro), folio=int(fol), orden=int(ord_), libro=int(lib), anio=int(anio), tipo=tipo,
+                            secretaria=sec_e, nro_exp=int(nro), folio=int(fol), orden=int(ord_), libro=int(lib), anio=int(anio), tipo=tipo,
                             origen=origen, dependencia_origen=dep_org, asunto=asunto.strip() or None,
                             nro_exp_origen=nro_org.strip() or None, iniciador=inic.strip().upper() or None, fecha_ingreso=f_ing,
                             prioridad=prio, fecha_termino=ft, estado=est, despacho=desp or None, ubicacion_actual=ubic, destino=dest,

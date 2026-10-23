@@ -10,6 +10,8 @@ import ui
 
 def filtrar(exp, key):
     with st.expander("🔍 Filtros", expanded=True):
+        secs = st.segmented_control("📖 Libro", ["Ambos"] + list(C.SECRETARIAS), default="Ambos", key=f"{key}_sec",
+                                    format_func=lambda k: k if k == "Ambos" else C.SECRETARIAS[k]["sigla"])
         c1, c2, c3 = st.columns([2, 1, 1])
         texto = c1.text_input("Buscar (N°, asunto, iniciador, N° origen)", key=f"{key}_txt")
         anios = sorted(exp["anio"].dropna().astype(int).unique().tolist(), reverse=True)
@@ -26,6 +28,8 @@ def filtrar(exp, key):
         hasta = c9.date_input("Ingreso hasta", value=None, format="DD/MM/YYYY", key=f"{key}_h")
         tram = c10.selectbox("Trámite", ["Todos", "⏳ Pendientes de trámite", "✅ Tramitados"], key=f"{key}_tram")
     df = exp
+    if secs and secs != "Ambos":
+        df = df[df["secretaria"].fillna(C.SEC_DEFAULT) == secs]
     if texto:
         t = texto.strip().lower()
         blob = (df["identificador"].astype(str) + " " + df["asunto"].fillna("") + " " + df["iniciador"].fillna("") + " "
@@ -59,6 +63,7 @@ def filtrar(exp, key):
 def tabla_libro(df):
     return pd.DataFrame(
         {
+            "Libro de": df["secretaria"].fillna(C.SEC_DEFAULT).map(lambda s: C.SECRETARIAS[C.sec_de(s)]["sigla"]),
             "N° Exp/Folio/Orden": df["identificador"],
             "Año": df["anio"],
             "Libro": df["libro"],
@@ -112,9 +117,10 @@ def render():
             if st.button("Abrir ficha", key=f"lib_open_{r['id']}"):
                 K.ir_a(K.PAG_FICHA, r["id"])
     elif vista == "📖 Por folio":
-        for (lib, fol), g in df.sort_values(["libro", "folio", "orden"], ascending=[False, False, True]).groupby(["libro", "folio"], sort=False):
-            ui.seccion(f"Libro {lib} · Folio {fol}–{fol + 1}  ({len(g)} asientos)")
-            st.dataframe(ui.estilo_tabla(tabla_libro(g).drop(columns=["Libro"]), mapa), hide_index=True, width="stretch", column_config=COLCFG)
+        d = df.assign(_sec=df["secretaria"].fillna(C.SEC_DEFAULT))
+        for (sec, lib, fol), g in d.sort_values(["_sec", "libro", "folio", "orden"], ascending=[True, False, False, True]).groupby(["_sec", "libro", "folio"], sort=False):
+            ui.seccion(f"{C.SECRETARIAS[C.sec_de(sec)]['sigla']} · Libro {lib} · Folio {fol}–{fol + 1}  ({len(g)} asientos)")
+            st.dataframe(ui.estilo_tabla(tabla_libro(g).drop(columns=["Libro", "Libro de"]), mapa), hide_index=True, width="stretch", column_config=COLCFG)
     else:
         ev = st.dataframe(
             ui.estilo_tabla(t, mapa),

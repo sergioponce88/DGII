@@ -13,7 +13,7 @@ def _resultado():
     r = st.session_state.get("ultimo_alta")
     if not r:
         return
-    ui.alerta("✅", f"Expediente registrado: N° {r['identificador']} (Año {r['anio']})",
+    ui.alerta("✅", f"Expediente registrado en el libro del {C.SECRETARIAS[C.sec_de(r.get('secretaria'))]['sigla']}: N° {r['identificador']} (Año {r['anio']})",
               f"{r['tipo']} · Asiento en libro {r['libro']}, folio {r['folio']}, orden {r['orden']}", C.STATUS["ok"])
     c1, c2, c3 = st.columns(3)
     c1.link_button("📲 Avisar por WhatsApp", R.link_whatsapp(R.msg_alta(r), K.tel_dep(r.get("ubicacion_actual"))))
@@ -22,6 +22,7 @@ def _resultado():
         K.ir_a(K.PAG_FICHA, r["id"])
     if c3.button("➕ Cargar otro", key="alta_otro"):
         st.session_state.pop("ultimo_alta", None)
+        st.session_state.pop("n_sec", None)  # vuelve a preguntar a qué libro corresponde
         st.rerun()
 
 
@@ -33,6 +34,13 @@ def render():
 
     lista_dep = K.deps()
     lista_tipos = K.tipos()
+
+    # ── Paso 0: ¿a qué libro corresponde? (mismo personal, dos libros con numeración propia) ──
+    sec = K.elegir_secretaria("n_sec", "📖 ¿A qué libro corresponde este expediente?")
+    if not sec:
+        st.info("Elija primero si el expediente corresponde a la **Dirección General de Institutos e Instrucción** o al "
+                "**Instituto de Enseñanza Superior de Policía**: cada uno lleva su propio libro y su propia numeración.")
+        return
 
     with st.container(border=True):
         a, b = st.columns([3, 1], vertical_alignment="center")
@@ -63,27 +71,27 @@ def render():
     with d2b:
         K.boton_nueva_dependencia("dest", "n_destino")
 
-    sug = db.sugerir_numeracion()
+    sug = db.sugerir_numeracion(sec=sec)
     with st.container(border=True):
-        st.markdown("**📖 Asiento en el libro**")
+        st.markdown(f"**📖 Asiento en el libro del {C.SECRETARIAS[sec]['sigla']}**")
         n1, n2, n3, n4, n5 = st.columns(5)
-        nro = n1.number_input("N° Expediente", min_value=1, value=sug["nro_exp"], step=1, key="n_nro")
-        nuevo_folio = n5.checkbox("Iniciar nuevo folio", key="n_nf", help=f"Pasa al folio {sug['folio'] + sug['paso'] if sug['orden'] > 1 else sug['folio']} con orden 1")
+        nro = n1.number_input("N° Expediente", min_value=1, value=sug["nro_exp"], step=1, key=f"n_nro_{sec}")
+        nuevo_folio = n5.checkbox("Iniciar nuevo folio", key=f"n_nf_{sec}", help=f"Pasa al folio {sug['folio'] + sug['paso'] if sug['orden'] > 1 else sug['folio']} con orden 1")
         f_def, o_def = (sug["folio"] + sug["paso"], 1) if nuevo_folio and sug["orden"] > 1 else (sug["folio"], sug["orden"])
-        folio = n2.number_input("Folio (foja izq.)", min_value=1, value=f_def, step=1, key=f"n_fol_{f_def}")
-        orden = n3.number_input("N° Orden", min_value=1, value=o_def, step=1, key=f"n_ord_{f_def}_{o_def}")
-        libro = n4.number_input("Libro", min_value=1, value=sug["libro"], step=1, key="n_lib")
-        conflicto = db.conflicto_numeracion(nro, folio, orden, libro, db.hoy().year)
+        folio = n2.number_input("Folio (foja izq.)", min_value=1, value=f_def, step=1, key=f"n_fol_{sec}_{f_def}")
+        orden = n3.number_input("N° Orden", min_value=1, value=o_def, step=1, key=f"n_ord_{sec}_{f_def}_{o_def}")
+        libro = n4.number_input("Libro", min_value=1, value=sug["libro"], step=1, key=f"n_lib_{sec}")
+        conflicto = db.conflicto_numeracion(nro, folio, orden, libro, db.hoy().year, sec=sec)
         ident = f"{nro}/{folio}/{orden}"
         if conflicto:
             st.error(f"⚠️ La numeración choca con el expediente ya registrado **{conflicto}**. Corrija N°, folio u orden.")
-            ex = db.leer("SELECT id FROM expedientes WHERE identificador = %s ORDER BY anio DESC LIMIT 1", (conflicto,))
+            ex = db.leer("SELECT id FROM expedientes WHERE identificador = %s AND secretaria = %s ORDER BY anio DESC LIMIT 1", (conflicto, sec))
             if not ex.empty and st.button(f"📥 Es el {conflicto} que vuelve: registrar reingreso", key="n_rei"):
                 st.session_state["mr_reingreso"] = True
                 st.session_state["mov_sel"] = int(ex["id"].iloc[0])
                 K.ir_a(K.PAG_MOV, int(ex["id"].iloc[0]))
         else:
-            st.markdown(f"<div class='ident'>{ui.esc(ident)}<small>IDENTIFICACIÓN · {sug['cap']} renglones por folio</small></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='ident'>{ui.esc(ident)}<small>{C.SECRETARIAS[sec]['sigla']} · IDENTIFICACIÓN · {sug['cap']} renglones por folio</small></div>", unsafe_allow_html=True)
 
     es_curso = bool(tipo) and K.tipo_es_curso(tipo)
 
@@ -162,7 +170,7 @@ def render():
         return
 
     exp = dict(
-        nro_exp=int(nro), folio=int(folio), orden=int(orden), libro=int(libro), anio=f_ing.year,
+        secretaria=sec, nro_exp=int(nro), folio=int(folio), orden=int(orden), libro=int(libro), anio=f_ing.year,
         fecha_ingreso=f_ing, origen=origen, dependencia_origen=dep_org, nro_exp_origen=nro_org.strip() or None,
         tipo=tipo, asunto=asunto.strip() or None, iniciador=iniciador.strip().upper() or None, prioridad=prioridad,
         fecha_termino=f_term, estado=estado, ubicacion_actual=ubic, destino=destino, despacho=despacho or None, fojas=int(fojas) or None, observaciones=obs.strip() or None,

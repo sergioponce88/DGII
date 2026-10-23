@@ -78,7 +78,15 @@ def idx(lista, valor, defecto=0):
 def etiqueta_exp(r):
     a = r.get("asunto")
     asunto = a[:45] if isinstance(a, str) else ""
-    return f"{r['identificador']} · {r['anio']} · {r['tipo']}" + (f" · {asunto}" if asunto else "")
+    sig = C.SECRETARIAS[C.sec_de(r.get("secretaria"))]["sigla"]
+    return f"[{sig}] {r['identificador']} · {r['anio']} · {r['tipo']}" + (f" · {asunto}" if asunto else "")
+
+
+def elegir_secretaria(key, label="¿A qué libro corresponde?", obligatorio=True):
+    """Pregunta explícita: Dirección (D.G.I.I.) o Instituto (I.E.S.P.). Sin valor por defecto si es obligatorio."""
+    ops = list(C.SECRETARIAS)
+    return st.radio(label, ops, index=None if obligatorio else 0, horizontal=True, key=key,
+                    format_func=lambda k: f"{C.SECRETARIAS[k]['sigla']} — {C.SECRETARIAS[k]['nombre']}")
 
 
 def selector_expediente(key, df=None, label="Buscar expediente (N°, tipo o asunto):"):

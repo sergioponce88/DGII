@@ -213,6 +213,14 @@ CONFIG_DEFAULT = {
     "renglones_por_folio": "10",
     "paso_folio": "2",
     "reinicio_anual": "NO",
+    # Libro del I.E.S.P. (mismo personal, otro libro y otra numeración)
+    "iesp_nro_inicial": "1",
+    "iesp_folio_inicial": "1",
+    "iesp_libro_actual": "1",
+    "iesp_renglones_por_folio": "10",
+    "iesp_paso_folio": "2",
+    "iesp_reinicio_anual": "NO",
+    "iesp_sec_ref": "Sec. Rectorado I.E.S.P. “G.J.F.S.M.”",
     "dias_aviso_cursos": "7",
     "dias_estancado": "15",
     "wp_por_defecto": "",
@@ -244,3 +252,27 @@ AUTORIDADES_SEED = [
     ("GABINETE", "Señora", "Directora del Gabinete Interdisciplinario", "", "Oficina", "INTERNO"),
     ("ASESORIA", "Señor", "Asesor Letrado del I.E.S.P. “G.J.F.S.M.”", "", "Oficina", "INTERNO"),
 ]
+
+
+# ───────────────────────── Libros / secretarías ─────────────────────────
+# La Dirección y el I.E.S.P. trabajan con el mismo personal, pero cada uno lleva su propio libro y numeración.
+SECRETARIAS = {
+    "DGII": {"sigla": "D.G.I.I.", "nombre": "Dirección General de Institutos e Instrucción", "color": "#3987E5"},
+    "IESP": {"sigla": "I.E.S.P.", "nombre": "Instituto de Enseñanza Superior de Policía “G.J.F.S.M.”", "color": "#199E70"},
+}
+SEC_DEFAULT = "DGII"
+
+
+def sec_de(x):
+    return x if x in SECRETARIAS else SEC_DEFAULT
+
+
+def cfg_libro(cfg, sec, clave):
+    """Parámetro del libro según la secretaría (las del I.E.S.P. llevan el prefijo iesp_)."""
+    if sec_de(sec) == "IESP":
+        return cfg.get(f"iesp_{clave}", CONFIG_DEFAULT.get(f"iesp_{clave}", cfg.get(clave)))
+    return cfg.get(clave, CONFIG_DEFAULT.get(clave))
+
+
+def sec_ref(cfg, sec):
+    return cfg_libro(cfg, sec, "sec_ref") or "Sec. D.G.I.I."

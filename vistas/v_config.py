@@ -32,30 +32,36 @@ def render():
         _drive(cfg)
 
     with t1:
-        with st.form("cfg_libro"):
-            st.markdown("**Numeración del libro**")
+        sec_cfg = st.segmented_control("📖 Libro a configurar", list(C.SECRETARIAS), default=C.SEC_DEFAULT, key="cfg_sec",
+                                       format_func=lambda k: f"{C.SECRETARIAS[k]['sigla']} — {C.SECRETARIAS[k]['nombre']}") or C.SEC_DEFAULT
+        pre = "iesp_" if sec_cfg == "IESP" else ""
+        L = lambda k: C.cfg_libro(cfg, sec_cfg, k)  # noqa: E731
+        with st.form(f"cfg_libro_{sec_cfg}"):
+            st.markdown(f"**Numeración del libro del {C.SECRETARIAS[sec_cfg]['sigla']}**")
             c1, c2, c3 = st.columns(3)
-            nro_ini = c1.number_input("N° de expediente inicial", 1, value=int(cfg["nro_inicial"]), help="Se usa solo cuando todavía no hay expedientes cargados.")
-            fol_ini = c2.number_input("Folio inicial", 1, value=int(cfg["folio_inicial"]))
-            libro = c3.number_input("Libro actual", 1, value=int(cfg["libro_actual"]))
+            nro_ini = c1.number_input("N° de expediente inicial", 1, value=int(L("nro_inicial")), help="Se usa solo cuando todavía no hay expedientes cargados en este libro.")
+            fol_ini = c2.number_input("Folio inicial", 1, value=int(L("folio_inicial")))
+            libro = c3.number_input("Libro actual", 1, value=int(L("libro_actual")))
             c4, c5, c6 = st.columns(3)
-            ren = c4.number_input("Renglones (asientos) por folio", 1, 100, int(cfg["renglones_por_folio"]),
+            ren = c4.number_input("Renglones (asientos) por folio", 1, 100, int(L("renglones_por_folio")),
                                   help="Cuando el orden llega a este número, el próximo expediente pasa al siguiente folio con orden 1.")
-            paso = c5.selectbox("Avance de folio", [2, 1], index=0 if cfg["paso_folio"] == "2" else 1,
+            paso = c5.selectbox("Avance de folio", [2, 1], index=0 if str(L("paso_folio")) == "2" else 1,
                                 help="2 = cada asiento ocupa la doble página (se numera la foja izquierda: 1, 3, 5…). 1 = folio correlativo.")
-            rei = c6.selectbox("¿El N° de expediente reinicia cada año?", ["NO", "SI"], index=0 if cfg["reinicio_anual"] == "NO" else 1)
-            st.markdown("**Alertas y avisos**")
+            rei = c6.selectbox("¿El N° de expediente reinicia cada año?", ["NO", "SI"], index=0 if L("reinicio_anual") == "NO" else 1)
+            sref = st.text_input("Secretaría que figura en la referencia de las notas", L("sec_ref"))
+            st.markdown("**Alertas y avisos** (comunes a ambos libros)")
             a1, a2, a3 = st.columns(3)
             dav = a1.number_input("Avisar inicio de curso (días antes)", 0, 60, int(cfg["dias_aviso_cursos"]))
             dest = a2.number_input("Marcar expediente detenido después de (días)", 1, 365, int(cfg["dias_estancado"]))
             wp = a3.text_input("WhatsApp por defecto (Mesa de Entradas)", cfg.get("wp_por_defecto", ""), placeholder="381 5123456")
             if st.form_submit_button("💾 Guardar configuración"):
-                db.set_config(dict(nro_inicial=nro_ini, folio_inicial=fol_ini, libro_actual=libro, renglones_por_folio=ren,
-                                   paso_folio=paso, reinicio_anual=rei, dias_aviso_cursos=dav, dias_estancado=dest, wp_por_defecto=wp.strip()))
+                vals = {"nro_inicial": nro_ini, "folio_inicial": fol_ini, "libro_actual": libro, "renglones_por_folio": ren,
+                        "paso_folio": paso, "reinicio_anual": rei, "sec_ref": sref.strip()}
+                db.set_config({pre + k: v for k, v in vals.items()} | dict(dias_aviso_cursos=dav, dias_estancado=dest, wp_por_defecto=wp.strip()))
                 st.toast("Configuración guardada", icon="✅")
                 st.rerun()
-        s = db.sugerir_numeracion()
-        st.info(f"Próximo asiento sugerido: **{s['nro_exp']}/{s['folio']}/{s['orden']}** (libro {s['libro']}).")
+        s = db.sugerir_numeracion(sec=sec_cfg)
+        st.info(f"Próximo asiento sugerido en el libro del {C.SECRETARIAS[sec_cfg]['sigla']}: **{s['nro_exp']}/{s['folio']}/{s['orden']}** (libro {s['libro']}).")
 
     with t2:
         df = db.df_dependencias()[["id", "nombre", "sigla", "color", "telefono_wp", "activa"]]
@@ -259,7 +265,7 @@ def _tramitacion(cfg):
         etiqueta = dict(zip(aut["clave"], aut["cargo"]))
         elevar = c1.selectbox("Las elevaciones van a", claves, index=claves.index(cfg.get("elevar_a")) if cfg.get("elevar_a") in claves else 0,
                               format_func=lambda k: etiqueta.get(k, k), help="Depende de la gestión: Jefatura o Subjefatura de Policía")
-        sec = c2.text_input("Secretaría en la referencia", cfg.get("sec_ref") or "Sec. D.G.I.I.")
+        c2.caption("La secretaría de la referencia se configura por libro en «📖 Libro y alertas».")
         c3, c4 = st.columns(2)
         fn = c3.text_input("Firmante (grado y nombre)", cfg.get("firmante_nombre") or "", placeholder="Crio. Insp. APELLIDO NOMBRE")
         fc = c4.text_input("Cargo del firmante", cfg.get("firmante_cargo") or "")
@@ -269,7 +275,7 @@ def _tramitacion(cfg):
                             value=cfg.get("ia_datos_personales") == "SI",
                             help="En el nivel gratuito, Google puede usar lo enviado para mejorar sus productos. Recomendado: desactivado.")
         if st.form_submit_button("💾 Guardar"):
-            db.set_config({"elevar_a": elevar, "sec_ref": sec.strip(), "firmante_nombre": fn.strip(), "firmante_cargo": fc.strip(),
+            db.set_config({"elevar_a": elevar, "firmante_nombre": fn.strip(), "firmante_cargo": fc.strip(),
                            "firmante_caracter": car.strip(), "doc_lema": lema.strip(),
                            "ia_datos_personales": "SI" if ia_pers else "NO"})
             st.toast("Configuración de notas guardada", icon="✅")

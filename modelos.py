@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from typing import Callable
 
+import catalogos as C
 import docword as W
 
 # ───────────────────────── Estructuras ─────────────────────────
@@ -62,7 +63,7 @@ def clave_elevacion(ctx):
 
 def referencia(d, ctx, asunto=None):
     e = ctx["exp"]
-    sec = ctx["cfg"].get("sec_ref") or "Sec. D.G.I.I."
+    sec = C.sec_ref(ctx["cfg"], ctx["exp"].get("secretaria"))
     txt = f"**Ref.:** Expte. N° {_s(e.get('identificador'))} {sec} — **Asunto:** {_s(asunto or e.get('asunto')) or '—'}.-"
     ini = _s(e.get("dependencia_origen"))
     d.referencia(txt, f"Iniciado por: {ini}" if ini and ini != ctx["cfg"].get("dep_propia") else None)
@@ -105,7 +106,7 @@ def parrafos(texto):
 def act_txt(ctx, corto=False):
     """'SUMARIO ADMINISTRATIVO N° 379/202/05 Sec. D.G.I.I.; CAUSA: ...; CAUSANTE: ...'"""
     a, e = ctx["act"], ctx["exp"]
-    sec = ctx["cfg"].get("sec_ref") or "Sec. D.G.I.I."
+    sec = C.sec_ref(ctx["cfg"], ctx["exp"].get("secretaria"))
     num = _s(a.get("numero")) or _s(e.get("identificador"))
     partes = [f"{_s(a.get('clase')) or 'ACTUACIONES ADMINISTRATIVAS'} N° {num} {sec}"]
     if corto:
@@ -393,7 +394,7 @@ def r_proyecto(v, ctx):
     d.titulo(_s(v.get("titulo")).upper() or "—", tam=16, subrayar=False, despues=40)
     d.parrafo(f"**PROCEDENCIA:** {_s(v.get('procedencia'))}", sangria=False, alin="c")
     if _s(ctx["exp"].get("identificador")):
-        d.parrafo(f"**Expte. N°** {_s(ctx['exp'].get('identificador'))} {ctx['cfg'].get('sec_ref') or 'Sec. D.G.I.I.'}", sangria=False, alin="c")
+        d.parrafo(f"**Expte. N°** {_s(ctx['exp'].get('identificador'))} {C.sec_ref(ctx['cfg'], ctx['exp'].get('secretaria'))}", sangria=False, alin="c")
     d.parrafo(f"San Miguel de Tucumán, {W.fecha_larga(v.get('fecha') or ctx['hoy'])}", sangria=False, alin="c")
     d.salto()
     for i, (k, t) in enumerate(SECCIONES_PROY, 1):

@@ -145,10 +145,14 @@ CREATE TABLE IF NOT EXISTS expedientes (
     observaciones TEXT,
     creado_por TEXT,
     creado_en TIMESTAMP DEFAULT NOW(),
-    actualizado_en TIMESTAMP DEFAULT NOW(),
-    CONSTRAINT ux_libro_folio_orden UNIQUE (libro, folio, orden)
+    actualizado_en TIMESTAMP DEFAULT NOW()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ux_exp_nro_anio ON expedientes (nro_exp, anio);
+-- Dos libros (D.G.I.I. e I.E.S.P.): la numeración es única dentro de cada uno
+ALTER TABLE expedientes ADD COLUMN IF NOT EXISTS secretaria TEXT NOT NULL DEFAULT 'DGII';
+ALTER TABLE expedientes DROP CONSTRAINT IF EXISTS ux_libro_folio_orden;
+DROP INDEX IF EXISTS ux_exp_nro_anio;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_sec_libro_folio_orden ON expedientes (secretaria, libro, folio, orden);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_sec_nro_anio ON expedientes (secretaria, nro_exp, anio);
 CREATE INDEX IF NOT EXISTS ix_exp_tipo ON expedientes (tipo);
 CREATE INDEX IF NOT EXISTS ix_exp_estado ON expedientes (estado);
 
@@ -498,28 +502,30 @@ def fase_curso(row):
 
 
 # ───────────────────────── Numeración del libro ─────────────────────────
-def sugerir_numeracion(anio=None):
-    """Próximo N°EXP/FOLIO/ORDEN según el último asiento del libro actual."""
+def sugerir_numeracion(anio=None, sec=None):
+    """Próximo N°EXP/FOLIO/ORDEN según el último asiento del libro actual de la secretaría (D.G.I.I. o I.E.S.P.)."""
     cfg = get_config()
+    sec = C.sec_de(sec)
+    L = lambda k: C.cfg_libro(cfg, sec, k)  # noqa: E731
     anio = anio or hoy().year
-    libro = int(cfg["libro_actual"])
-    cap = max(1, int(cfg["renglones_por_folio"]))
-    paso = max(1, int(cfg["paso_folio"]))
-    if cfg["reinicio_anual"] == "SI":
-        r = leer("SELECT MAX(nro_exp) AS m FROM expedientes WHERE anio = %s", (anio,))
+    libro = int(L("libro_actual"))
+    cap = max(1, int(L("renglones_por_folio")))
+    paso = max(1, int(L("paso_folio")))
+    if L("reinicio_anual") == "SI":
+        r = leer("SELECT MAX(nro_exp) AS m FROM expedientes WHERE anio = %s AND secretaria = %s", (anio, sec))
     else:
-        r = leer("SELECT MAX(nro_exp) AS m FROM expedientes")
+        r = leer("SELECT MAX(nro_exp) AS m FROM expedientes WHERE secretaria = %s", (sec,))
     max_nro = r["m"].iloc[0]
-    nro = int(max_nro) + 1 if pd.notna(max_nro) else int(cfg["nro_inicial"])
+    nro = int(max_nro) + 1 if pd.notna(max_nro) else int(L("nro_inicial"))
     ult = leer(
-        "SELECT folio, orden FROM expedientes WHERE libro = %s ORDER BY folio DESC, orden DESC LIMIT 1", (libro,)
+        "SELECT folio, orden FROM expedientes WHERE libro = %s AND secretaria = %s ORDER BY folio DESC, orden DESC LIMIT 1", (libro, sec)
     )
     if ult.empty:
-        folio, orden = int(cfg["folio_inicial"]), 1
+        folio, orden = int(L("folio_inicial")), 1
     else:
         f, o = int(ult["folio"].iloc[0]), int(ult["orden"].iloc[0])
         folio, orden = (f + paso, 1) if o >= cap else (f, o + 1)
-    return {"nro_exp": nro, "folio": folio, "orden": orden, "libro": libro, "anio": anio, "cap": cap, "paso": paso}
+    return {"nro_exp": nro, "folio": folio, "orden": orden, "libro": libro, "anio": anio, "cap": cap, "paso": paso, "secretaria": sec}
 
 
 def avanzar(num: dict, nuevo_folio=False):
@@ -534,11 +540,12 @@ def avanzar(num: dict, nuevo_folio=False):
     return n
 
 
-def conflicto_numeracion(nro, folio, orden, libro, anio, excluir_id=None):
+def conflicto_numeracion(nro, folio, orden, libro, anio, excluir_id=None, sec=None):
     cfg = get_config()
-    params = [libro, folio, orden]
-    sql = "SELECT identificador FROM expedientes WHERE ((libro = %s AND folio = %s AND orden = %s)"
-    if cfg["reinicio_anual"] == "SI":
+    sec = C.sec_de(sec)
+    params = [sec, libro, folio, orden]
+    sql = "SELECT identificador FROM expedientes WHERE secretaria = %s AND ((libro = %s AND folio = %s AND orden = %s)"
+    if C.cfg_libro(cfg, sec, "reinicio_anual") == "SI":
         sql += " OR (nro_exp = %s AND anio = %s))"
         params += [nro, anio]
     else:
@@ -755,8 +762,8 @@ def importar_expedientes(filas, modo="omitir", usuario=""):
             cur.execute("SAVEPOINT sp")
             try:
                 cur.execute(
-                    "SELECT id FROM expedientes WHERE libro = %s AND folio = %s AND orden = %s",
-                    (f["libro"], f["folio"], f["orden"]),
+                    "SELECT id FROM expedientes WHERE secretaria = %s AND libro = %s AND folio = %s AND orden = %s",
+                    (C.sec_de(f.get("secretaria")), f["libro"], f["folio"], f["orden"]),
                 )
                 existe = cur.fetchone()
                 if existe:
