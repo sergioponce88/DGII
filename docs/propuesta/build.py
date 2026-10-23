@@ -65,11 +65,10 @@ def portada(c, doc):
     c.rect(0, H - 8 * mm, W, 8 * mm, fill=1, stroke=0)
     c.setFillColor(colors.HexColor("#1D4ED8"))
     c.rect(0, H * 0.30, W, 4, fill=1, stroke=0)
-    for x, logo in ((W / 2 - 46 * mm, P.LOGO_POL), (W / 2 + 8 * mm, P.LOGO_DGII)):
-        try:
-            c.drawImage(logo, x, H - 85 * mm, width=38 * mm, height=44 * mm, mask="auto", preserveAspectRatio=True)
-        except Exception:
-            pass
+    try:
+        c.drawImage(P.LOGO_POL, W / 2 - 22 * mm, H - 88 * mm, width=44 * mm, height=50 * mm, mask="auto", preserveAspectRatio=True)
+    except Exception:
+        pass
     c.setFillColor(colors.HexColor("#93C5FD"))
     c.setFont("SB", 11)
     c.drawCentredString(W / 2, H - 100 * mm, "POLICÍA DE TUCUMÁN")
