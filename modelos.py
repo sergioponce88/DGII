@@ -97,7 +97,6 @@ def nota_base(ctx, v, cuerpo, asunto=None, cierre=CIERRE):
         if _s(t):
             d.parrafo(t)
     d.parrafo(cierre)
-    firma_director(d, ctx, v)
     return d
 
 
@@ -217,7 +216,7 @@ ELEVACION = Modelo(
      Campo("motivo", "Motivo / complemento de la opinión", "area", "", ia=True,
            ayuda="Ej.: , teniéndose en cuenta que los conocimientos adquiridos serán replicados…"),
      Campo("mision", "Solicitar carácter de Misión Oficial y Necesidad Institucional", "check", False),
-     C_verbo(), C_firma()],
+     C_verbo()],
     r_elevacion, "NOTA ELEVADA", destino=lambda v: v.get("destino"), despacho=_despacho_opinion)
 
 
@@ -248,7 +247,7 @@ def _pase(id_, nombre, icono, desc, destino, fin, cumplido=False, cumplido_txt="
                ayuda=detalle_ayuda or "Ej.: Que conforme a la presente solicitud, deberá hacer comparecer a … ; asimismo, informará si …"),
          Campo("cumplido", "Agregar «CUMPLIDO, …»", "check", cumplido),
          Campo("cumplido_txt", "Texto del cumplido", "text", cumplido_txt or "vuelva para trámites ulteriores"),
-         C_verbo(), C_firma()],
+         C_verbo()],
         r_pase, accion, destino=lambda v: v.get("destino"))
 
 
@@ -290,7 +289,7 @@ RELACIONES = Modelo(
      Campo("detalle", "Detalle del pedido (opcional)", "area", "", ia=True),
      Campo("viable", "Opinión", "select", "VIABLE", ["VIABLE", "NO VIABLE"]),
      Campo("movilidad", "Movilidad", "select", "brinda", list(MOVILIDAD)),
-     C_verbo(), C_firma()],
+     C_verbo()],
     r_relaciones, "NOTA ELEVADA", destino=lambda v: v.get("destino"),
     despacho=lambda v: "VISTO BUENO" if v.get("viable") == "VIABLE" else "A CONSIDERACIÓN DEL COMANDO SUPERIOR")
 
@@ -315,7 +314,7 @@ SANCION = Modelo(
      Campo("impuesta_por", "Impuesta por", "text", ""),
      Campo("infraccion", "Infracción", "text", "", ayuda="Ej.: Cap. II Art. 10 Inc. 1° Ap. “b” del R.R.D.P."),
      Campo("detalle", "Detalle adicional (opcional)", "area", ""),
-     C_firma()],
+     ],
     r_sancion, "AUTORIZACIÓN OTORGADA", sensible=True, destino=lambda v: v.get("destino"), despacho=lambda v: "VISTO BUENO")
 
 
@@ -511,7 +510,7 @@ def r_valoracion(v, ctx):
     for i, t in enumerate(arts, 1):
         d.parrafo(f"**Artículo {i}°.-** {t}", sangria=False)
     d.parrafo(f"SAN MIGUEL DE TUCUMÁN, {W.fecha_larga(v.get('fecha') or ctx['hoy']).upper()}.-", sangria=False, alin="r", negrita=True, antes=8)
-    d.firma(_s(a.get("instructor")) or _s(ctx["cfg"].get("firmante_nombre")), "Instructor")
+    d.firma(_s(a.get("instructor")), "Instructor")
     return d
 
 
@@ -742,7 +741,7 @@ CONCLUSIONES = Modelo("conclusiones", "Conclusiones definitivas", "✅", ACT, "V
                       r_conclusiones, "INFORME PRODUCIDO", sensible=True)
 ELEV_ACT = Modelo("elev_actuacion", "Elevación de las actuaciones", "📤", ACT, "Eleva lo actuado a Jefatura / Subjefatura.",
                   [C_fecha(), C_destino(clave_elevacion, "Elevar a"), C_fojas(),
-                   Campo("resumen", "Resumen / pedido (opcional)", "area", "", ia=True), C_verbo(), C_firma()],
+                   Campo("resumen", "Resumen / pedido (opcional)", "area", "", ia=True), C_verbo()],
                   r_elev_actuacion, "NOTA ELEVADA", sensible=True, destino=lambda v: v.get("destino"))
 
 # ───────────────────────── 8. Oficios judiciales ─────────────────────────
@@ -805,7 +804,7 @@ OJ_RESPUESTA = Modelo(
        Campo("informe", "Informe / detalle", "area", "", ia=True, requerido=True,
              ayuda="Ej.: Que el Cadete de II° Año … L.P. N° … revista en este Instituto desde …"),
        Campo("adjuntos", "Se adjunta (opcional)", "text", "", ayuda="Ej.: copia certificada de la planilla de antecedentes"),
-       C_firma()],
+       ],
     r_oj_respuesta, "RESPUESTA ENVIADA", sensible=True, destino=lambda v: "_JUD")
 
 
@@ -824,7 +823,7 @@ OJ_PASE = Modelo(
     + [Campo("requerido", "Qué solicita el oficio", "area", "", ia=True, requerido=True,
              ayuda="Ej.: informe si el Cadete … L.P. N° … se encontraba de servicio el día …"),
        Campo("plazo", "Plazo para informar", "text", "48 horas"),
-       Campo("detalle", "Indicaciones adicionales (opcional)", "area", "", ia=True), C_verbo(), C_firma()],
+       Campo("detalle", "Indicaciones adicionales (opcional)", "area", "", ia=True), C_verbo()],
     r_oj_pase_informe, "PASE A DIVISIÓN / ESCUELA", sensible=True, destino=lambda v: v.get("destino"))
 
 
@@ -902,7 +901,7 @@ OJ_RUEDA = Modelo(
        Campo("fecha_rueda", "Día", "date", None), Campo("hora_rueda", "Hora", "time", time(9, 0)),
        Campo("lugar", "Lugar", "text", "", requerido=True, ayuda="Ej.: Unidad Fiscal …, calle … N° …"),
        Campo("vestimenta", "Vestimenta", "text", "ropa de civil"),
-       Campo("detalle", "Indicaciones adicionales (opcional)", "area", "", ia=True), C_verbo(), C_firma()],
+       Campo("detalle", "Indicaciones adicionales (opcional)", "area", "", ia=True), C_verbo()],
     r_oj_rueda, "PASE A DIVISIÓN / ESCUELA", sensible=True, destino=lambda v: v.get("destino"))
 
 
