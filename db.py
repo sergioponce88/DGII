@@ -345,6 +345,13 @@ def init_db(version=VERSION_ESQUEMA):
         # El Director firma siempre los asuntos de la Dirección (se completa si quedó vacío)
         cur.execute("UPDATE config SET valor = %s WHERE clave = 'firmante_nombre' AND COALESCE(valor, '') = ''",
                     (C.CONFIG_DEFAULT["firmante_nombre"],))
+        # Migración única: formato de pase/elevación de la Dirección (carácter abreviado; «remito» a las Escuelas)
+        cur.execute("SELECT valor FROM config WHERE clave = 'mig_formato_nota_v1'")
+        if not cur.fetchone():
+            cur.execute("UPDATE config SET valor = %s WHERE clave = 'firmante_caracter' AND valor LIKE %s",
+                        (C.CONFIG_DEFAULT["firmante_caracter"], "%y Rector del Instituto%"))
+            cur.execute("UPDATE autoridades SET relacion = 'PAR' WHERE clave IN ('ESC_SUPERIOR', 'ESC_SUBOF') AND relacion = 'INTERNO'")
+            cur.execute("INSERT INTO config (clave, valor) VALUES ('mig_formato_nota_v1', 'OK') ON CONFLICT DO NOTHING")
         for fila in C.AUTORIDADES_SEED:
             cur.execute("INSERT INTO autoridades (clave, tratamiento, cargo, titular, saludo, relacion) "
                         "VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (clave) DO NOTHING", fila)

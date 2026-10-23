@@ -230,8 +230,7 @@ CONFIG_DEFAULT = {
     "sec_ref": "Sec. D.G.I.I.",
     "firmante_nombre": "Crio. Grl. CLAUDIO NÉSTOR DADIN",
     "firmante_cargo": "Director General de Institutos e Instrucción",
-    "firmante_caracter": "en mi carácter de Director General de Institutos e Instrucción y Rector del Instituto de Enseñanza "
-                         "Superior de Policía “Grl. José Francisco de San Martín”",
+    "firmante_caracter": "en mi carácter de Director General de Institutos e Instrucción",
     "doc_lema": "Dirección General de Institutos e Instrucción · Policía de Tucumán",
     "ia_datos_personales": "NO",  # permitir Gemini en documentos con datos personales
 }
@@ -245,8 +244,8 @@ AUTORIDADES_SEED = [
     ("RELACIONES", "Señora", "Directora General de Relaciones Policiales e Institucionales", "Crio. Ppal. PAOLA VANESA MOLINA", "Oficina", "PAR"),
     ("D1", "Señor", "Jefe del Departamento Personal (D-1)", "", "Despacho", "PAR"),
     ("D4", "Señor", "Jefe del Departamento Logística (D-4)", "", "Despacho", "PAR"),
-    ("ESC_SUPERIOR", "Señor", "Director de la Escuela Superior de Policía", "Crio. Insp. MEDINA DANIEL OSCAR", "Oficina", "INTERNO"),
-    ("ESC_SUBOF", "Señora", "Directora de la Escuela de Suboficiales y Agentes “Agte. Juan José Vides”", "Crio. Ppal. TORRES GABRIELA FERNANDA", "Oficina", "INTERNO"),
+    ("ESC_SUPERIOR", "Señor", "Director de la Escuela Superior de Policía", "Crio. Insp. MEDINA DANIEL OSCAR", "Oficina", "PAR"),
+    ("ESC_SUBOF", "Señora", "Directora de la Escuela de Suboficiales y Agentes “Agte. Juan José Vides”", "Crio. Ppal. TORRES GABRIELA FERNANDA", "Oficina", "PAR"),
     ("COMPANIA", "Señor", "Jefe de Cuerpo de Cadetes del I.E.S.P. “G.J.F.S.M.”", "Of. Ppal. PONCE DANIEL ALEJANDRO", "Oficina", "INTERNO"),
     ("CITTU", "Señor", "Director del Centro de Instrucción de Tiro Táctico y Urbano (C.I.T.T.U.)", "", "Oficina", "PAR"),
     ("GABINETE", "Señora", "Directora del Gabinete Interdisciplinario", "", "Oficina", "INTERNO"),

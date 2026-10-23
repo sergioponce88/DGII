@@ -140,7 +140,6 @@ class Doc:
         lineas = [
             ("POLICÍA DE TUCUMÁN", 8.5, True, GRIS),
             ("DIRECCIÓN GENERAL DE INSTITUTOS E INSTRUCCIÓN", 12.5, True, NAVY),
-            ("Instituto de Enseñanza Superior de Policía “Grl. José Francisco de San Martín”", 9, False, NAVY),
             (self.cfg.get("doc_direccion") or "Muñecas 1025 · San Miguel de Tucumán · Tel. (0381) 430-5141 · C.P. 4000", 7.5, False, GRIS),
         ]
         mid.paragraphs[0].text = ""
@@ -445,7 +444,7 @@ def preview_html(doc: "Doc") -> str:
             '<div class="mh">'
             + (f'<img src="data:image/png;base64,{_LOGOS["pol"]}">' if _LOGOS["pol"] else "<span></span>")
             + '<div><small>POLICÍA DE TUCUMÁN</small><b>DIRECCIÓN GENERAL DE INSTITUTOS E INSTRUCCIÓN</b>'
-              '<i>Instituto de Enseñanza Superior de Policía “Grl. José Francisco de San Martín”</i></div>'
+              '<i>Muñecas 1025 · San Miguel de Tucumán · Tel. (0381) 430-5141</i></div>'
             + (f'<img src="data:image/png;base64,{_LOGOS["dgii"]}">' if _LOGOS["dgii"] else "<span></span>")
             + "</div>")
     for el in doc.d.element.body.iterchildren():

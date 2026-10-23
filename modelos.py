@@ -73,10 +73,11 @@ def intro(ctx, v, objeto="el presente expediente", fin="para su conocimiento e i
     a = autoridad(ctx, v.get("destino"))
     verbo = v.get("verbo") if v.get("verbo") and v.get("verbo") != "automático" else VERBOS.get(a.get("relacion"), "remito")
     car = _s(ctx["cfg"].get("firmante_caracter")) or "en mi carácter de Director General de Institutos e Instrucción"
+    car = car[0].upper() + car[1:]
     fojas = int(v.get("fojas") or 0)
-    pre = f"En un cómputo de ({fojas:02d}) fojas útiles, " if fojas else ""
-    car = car[0].lower() + car[1:] if pre else car[0].upper() + car[1:]
-    return f"{pre}{car}, {verbo} a Usted {objeto} {fin}"
+    # Formato de la Dirección: «En mi carácter de …, en un cómputo de (10) fojas útiles remito a Usted …»
+    fj = f", en un cómputo de ({fojas:02d}) fojas útiles" if fojas else ","
+    return f"{car}{fj} {verbo} a Usted {objeto} {fin}"
 
 
 def firma_director(d, ctx, v):
@@ -173,7 +174,7 @@ def C_verbo():
 
 
 def C_firma():
-    return Campo("firma", "Incluir firma del Director", "check", True)
+    return Campo("firma", "Incluir línea de firma (si no, se firma y sella a mano)", "check", False)
 
 
 # ───────────────────────── 1. Elevación solicitando autorización ─────────────────────────
@@ -208,7 +209,7 @@ ELEVACION = Modelo(
     "A Jefatura o Subjefatura (según configuración) con la opinión de la Dirección.",
     [C_fecha(), C_destino(clave_elevacion, "Elevar a"), C_fojas(),
      Campo("fundamento", "Fundamento (qué se solicita, quién, cuándo, dónde)", "area", "", ia=True, requerido=True,
-           ayuda="Ej.: Teniéndose en cuenta la invitación de… para que personal de… participe en… desde el… en…"),
+           ayuda="Ej.: Que conforme a la invitación de… para que personal de… participe en… desde el… en…"),
      Campo("opinion", "Opinión de la Dirección", "select", "FAVORABLE", OPINIONES),
      Campo("motivo", "Motivo / complemento de la opinión", "area", "", ia=True,
            ayuda="Ej.: , teniéndose en cuenta que los conocimientos adquiridos serán replicados…"),
@@ -240,7 +241,8 @@ def _pase(id_, nombre, icono, desc, destino, fin, cumplido=False, cumplido_txt="
         id_, nombre, icono, "Notas y pases", desc,
         [C_fecha(), C_destino(destino), C_fojas(),
          Campo("fin", "Finalidad", "select", fin, list(FINES)),
-         Campo("detalle", "Indicaciones / detalle (opcional)", "area", "", ia=True, ayuda=detalle_ayuda),
+         Campo("detalle", "Indicaciones / detalle (opcional)", "area", "", ia=True,
+               ayuda=detalle_ayuda or "Ej.: Que conforme a la presente solicitud, deberá hacer comparecer a … ; asimismo, informará si …"),
          Campo("cumplido", "Agregar «CUMPLIDO, …»", "check", cumplido),
          Campo("cumplido_txt", "Texto del cumplido", "text", cumplido_txt or "vuelva para trámites ulteriores"),
          C_verbo(), C_firma()],
@@ -248,7 +250,7 @@ def _pase(id_, nombre, icono, desc, destino, fin, cumplido=False, cumplido_txt="
 
 
 PASE_SUPERIOR = _pase("pase_superior", "Pase a la Escuela Superior", "🏫", "Becas, diplomaturas, disertaciones, talleres y cursos.",
-                      "ESC_SUPERIOR", "conocimiento")
+                      "ESC_SUPERIOR", "conocimiento", True, "vuelva para trámites ulteriores")
 PASE_CITTU = _pase("pase_cittu", "Pase al CITTU (práctica de tiro)", "🎯", "Se pide análisis y opinión de competencia.", "CITTU", "opinion",
                    True, "elévense los actuados a esta Dirección General para la prosecución del trámite",
                    "Ej.: Al respecto y de acuerdo al presente proyecto, deberá realizar un análisis del mismo…")
