@@ -453,7 +453,7 @@ def armar():
         ["<b>3. Mesa de trabajo y análisis</b>", "Referentes por división y Unidad Regional; entrevistas y análisis del flujo de trabajo de cada área; priorización.", "Según disponga la Superioridad"],
         ["<b>4. Pilotos</b>", "Una o dos divisiones priorizadas (por ejemplo D-1, D-5 o Asuntos Internos) y una comisaría piloto por Unidad Regional.", "6 a 12 meses"],
         ["<b>5. Extensión</b>", "Extensión a otras oficinas y comisarías; servidor propio y cuentas institucionales; capacitación permanente.", "Mediano plazo"],
-        ["<b>6. Visión a futuro</b>", "Análisis de la tarea del oficial de turno como complemento de la plataforma de denuncias digitales.", "A evaluar"]],
+        ["<b>6. Visión a futuro</b>", "Análisis de la tarea del oficial de turno: registro único del procedimiento con imágenes, videos y audios, como complemento de la plataforma de denuncias digitales.", "A evaluar"]],
         [42 * mm, ANCHO - 82 * mm, 40 * mm]),
         Spacer(1, 4),
         caja("Los plazos son orientativos y dependen de las prioridades y recursos que disponga la Superioridad. Cada etapa se evalúa antes de iniciar la siguiente.", "tip")]
@@ -462,20 +462,34 @@ def armar():
     # Visión a futuro
     s += h1("14. Visión a futuro: la tarea del oficial de turno")
     s += [Paragraph("Como línea de trabajo futura, se propone estudiar la <b>sistematización de la tarea del oficial de turno</b> en las "
-                    "comisarías, como <b>complemento de la plataforma de denuncias digitales</b> y no en reemplazo de ella.", st["lead"]),
-          pj("Hoy, en un mismo procedimiento, el oficial transcribe una y otra vez los mismos datos —personas, documentos, domicilios, lugar, "
+                    "comisarías, como <b>complemento de la plataforma de denuncias digitales</b> del Ministerio Público Fiscal y no en reemplazo de ella. "
+                    "Es, probablemente, donde la informatización más facilitaría el trabajo policial.", st["lead"])]
+    s += h2("Situación actual")
+    s += [pj("La plataforma de denuncias digitales del Ministerio Público Fiscal de Tucumán responde a las necesidades de la investigación "
+             "fiscal: en ella se carga, de forma manual, la información que la Fiscalía requiere. La Policía, en cambio, no cuenta con un "
+             "<b>registro propio y estructurado</b> de todo lo actuado en cada procedimiento, que le permita documentar con precisión los "
+             "hechos a su cargo, reutilizar esa información y analizarla."),
+          pj("Además, en un mismo procedimiento el oficial transcribe una y otra vez los mismos datos —personas, documentos, domicilios, lugar, "
              "fecha y hora, elementos secuestrados, intervinientes, fiscalía— en actas, constancias, notas, partes y en la causa que se eleva a "
              "la Justicia provincial. Cada transcripción insume tiempo y abre la posibilidad de errores u omisiones."),
-          imagen(PI("dato_unico.png"), pie="Figura 8. Dato único: la información del procedimiento se carga una vez y se reutiliza.")]
+          imagen(PI("dato_unico.png"), pie="Figura 8. Dato único: la información del procedimiento, incluido el material audiovisual, se registra una vez y se reutiliza.")]
     s += h2("Qué se lograría")
-    s += lista(["<b>Carga guiada y única</b> de los datos del procedimiento, desde la PC o el celular.",
+    s += lista(["<b>Registro guiado y único</b> de los datos del procedimiento, en el lugar del hecho, desde el celular.",
+                "<b>Registro de imágenes, videos y audios</b> del hecho, con fecha, hora y ubicación, asociados al procedimiento, para documentar "
+                "con precisión lo ocurrido.",
                 "<b>Generación automática</b> de actas, constancias, notas y elevaciones con esos mismos datos, en los formatos vigentes.",
                 "<b>Documentación rápida, efectiva y sin errores</b>: los datos son idénticos en todas las piezas de la causa.",
                 "<b>Reducción del tiempo</b> que el oficial dedica a transcribir, que puede destinarse a la tarea policial.",
-                "<b>Datos operativos</b> disponibles para la jefatura de zona, la Unidad Regional y la Superioridad."])
-    s += [caja("Esta línea requiere un análisis específico del trabajo en comisarías y debe coordinarse con los organismos responsables de "
-               "la plataforma de denuncias digitales y con el Ministerio Público, respetando la normativa procesal vigente. Se plantea como "
-               "<b>visión a futuro</b>, a evaluar a partir de los resultados de las primeras etapas.", "ojo")]
+                "<b>Información propia de la Policía</b>, disponible para la jefatura de zona, la Unidad Regional y la Superioridad, y para el análisis operativo.",
+                "<b>Mejor respuesta a lo que exige la Justicia</b>: causas más completas, mejor documentadas y elevadas en menos tiempo."])
+    s += h2("Requisitos para el material audiovisual")
+    s += lista(["Resguardo de la <b>integridad</b> de cada archivo (registro de fecha, hora, ubicación y huella digital que permita verificar que no fue alterado).",
+                "Constancia de <b>quién lo registró</b> y de cada acceso posterior.",
+                "Almacenamiento seguro en servidores institucionales y acceso restringido por roles.",
+                "Procedimientos acordes a la <b>normativa procesal</b> y a la protección de datos personales."])
+    s += [caja("Esta línea requiere un análisis específico del trabajo en comisarías y debe coordinarse con el Ministerio Público Fiscal y "
+               "los organismos responsables de la plataforma de denuncias digitales, respetando la normativa procesal vigente y los criterios "
+               "de cadena de custodia. Se plantea como <b>visión a futuro</b>, a evaluar a partir de los resultados de las primeras etapas.", "ojo")]
 
     s += h1("15. Riesgos, mitigaciones e indicadores")
     s += [tabla(["Riesgo", "Mitigación"], [
@@ -508,7 +522,8 @@ def armar():
              "concretos, personal propio y sin costo de licencias. Comenzar a trabajar junto a las divisiones y las Unidades Regionales, "
              "<b>analizando en cada caso su flujo de trabajo</b>, "
              "permitirá multiplicar esos resultados en todas las oficinas y comisarías, registrar el trabajo administrativo y operativo como datos "
-             "útiles para decidir y, a futuro, aliviar la tarea del oficial de turno, con orden, seguridad y continuidad, en "
+             "útiles para decidir y, a futuro, facilitar la tarea del oficial de turno —con registro de datos, imágenes, videos y audios del "
+             "procedimiento— para cumplir con mayor agilidad lo que exige la Justicia, con orden, seguridad y continuidad, en "
              "beneficio de la Policía de Tucumán y de la comunidad a la que sirve."),
           caja("Los sistemas y esta propuesta <b>se irán optimizando en forma continua</b>, incorporando las necesidades y sugerencias de cada área.", "ok"),
           firma()]
