@@ -62,6 +62,7 @@ def render():
         ("Movimientos", len(m), "salidas, ingresos y pases", C.PALETA[3]),
     ]
     ui.kpis(kp)
+    K.compartir_wp(R.msg_kpis("Informe de gestión", kp, sub=f"Período: {periodo}"), "inf_kp", "📲 Enviar resumen del período por WhatsApp")
 
     t1, t2, t3, t4 = st.tabs(["📊 Gestión", "⏳ Control de pendientes", "🔁 Libro de movimientos", "🎓 Actividades"])
 
@@ -141,6 +142,8 @@ def render():
                                              [("Pendientes por antigüedad", pend)], K.LOGO),
                                file_name=f"pendientes_{db.hoy():%Y%m%d}.pdf", mime="application/pdf")
             b2.download_button("📥 Control de pendientes (Excel)", R.excel({"Pendientes": pend}), file_name=f"pendientes_{db.hoy():%Y%m%d}.xlsx")
+            ab_wp = ab.assign(asunto=ab["asunto"].fillna("") + " · " + ab["dias_quieto"].astype(str) + " d sin mover")
+            K.compartir_wp(R.msg_expedientes("Control de pendientes", ab_wp, sub=f"al {db.hoy():%d/%m/%Y}"), "inf_pend")
 
     with t3:
         if m.empty:
@@ -156,6 +159,9 @@ def render():
             b1.download_button("🖨️ Libro de movimientos (PDF)", R.pdf_informe("LIBRO DE MOVIMIENTOS", periodo, [("Movimientos", len(lm))], [("Detalle", lm)], K.LOGO),
                                file_name=f"movimientos_{d:%Y%m%d}_{a:%Y%m%d}.pdf", mime="application/pdf")
             b2.download_button("📥 Libro de movimientos (Excel)", R.excel({"Movimientos": lm}), file_name=f"movimientos_{d:%Y%m%d}_{a:%Y%m%d}.xlsx")
+            lin = [f"• {r['Fecha/Hora']} · *{r['Exp.']}* {r['Movimiento']}: {r['Origen'] or '—'} ➜ {r['Destino'] or '—'}"
+                   + (f" · recibió {r['Recibe']}" if isinstance(r["Recibe"], str) and r["Recibe"] else "") for r in lm.head(60).to_dict("records")]
+            K.compartir_wp(R.msg_lista("Libro de movimientos", lin, sub=f"Período: {periodo}", pie=f"Total: {len(lm)}"), "inf_movs")
 
     with t4:
         cur = db.df_cursos()
@@ -167,6 +173,8 @@ def render():
         else:
             kc, tablas = estadisticas_cursos(cur, pers)
             ui.kpis(kc)
+            K.compartir_wp(R.msg_kpis("Actividades del período", kc, [R.linea_actividad(c) for c in cur.sort_values("fecha_inicio").to_dict("records")],
+                                      sub=f"Período: {periodo}"), "inf_act")
             for n, t in tablas.items():
                 with st.expander(f"{n} ({len(t)})"):
                     st.dataframe(t, hide_index=True, width="stretch")

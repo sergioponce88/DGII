@@ -57,6 +57,13 @@ def render():
 
     sel = st.session_state.get("com_sel")
     if sel is None:
+        lin = [f"• *{r['identificador']}* ➜ {r.get('entrega_destino') or '—'}" + (f" · {r['entrega_despacho']}" if r.get("entrega_despacho") else "")
+               for r in pend.to_dict("records")] or ["Sin entregas pendientes."]
+        if not hechas.empty:
+            lin += ["", "*✅ Entregados hoy*"] + [f"• {ui.fmt_fecha(m['fecha_hora'], True)} · *{m['identificador']}* ➜ {m['destino']} · recibió {m.get('recibido_por') or '—'}"
+                                                 for m in hechas.to_dict("records")]
+        K.compartir_wp(R.msg_lista("Comisión del día", lin, sub=f"{len(pend)} para entregar · {len(hechas)} entregados"),
+                       "comision", "📲 Informar la comisión por WhatsApp")
         _lista(pend)
         with st.expander("🔎 Buscar otro expediente tramitado"):
             base = _tramitados_en_direccion(exp)

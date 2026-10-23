@@ -96,7 +96,13 @@ def render():
                        R.pdf_hoja_ruta(r.to_dict(), movs, cursos, pers, K.LOGO),
                        file_name=f"hoja_ruta_{r['identificador'].replace('/', '-')}_{r['anio']}.pdf", mime="application/pdf")
     resumen = R.msg_alta(r.to_dict()) + f"\n📍 Ubicación actual: {r['ubicacion_actual'] or '—'}\nEstado: {r['estado']}"
-    b2.link_button("📲 Compartir por WhatsApp", R.link_whatsapp(resumen))
+    if len(movs):
+        m0 = movs.iloc[0]
+        resumen += f"\nÚltimo movimiento: {m0['tipo']} ➜ {m0['destino'] or '—'} ({R._f(m0['fecha_hora'], True)})"
+    if bool(r.get("tramitado")):
+        resumen += f"\n✅ Tramitado el {R._f(r.get('fecha_tramite'), True)} por {r.get('tramitado_por') or '—'}"
+    with b2:
+        K.compartir_wp(resumen, f"ficha_{exp_id}", "📲 Compartir por WhatsApp", dep=r.get("ubicacion_actual"), ancho=True)
 
     t0, tp, t1, t2, t3, t4, t5 = st.tabs(["✅ Trámite", "📎 PDF", "🧭 Hoja de ruta", "🔁 Registrar movimiento", "🎓 Curso y personal", "🔔 Alertas", "✏️ Editar"])
 

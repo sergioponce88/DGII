@@ -5,6 +5,7 @@ import streamlit as st
 import catalogos as C
 import comun as K
 import db
+import reportes as R
 import ui
 
 MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
@@ -44,6 +45,19 @@ def render():
             ("Actividades en desarrollo", len(cur_act), f"{len(cur)} actividades registradas", C.PALETA[4]),
         ]
     )
+
+    # Parte del día por WhatsApp
+    extra = []
+    if len(urg):
+        extra += ["*⚡ Urgentes activos*"] + [R.linea_exp(x) for x in urg.head(10).to_dict("records")] + [""]
+    if len(vencidos):
+        extra += ["*🔴 Vencidos*"] + [R.linea_exp(x) for x in vencidos.head(10).to_dict("records")] + [""]
+    if len(cur_act):
+        extra += ["*🎓 Actividades en desarrollo*"] + [R.linea_actividad(c) for c in cur_act.head(10).to_dict("records")]
+    kp_wp = [("Expedientes " + str(anio), len(e), ""), ("En trámite", len(abiertos), ""),
+             ("Pendientes de trámite", int((~abiertos["tramitado"]).sum()), ""), ("Urgentes activos", len(urg), ""),
+             ("Vencidos", len(vencidos), ""), ("Movimientos hoy", len(mov_hoy), ""), ("Actividades en desarrollo", len(cur_act), "")]
+    K.compartir_wp(R.msg_kpis("Parte del día", kp_wp, extra), "panel", "📲 Enviar parte del día por WhatsApp")
 
     # Comisión: lo que está encargado y lo que ya entregaron hoy los comisionistas
     pend = e[e["entrega_pendiente"].fillna(False).astype(bool)] if "entrega_pendiente" in e.columns else e.iloc[0:0]

@@ -156,6 +156,8 @@ def render():
                     st.toast(f"{len(pend)} expedientes tramitados", icon="✅")
                     st.rerun()
 
+    K.compartir_wp(R.msg_expedientes("Libro de registro", df, sub=f"{len(abiertos)} abiertos · filtros aplicados"), "libro",
+                   f"📲 Enviar estos {len(df)} expedientes por WhatsApp")
     st.download_button("📥 Exportar a Excel", R.excel({"Libro de expedientes": t}),
                        file_name=f"libro_expedientes_{db.hoy():%Y%m%d}.xlsx",
                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

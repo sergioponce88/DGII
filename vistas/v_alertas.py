@@ -48,6 +48,8 @@ def render(alertas):
         cats = sorted({a["cat"] for a in alertas})
         sel = st.pills("Filtrar", cats, selection_mode="multi", key="al_cat") if cats else []
         lista = [a for a in alertas if not sel or a["cat"] in sel]
+        if lista:
+            K.compartir_wp(R.msg_alertas(lista), "alertas", f"📲 Enviar estas {len(lista)} alertas por WhatsApp")
         if not lista:
             st.success("✔ Sin alertas pendientes.")
         for i, a in enumerate(lista[:80]):

@@ -119,6 +119,9 @@ def _que_pasa(cur):
     semana = cur[(cur["fecha_inicio"] > h) & (cur["fecha_inicio"] <= h + pd.Timedelta(days=7))]
     mes = cur[(cur["fecha_inicio"] > h + pd.Timedelta(days=7)) & (cur["fecha_inicio"] <= h + pd.Timedelta(days=31))]
     recien = cur[(fin < h) & (fin >= h - pd.Timedelta(days=7))]
+    K.compartir_wp(R.msg_que_pasa([("🟢 En desarrollo hoy", hoy.sort_values("fecha_inicio")), ("🟡 Próximos 7 días", semana.sort_values("fecha_inicio")),
+                                   ("🔵 Próximo mes", mes.sort_values("fecha_inicio")), ("⚪ Terminaron en los últimos 7 días", recien.sort_values("fecha_fin"))]),
+                   "que_pasa", "📲 Informar qué está pasando por WhatsApp")
     ui.kpis([
         ("En desarrollo hoy", len(hoy), f"{int(hoy['cant_personal'].sum() or 0)} efectivos afectados", C.PALETA[2]),
         ("Próximos 7 días", len(semana), "por iniciar", C.STATUS["warning"]),
@@ -244,6 +247,19 @@ def render():
                                         if col.name == "Fase" else [""] * len(col), axis=0),
                          hide_index=True, width="stretch")
             st.download_button("📥 Exportar actividades", R.excel({"Actividades": tb}), file_name="actividades.xlsx")
+            ui.seccion("📲 Informar por WhatsApp")
+            w1, w2 = st.columns([3, 1], vertical_alignment="bottom")
+            ops = cf.sort_values("fecha_inicio", ascending=False, na_position="last")
+            aid = w1.selectbox("Una actividad con su personal", ops["id"].tolist(), index=None, key="wp_act_sel",
+                               format_func=lambda i: R.linea_actividad(ops[ops["id"] == i].iloc[0].to_dict()).lstrip("• ").replace("*", ""),
+                               placeholder="Elija la actividad…")
+            with w2:
+                if aid is not None:
+                    c_sel = ops[ops["id"] == aid].iloc[0].to_dict()
+                    K.compartir_wp(R.msg_actividad(c_sel, pers[pers["curso_id"] == aid]), f"act_{aid}", "📲 Enviar", ancho=True)
+                else:
+                    K.compartir_wp(R.msg_lista("Actividades", [R.linea_actividad(c) for c in ops.to_dict("records")], pie=f"Total: {len(ops)}"),
+                                   "act_lista", "📲 Enviar la lista", ancho=True)
 
     with t3:
         q = st.text_input("Buscar por apellido o DNI", key="pers_q")
@@ -261,6 +277,8 @@ def render():
         st.caption(f"{len(pf)} registros · {pf['dni'].nunique()} personas distintas")
         st.dataframe(_tabla_personal(pf), hide_index=True, width="stretch")
         st.download_button("📥 Exportar personal", R.excel({"Personal en actividades": _tabla_personal(pf)}), file_name="personal_actividades.xlsx")
+        filtro = " · ".join(x for x in [f"Búsqueda: {q}" if q else "", ", ".join(esc or []), ", ".join(rol or [])] if x) or None
+        K.compartir_wp(R.msg_personal(pf, filtro), "personal", f"📲 Enviar este personal ({len(pf)}) por WhatsApp")
 
     with t4:
         gc = cur.dropna(subset=["fecha_inicio"]).copy()

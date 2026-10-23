@@ -92,6 +92,109 @@ def msg_alerta(titulo, detalle):
     return f"🔔 *{C.INSTITUCION_CORTA} – Aviso*\n*{titulo}*\n{detalle}"
 
 
+# ── Mensajes de resumen para cada pestaña ──
+MAX_WP = 3500  # WhatsApp corta enlaces muy largos
+
+
+def _recortar(lineas, maximo=MAX_WP):
+    out, n = [], 0
+    for i, l in enumerate(lineas):
+        if n + len(l) + 1 > maximo:
+            out.append(f"… y {len(lineas) - i} línea(s) más (ver el sistema).")
+            break
+        out.append(l)
+        n += len(l) + 1
+    return "\n".join(out)
+
+
+def msg_lista(titulo, lineas, sub=None, pie=None):
+    cab = [f"📋 *{C.INSTITUCION_CORTA} – {titulo}*", f"🗓️ {pd.Timestamp.now(tz='America/Argentina/Tucuman'):%d/%m/%Y %H:%M}"]
+    if sub:
+        cab.append(sub)
+    return _recortar(cab + [""] + list(lineas) + ([f"\n{pie}"] if pie else []))
+
+
+def _dt(x):
+    return _f(x) if x is not None and not (isinstance(x, float) and pd.isna(x)) else "—"
+
+
+def linea_actividad(c):
+    tipo = _t(c.get("tipo_actividad"), "CURSO")
+    fin = c.get("fecha_fin")
+    fechas = _dt(c.get("fecha_inicio")) + (f" al {_dt(fin)}" if pd.notna(fin) and fin != c.get("fecha_inicio") else "")
+    extra = " · ".join(str(x) for x in [c.get("hora"), c.get("lugar"), c.get("modalidad")] if isinstance(x, str) and x.strip())
+    n = int(c.get("cant_personal") or 0)
+    return f"• *{_t(c.get('nombre'))}* ({tipo}) – {fechas}" + (f" · {extra}" if extra else "") + (f" · 👮 {n}" if n else "")
+
+
+def msg_que_pasa(grupos):
+    """grupos: lista de (titulo, DataFrame de actividades)."""
+    lineas = []
+    for titulo, df in grupos:
+        if df is None or df.empty:
+            continue
+        lineas.append(f"*{titulo} ({len(df)})*")
+        lineas += [linea_actividad(c) for c in df.to_dict("records")]
+        lineas.append("")
+    return msg_lista("Actividades: qué está pasando", lineas or ["Sin actividades en curso ni próximas."])
+
+
+def linea_persona(p):
+    nom = " ".join(str(x) for x in [p.get("jerarquia"), p.get("apellido"), p.get("nombre")] if isinstance(x, str) and x.strip())
+    extra = " · ".join(str(x) for x in [p.get("rol"), p.get("division")] if isinstance(x, str) and x.strip())
+    return f"• {nom.upper() or '—'}" + (f" ({extra})" if extra else "")
+
+
+def msg_actividad(c, pers):
+    org = c.get("organiza") if isinstance(c.get("organiza"), str) else c.get("division_dicta")
+    lineas = [linea_actividad(c)]
+    if isinstance(org, str) and org.strip():
+        lineas.append(f"Organiza: {org}")
+    if isinstance(c.get("identificador"), str):
+        lineas.append(f"Exp. N° {c['identificador']}")
+    lineas.append(f"Fase: {_t(c.get('fase'))}")
+    if pers is not None and not pers.empty:
+        lineas += ["", f"*Personal afectado ({len(pers)})*"] + [linea_persona(p) for p in pers.to_dict("records")]
+    return msg_lista("Actividad", lineas)
+
+
+def msg_personal(pers, filtro=None):
+    lineas = []
+    for act, g in pers.groupby(pers["curso"].fillna("Sin actividad"), sort=False):
+        lineas.append(f"*{act} ({len(g)})*")
+        lineas += [linea_persona(p) for p in g.to_dict("records")]
+        lineas.append("")
+    return msg_lista("Personal en actividades", lineas or ["Sin registros."], sub=filtro,
+                     pie=f"Total: {len(pers)} registros · {pers['dni'].nunique()} personas")
+
+
+def linea_exp(e, con_ubic=True):
+    urg = "⚡ " if e.get("prioridad") == "URGENTE TRÁMITE" else ""
+    est = "TRAMITADO" if e.get("tramitado") else _t(e.get("estado"))
+    ub = f" · 📍 {_t(e.get('ubicacion_actual'))}" if con_ubic else ""
+    return f"• {urg}*{e['identificador']}* – {_t(e.get('asunto'))[:80]} · {est}{ub}"
+
+
+def msg_expedientes(titulo, df, sub=None, max_filas=40):
+    lineas = [linea_exp(e) for e in df.head(max_filas).to_dict("records")]
+    if len(df) > max_filas:
+        lineas.append(f"… y {len(df) - max_filas} más.")
+    return msg_lista(titulo, lineas or ["Sin expedientes."], sub=sub, pie=f"Total: {len(df)}")
+
+
+def msg_kpis(titulo, kpis, extra=None, sub=None):
+    lineas = [f"• {k}: *{v}*" + (f" ({n})" if n else "") for k, v, n, *_ in kpis]
+    return msg_lista(titulo, lineas + ([""] + list(extra) if extra else []), sub=sub)
+
+
+def msg_alertas(alertas, max_filas=40):
+    ic = {"critical": "🔴", "serious": "🟠", "warning": "🟡", "info": "🔵"}
+    lineas = [f"{ic.get(a['nivel'], '•')} *{a['titulo']}* – {a['detalle']}" for a in alertas[:max_filas]]
+    if len(alertas) > max_filas:
+        lineas.append(f"… y {len(alertas) - max_filas} más.")
+    return msg_lista("Alertas", lineas or ["✔ Sin alertas pendientes."])
+
+
 # ───────────────────────── Excel ─────────────────────────
 def excel(hojas: dict) -> bytes:
     buf = io.BytesIO()

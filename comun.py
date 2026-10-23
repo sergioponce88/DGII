@@ -98,6 +98,21 @@ def tel_dep(nombre):
     return tel or db.get_config().get("wp_por_defecto") or None
 
 
+def compartir_wp(mensaje, key, etiqueta="📲 Informar por WhatsApp", dep=None, ancho=False):
+    """Botón que abre un panel: elegir a quién (dependencia con WhatsApp o contacto libre), revisar el texto y enviar."""
+    import hashlib
+
+    with st.popover(etiqueta, width="stretch" if ancho else "content"):
+        d = db.df_dependencias()
+        con_tel = d[d["telefono_wp"].fillna("").astype(str).str.strip() != ""]["nombre"].tolist() if not d.empty else []
+        ops = ["📇 Elegir contacto en WhatsApp"] + con_tel
+        a = st.selectbox("Enviar a", ops, index=ops.index(dep) if dep in ops else 0, key=f"wpd_{key}")
+        h = hashlib.md5(mensaje.encode()).hexdigest()[:8]
+        txt = st.text_area("Mensaje (puede editarlo)", mensaje, height=260, key=f"wpt_{key}_{h}")
+        tel = None if a == ops[0] else tel_dep(a)
+        st.link_button("📲 Abrir WhatsApp", R.link_whatsapp(txt, tel), type="primary", width="stretch")
+
+
 def num(x, defecto=0):
     try:
         return defecto if x is None or pd.isna(x) else int(x)
