@@ -344,6 +344,8 @@ def init_db(version=VERSION_ESQUEMA):
         for fila in C.AUTORIDADES_SEED:
             cur.execute("INSERT INTO autoridades (clave, tratamiento, cargo, titular, saludo, relacion) "
                         "VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (clave) DO NOTHING", fila)
+        cur.execute("INSERT INTO tipos_expediente (nombre, grupo, origen, es_curso) VALUES ('OFICIO JUDICIAL', 'Judicial', 'EXT', FALSE) "
+                    "ON CONFLICT (nombre) DO NOTHING")
         cur.execute("SELECT COUNT(*) FROM tipos_expediente")
         if cur.fetchone()[0] == 0:
             for n, g, o, ec in C.TIPOS_SEED:

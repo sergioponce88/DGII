@@ -206,7 +206,7 @@ class Doc:
 
     def destinatario(self, a: dict):
         """a = {tratamiento, cargo, titular, saludo}"""
-        for txt, b in ((a.get("tratamiento") or "Señor", False), (a.get("cargo"), False), (a.get("titular"), True)):
+        for txt, b in ((a.get("tratamiento") or "Señor", False), (a.get("cargo"), False), (a.get("organismo"), False), (a.get("titular"), True)):
             if txt:
                 p = self.parrafo(sangria=False, alin="l", despues=0)
                 self.rico(p, txt, negrita=b)

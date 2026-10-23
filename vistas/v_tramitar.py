@@ -382,7 +382,8 @@ def _formulario(m, r, ctx):
                  help="Diccionario propio + LanguageTool (gratis)" + ("" if m.sensible else " · Gemini opcional")):
         _revisar(m, p, ia)
     if b2.button("📄 Generar Word", key=p + "gen_b", type="primary", width="stretch", disabled=bool(faltan) or doc is None):
-        dest = ctx["aut"].get(v.get("destino") or "", {}) if v.get("destino") else {}
+        clave = v.get("destino") or (m.destino(v) if m.destino else None)
+        dest = ctx["aut"].get(clave or "", {}) if clave else {}
         nombre = f"{m.id}_{str(r['identificador']).replace('/', '-')}_{db.hoy():%Y%m%d}.docx"
         db.registrar_documento(exp_id, m.id, m.nombre, dest.get("cargo"), json.dumps(v, default=str, ensure_ascii=False), K.usuario())
         st.session_state[p + "_doc"] = {"bytes": doc.bytes(), "nombre": nombre, "destino": dest.get("cargo"), "v": v}

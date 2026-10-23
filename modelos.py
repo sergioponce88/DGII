@@ -39,7 +39,7 @@ class Modelo:
     despacho: Callable = None  # v -> despacho del expediente
 
 
-GRUPOS = ["Notas y pases", "Notificación", "Proyecto", "Actuaciones / Sumario"]
+GRUPOS = ["Notas y pases", "Notificación", "Proyecto", "Oficios judiciales", "Actuaciones / Sumario"]
 
 # ───────────────────────── Textos comunes ─────────────────────────
 OPINIONES = ["FAVORABLE", "DESFAVORABLE", "NO REÚNE LAS CONDICIONES", "A CONSIDERACIÓN DEL COMANDO SUPERIOR"]
@@ -739,9 +739,188 @@ ELEV_ACT = Modelo("elev_actuacion", "Elevación de las actuaciones", "📤", ACT
                    Campo("resumen", "Resumen / pedido (opcional)", "area", "", ia=True), C_verbo(), C_firma()],
                   r_elev_actuacion, "NOTA ELEVADA", sensible=True, destino=lambda v: v.get("destino"))
 
+# ───────────────────────── 8. Oficios judiciales ─────────────────────────
+OJ = "Oficios judiciales"
+CALIDADES = ["testigo", "imputado", "víctima", "perito", "denunciante"]
+RESPUESTAS_OJ = ["Remite el informe solicitado", "Informa que la notificación fue diligenciada",
+                 "Informa el personal designado para la rueda de reconocimiento", "Otro"]
+
+
+def C_oficio():
+    """Datos del oficio: se completan con lo cargado en el expediente."""
+    return [Campo("organismo", "Organismo judicial", "text", lambda c: _s(c["exp"].get("dependencia_origen")),
+                  ayuda="Ej.: Unidad Fiscal de Decisión Temprana C.J.C. / Juzgado de Instrucción de la IIª Nom."),
+            Campo("oficio_n", "Oficio N°", "text", ""),
+            Campo("oficio_fecha", "Fecha del oficio", "text", "", ayuda="Ej.: 15/10/2026"),
+            Campo("autos", "Autos caratulados", "text", lambda c: _s(c["exp"].get("asunto")), requerido=True,
+                  ayuda="Ej.: PÉREZ JUAN S/ LESIONES – VÍCT.: GÓMEZ ANA"),
+            Campo("legajo", "Legajo / Expte. judicial N°", "text", "", ayuda="Ej.: D-505715/2026")]
+
+
+def _ref_oficio(v):
+    t = "Oficio" + (f" N° {_s(v.get('oficio_n'))}" if _s(v.get("oficio_n")) else "")
+    t += f" de fecha {_s(v.get('oficio_fecha'))}" if _s(v.get("oficio_fecha")) else ""
+    t += f", librado por {_s(v.get('organismo'))}" if _s(v.get("organismo")) else ""
+    t += f" en los autos caratulados “{_s(v.get('autos'))}”"
+    t += f", Legajo N° {_s(v.get('legajo'))}" if _s(v.get("legajo")) else ""
+    return t
+
+
+def _dest_judicial(ctx, v):
+    ctx["aut"]["_JUD"] = {"clave": "_JUD", "tratamiento": _s(v.get("dest_trat")) or "Señor",
+                          "cargo": _s(v.get("dest_cargo")), "organismo": _s(v.get("organismo")),
+                          "titular": _s(v.get("dest_nombre")), "saludo": "Despacho", "relacion": "SUPERIOR"}
+    v["destino"] = "_JUD"
+
+
+def r_oj_respuesta(v, ctx):
+    _dest_judicial(ctx, v)
+    fin = {RESPUESTAS_OJ[0]: "remitir el informe solicitado",
+           RESPUESTAS_OJ[1]: "informar que la notificación ordenada fue debidamente diligenciada",
+           RESPUESTAS_OJ[2]: "informar la nómina del personal designado para la rueda de reconocimiento ordenada"}.get(v.get("respuesta"), "informar lo siguiente")
+    cuerpo = [f"Tengo el agrado de dirigirme a Usted, {_s(ctx['cfg'].get('firmante_caracter')) or 'en mi carácter de Director General de Institutos e Instrucción'}, "
+              f"en respuesta al {_ref_oficio(v)}, a fin de {fin}."] + parrafos(v.get("informe"))
+    if _s(v.get("adjuntos")):
+        cuerpo.append(f"Se adjunta a la presente: {_s(v.get('adjuntos'))}.")
+    asunto = (f"Respuesta a Oficio{' N° ' + _s(v.get('oficio_n')) if _s(v.get('oficio_n')) else ''} – Autos “{_s(v.get('autos'))}”"
+              + (f" – Legajo N° {_s(v.get('legajo'))}" if _s(v.get("legajo")) else ""))
+    return nota_base(ctx, v, cuerpo, asunto=asunto,
+                     cierre="Sin otro particular, saludo a Usted con atenta y distinguida consideración.-")
+
+
+OJ_RESPUESTA = Modelo(
+    "oj_respuesta", "Respuesta al oficio judicial", "⚖️", OJ,
+    "Informe a la Fiscalía o Juzgado: remite informe, notificación diligenciada o personal designado.",
+    [C_fecha(), Campo("dest_trat", "Tratamiento", "select", "Señor", ["Señor", "Señora", "Al Señor", "A la Señora"]),
+     Campo("dest_cargo", "Cargo del destinatario", "text", "Fiscal", ayuda="Ej.: Fiscal / Juez / Secretario"),
+     Campo("dest_nombre", "Nombre del destinatario", "text", "", ayuda="Ej.: Dr. APELLIDO NOMBRE")]
+    + C_oficio()
+    + [Campo("respuesta", "Qué se responde", "select", RESPUESTAS_OJ[0], RESPUESTAS_OJ),
+       Campo("informe", "Informe / detalle", "area", "", ia=True, requerido=True,
+             ayuda="Ej.: Que el Cadete de II° Año … L.P. N° … revista en este Instituto desde …"),
+       Campo("adjuntos", "Se adjunta (opcional)", "text", "", ayuda="Ej.: copia certificada de la planilla de antecedentes"),
+       C_firma()],
+    r_oj_respuesta, "RESPUESTA ENVIADA", sensible=True, destino=lambda v: "_JUD")
+
+
+def r_oj_pase_informe(v, ctx):
+    cuerpo = [intro(ctx, v, fin=f"por el cual se recepcionó {_ref_oficio(v)}, mediante el cual la autoridad judicial requiere: "
+                              f"{_s(v.get('requerido')) or '________'}") + ".",
+              f"En consecuencia, sírvase producir el informe requerido y elevarlo a esta Dirección General dentro del plazo de "
+              f"{_s(v.get('plazo')) or '48 horas'}, a fin de dar cumplimiento en término a lo ordenado por la autoridad judicial."]
+    return nota_base(ctx, v, cuerpo + parrafos(v.get("detalle")))
+
+
+OJ_PASE = Modelo(
+    "oj_pase_informe", "Pase interno: solicitud de informe", "📋", OJ,
+    "Pide al área (Compañía, Secretaría Académica…) el informe que requiere el oficio.",
+    [C_fecha(), C_destino("COMPANIA", "Área que debe informar"), C_fojas()] + C_oficio()
+    + [Campo("requerido", "Qué solicita el oficio", "area", "", ia=True, requerido=True,
+             ayuda="Ej.: informe si el Cadete … L.P. N° … se encontraba de servicio el día …"),
+       Campo("plazo", "Plazo para informar", "text", "48 horas"),
+       Campo("detalle", "Indicaciones adicionales (opcional)", "area", "", ia=True), C_verbo(), C_firma()],
+    r_oj_pase_informe, "PASE A DIVISIÓN / ESCUELA", sensible=True, destino=lambda v: v.get("destino"))
+
+
+def _cedula_oj(d, v, ctx, texto):
+    d.caja_titulo("CÉDULA DE NOTIFICACIÓN", 13)
+    d.parrafo(f"**SR./SRA.:** {_s(v.get('persona')) or '________'}", sangria=False, despues=2)
+    d.parrafo(f"**DLIO. LAB.:** {_s(v.get('domicilio')) or 'I.E.S.P. “G.J.F.S.M.” – Muñecas 1025, S. M. de Tucumán'}", sangria=False, despues=2)
+    d.parrafo(f"**CAUSA:** “{_s(v.get('autos'))}”" + (f" – Legajo N° {_s(v.get('legajo'))}" if _s(v.get("legajo")) else "") + ".-",
+              sangria=False, despues=10)
+    d.parrafo(texto)
+    d.parrafo("**QUEDA UD. DEBIDAMENTE NOTIFICADO.**", antes=6)
+    d.parrafo(f"S. M. de Tucumán, {W.fecha_larga(v.get('fecha') or ctx['hoy'])}.-")
+    d.renglones_firma(["NOTIFICADO (firma)", "ACLARACIÓN Y CARÁCTER DEL RECEPTOR", "DNI N° ·  FECHA ___/___/______  ·  HORA ______",
+                       "FIRMA DEL NOTIFICADOR", "ACLARACIÓN, JERARQUÍA Y N° DE CARGO"])
+
+
+def _doc_cedula(v, ctx, texto):
+    d = W.Doc(ctx["cfg"])
+    _cedula_oj(d, v, ctx, texto)
+    if v.get("duplicado"):
+        d.salto()
+        d.parrafo("— DUPLICADO —", sangria=False, alin="c", negrita=True, color=W.GRIS, tam=9)
+        _cedula_oj(d, v, ctx, texto)
+    return d
+
+
+def r_oj_comparendo(v, ctx):
+    f = v.get("fecha_comp")
+    h = v.get("hora_comp")
+    cuando = (f"el día {W.fecha_larga(f)}" if f else "el día ________") + (f" a horas {h.strftime('%H:%M')}" if h else "")
+    texto = (f"Se notifica a Usted que, conforme lo ordenado mediante {_ref_oficio(v)}, deberá comparecer {cuando}, en calidad de "
+             f"**{(_s(v.get('calidad')) or 'testigo').upper()}**, ante {_s(v.get('organismo')) or '________'}"
+             + (f", sito en {_s(v.get('lugar'))}" if _s(v.get("lugar")) else "")
+             + f", munido de su Documento Nacional de Identidad, {_s(v.get('apercibimiento'))}".rstrip(", ") + ".")
+    return _doc_cedula(v, ctx, texto)
+
+
+OJ_COMPARENDO = Modelo(
+    "oj_comparendo", "Notificación de comparendo", "🏛️", OJ,
+    "Cédula para que el efectivo o cadete comparezca ante la Fiscalía o el Juzgado.",
+    [C_fecha(), Campo("persona", "A quién se notifica (grado, apellido y nombre, L.P.)", "text", "", requerido=True),
+     Campo("domicilio", "Domicilio laboral / real", "text", "I.E.S.P. “G.J.F.S.M.” – Muñecas 1025, S. M. de Tucumán"),
+     Campo("calidad", "En calidad de", "select", "testigo", CALIDADES),
+     Campo("fecha_comp", "Día del comparendo", "date", None), Campo("hora_comp", "Hora", "time", time(8, 0)),
+     Campo("lugar", "Lugar (sala, dirección)", "text", "", ayuda="Ej.: Sala de Audiencias, calle España N° 430")]
+    + C_oficio()
+    + [Campo("apercibimiento", "Apercibimiento", "area",
+             "bajo apercibimiento de ser conducido inmediatamente por la fuerza pública, sin perjuicio de las responsabilidades penales "
+             "que correspondan y del pago de las costas que cause (Art. 176 del C.P.P.)"),
+       Campo("duplicado", "Imprimir con duplicado", "check", True)],
+    r_oj_comparendo, "NOTIFICACIÓN REALIZADA", sensible=True)
+
+
+def r_oj_rueda(v, ctx):
+    f, h = v.get("fecha_rueda"), v.get("hora_rueda")
+    cuando = (f"el día {W.fecha_larga(f)}" if f else "el día ________") + (f" a horas {h.strftime('%H:%M')}" if h else "")
+    cuerpo = [intro(ctx, v, fin=f"por el cual, mediante {_ref_oficio(v)}, se solicita la colaboración de personal a cargo para la "
+                              f"realización de una **RUEDA DE RECONOCIMIENTO**") + ".",
+              f"A tal efecto, sírvase designar **{_s(v.get('cantidad')) or '____'}** {_s(v.get('quienes')) or 'efectivos'} con las siguientes "
+              f"características: {_s(v.get('caracteristicas')) or '________'}; quienes deberán presentarse {cuando} en "
+              f"{_s(v.get('lugar')) or '________'}, vistiendo {_s(v.get('vestimenta')) or 'ropa de civil'}.",
+              "Cumplido, informe a esta Dirección General la nómina del personal designado (apellido, nombre, D.N.I. y L.P.) para su "
+              "comunicación a la autoridad judicial."]
+    return nota_base(ctx, v, cuerpo + parrafos(v.get("detalle")))
+
+
+OJ_RUEDA = Modelo(
+    "oj_rueda", "Rueda de reconocimiento: pedido de personal", "👥", OJ,
+    "Pide a Compañía o a la Escuela personal con las características que solicita la Justicia.",
+    [C_fecha(), C_destino("COMPANIA", "Pedir el personal a"), C_fojas()] + C_oficio()
+    + [Campo("cantidad", "Cantidad", "text", "cuatro (04)"),
+       Campo("quienes", "Personal", "select", "cadetes", ["cadetes", "aspirantes", "efectivos", "personal masculino", "personal femenino"]),
+       Campo("caracteristicas", "Características físicas", "area", "", requerido=True,
+             ayuda="Ej.: sexo masculino, entre 20 y 25 años, contextura delgada, altura aprox. 1,75 m, tez trigueña, cabello corto oscuro"),
+       Campo("fecha_rueda", "Día", "date", None), Campo("hora_rueda", "Hora", "time", time(9, 0)),
+       Campo("lugar", "Lugar", "text", "", requerido=True, ayuda="Ej.: Unidad Fiscal …, calle … N° …"),
+       Campo("vestimenta", "Vestimenta", "text", "ropa de civil"),
+       Campo("detalle", "Indicaciones adicionales (opcional)", "area", "", ia=True), C_verbo(), C_firma()],
+    r_oj_rueda, "PASE A DIVISIÓN / ESCUELA", sensible=True, destino=lambda v: v.get("destino"))
+
+
+def r_oj_notificacion(v, ctx):
+    texto = f"Se notifica a Usted que, conforme lo ordenado mediante {_ref_oficio(v)}, {_s(v.get('texto')) or '________'}"
+    return _doc_cedula(v, ctx, texto.rstrip(".") + ".")
+
+
+OJ_NOTIF = Modelo(
+    "oj_notificacion", "Notificaciones varias (oficio)", "📨", OJ,
+    "Cédula para notificar cualquier otra disposición judicial.",
+    [C_fecha(), Campo("persona", "A quién se notifica (grado, apellido y nombre, L.P.)", "text", "", requerido=True),
+     Campo("domicilio", "Domicilio laboral / real", "text", "I.E.S.P. “G.J.F.S.M.” – Muñecas 1025, S. M. de Tucumán")]
+    + C_oficio()
+    + [Campo("texto", "Qué se notifica", "area", "", ia=True, requerido=True,
+             ayuda="Ej.: se ha dispuesto el archivo de las actuaciones… / deberá presentar …"),
+       Campo("duplicado", "Imprimir con duplicado", "check", True)],
+    r_oj_notificacion, "NOTIFICACIÓN REALIZADA", sensible=True)
+
+
 MODELOS = {m.id: m for m in [ELEVACION, PASE_SUPERIOR, PASE_CITTU, RELACIONES, PASE_COMPANIA, PASE_GABINETE, SANCION, PASE_ORIGEN,
                               NOTIFICACION, PROYECTO, CARATULA, ACTA_APERTURA, PROVIDENCIA, VALORACION, TESTIGO, CAUSANTE, VISU,
-                              DEFENSA, ANALISIS, CONCLUSIONES, ELEV_ACT]}
+                              DEFENSA, ANALISIS, CONCLUSIONES, ELEV_ACT,
+                              OJ_RESPUESTA, OJ_PASE, OJ_COMPARENDO, OJ_RUEDA, OJ_NOTIF]}
 
 # Pasos de las actuaciones según su origen (lo explicado por el usuario)
 PASOS_INTERNA = ["caratula", "acta_apertura", "providencia", "valoracion", "testigo", "notificacion", "visu", "defensa", "analisis", "conclusiones"]
@@ -759,6 +938,7 @@ SUGERIDOS = [
     (("EVENTO DEPORTIVO",), ["elevacion"]),
     (("COLABORACIÓN",), ["elevacion", "pase_origen"]),
     (("SANCIÓN",), ["sancion"]),
+    (("OFICIO", "JUDICIAL"), ["oj_respuesta", "oj_pase_informe", "oj_comparendo", "oj_rueda", "oj_notificacion"]),
     (("NOTIFICACIÓN",), ["notificacion"]),
     (("PROYECTO",), ["elevacion", "proyecto"]),
     (("INVITACIÓN",), ["elevacion", "relaciones"]),

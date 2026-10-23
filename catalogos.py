@@ -58,6 +58,7 @@ TIPOS_SEED = [
     ("EXTENSIÓN DE COLABORACIÓN", "Institucional", "EXT", False),
     ("INVITACIÓN", "Institucional", "EXT", False),
     ("INTERVENCIÓN GABINETE INTERDISCIPLINARIO", "Gabinete", "EXT", False),
+    ("OFICIO JUDICIAL", "Judicial", "EXT", False),
     ("ESTADÍSTICA", "Planificación y Estadística", "DIR", False),
     ("PLANIFICACIÓN ANUAL DE CURSOS", "Planificación y Estadística", "DIR", True),
     ("OTRO", "Otros", "AMBOS", False),
