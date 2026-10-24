@@ -19,8 +19,11 @@ def render():
         auth.aviso_sin_permiso("la configuración")
         return
     cfg = db.get_config()
-    tu, tn, t1, t2, t3, t5, t4 = st.tabs(["👥 Usuarios", "📝 Notas y autoridades", "📖 Libro y alertas", "🏢 Dependencias y colores",
-                                          "🗂️ Tipos de expediente", "☁️ Google Drive", "💾 Respaldo y auditoría"])
+    tu, tn, tw, t1, t2, t3, t5, t4 = st.tabs(["👥 Usuarios", "📝 Notas y autoridades", "📲 Avisos WhatsApp", "📖 Libro y alertas",
+                                              "🏢 Dependencias y colores", "🗂️ Tipos de expediente", "☁️ Google Drive", "💾 Respaldo y auditoría"])
+
+    with tw:
+        _avisos(cfg)
 
     with tu:
         _usuarios()
@@ -318,3 +321,61 @@ def _tramitacion(cfg):
                         "2. En Streamlit: **Manage app → Settings → Secrets**, agregue una línea:\n\n"
                         "```toml\nGEMINI_API_KEY = \"su-clave\"\n```\n"
                         "3. Guarde: la app se reinicia sola. No pegue la clave en ningún chat.")
+
+
+def _avisos(cfg):
+    """Avisos automáticos por WhatsApp a los oficiales cuando se carga o reingresa un expediente."""
+    import avisos as AV
+
+    listo, expl = AV.estado(cfg)
+    ui.alerta("✅" if listo else "⚙️", "Avisos automáticos " + ("ACTIVOS" if listo else "sin activar"), expl,
+              C.STATUS["ok"] if listo else C.STATUS["warning"])
+    with st.form("cfg_avisos"):
+        prov = st.radio("¿Cómo se envían?", AV.PROVEEDORES, index=AV.PROVEEDORES.index(cfg.get("wa_proveedor") or "DESACTIVADO"),
+                        horizontal=True, format_func={"DESACTIVADO": "Desactivado", "META": "WhatsApp Business (número propio del sistema)",
+                                                      "CALLMEBOT": "CallMeBot (gratis)"}.get)
+        dest = st.text_area("Oficiales que reciben el aviso (uno por línea: Nombre | número)", cfg.get("wa_destinos") or "", height=90,
+                            placeholder="OF. AUX. ALVAREZ | 381 512-3456\nOF. PPAL. GÓMEZ | 381 654-3210")
+        ev = st.multiselect("¿Cuándo avisar?", list(AV.EVENTOS), default=[e for e in AV.eventos_activos(cfg) if e in AV.EVENTOS],
+                            format_func=AV.EVENTOS.get)
+        c1, c2 = st.columns(2)
+        plant = c1.text_input("Plantilla aprobada en Meta (solo WhatsApp Business)", cfg.get("wa_plantilla") or "aviso_expediente")
+        idioma = c2.text_input("Idioma de la plantilla", cfg.get("wa_idioma") or "es_AR")
+        if st.form_submit_button("💾 Guardar avisos", type="primary"):
+            db.set_config({"wa_proveedor": prov, "wa_destinos": dest.strip(), "wa_eventos": ",".join(ev), "wa_plantilla": plant.strip(),
+                           "wa_idioma": idioma.strip()})
+            st.toast("Avisos guardados", icon="📲")
+            st.rerun()
+    if listo and st.button("📤 Enviar un aviso de prueba ahora"):
+        r = AV.enviar(["Aviso de PRUEBA", "000/0/0 (2026)", "PRUEBA", "Mensaje de prueba del sistema", "DIRECCIÓN", K.usuario()], esperar=True)
+        for d, ok, det in r:
+            (st.success if ok else st.error)(f"{d}: {det}")
+
+    with st.expander("📘 Cómo activarlo (paso a paso)"):
+        st.markdown(f"""
+**Opción A — WhatsApp Business (recomendada: llega como «{AV.NOMBRE}»)**
+1. Con un **número de teléfono nuevo** (que no esté usando WhatsApp), cree una cuenta en *Meta for Developers* → app de tipo **Business** → producto **WhatsApp**.
+2. Registre el número y ponga como nombre visible **{AV.NOMBRE}**.
+3. En *WhatsApp Manager → Plantillas* cree una plantilla de categoría **Utilidad**, nombre `aviso_expediente`, idioma *Español (ARG)*, con este cuerpo:
+
+```
+📁 Sistema de Expedientes DGII
+🔔 {{{{1}}}}
+Exp. N° {{{{2}}}} · {{{{3}}}}
+Asunto: {{{{4}}}}
+Origen: {{{{5}}}}
+Cargó: {{{{6}}}}
+Revíselo en Mi trabajo → Para tramitar.
+```
+4. Cree un **token permanente** (usuario del sistema) y copie el **Phone number ID**.
+5. En Streamlit Cloud → *Settings → Secrets* agregue `WA_TOKEN = "…"` y `WA_PHONE_ID = "…"` (nunca los pegue en el chat ni en otro lado).
+6. Aquí: elija **WhatsApp Business**, cargue los números de los oficiales, guarde y pruebe.
+
+Meta cobra un monto bajo por cada mensaje de plantilla según el país; revise el costo vigente en su panel.
+
+**Opción B — CallMeBot (gratis, para probar ya)**
+1. Cada oficial agenda el número de CallMeBot (ver callmebot.com → WhatsApp) y le envía: `I allow callmebot to send me messages`.
+2. Recibe por WhatsApp su **apikey**.
+3. En *Secrets* agregue `CALLMEBOT_KEYS = "5493815123456:123456,5493816543210:654321"` (número:apikey de cada oficial).
+4. Aquí: elija **CallMeBot**, cargue los números, guarde y pruebe. El mensaje llega desde el número de CallMeBot, encabezado con «{AV.NOMBRE}».
+""")

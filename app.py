@@ -15,7 +15,7 @@ st.set_page_config(
 import importlib  # noqa: E402
 import sys  # noqa: E402
 
-_PROPIOS = ["catalogos", "docword", "redaccion", "db", "auth", "gdrive", "reportes", "ui", "comun", "modelos"]
+_PROPIOS = ["catalogos", "docword", "redaccion", "db", "auth", "gdrive", "reportes", "ui", "comun", "modelos", "avisos"]
 _VISTAS = ["v_alertas", "v_carga", "v_config", "v_cursos", "v_ficha", "v_informes", "v_libro", "v_movimiento",
            "v_tramitar", "v_comision", "v_nuevo", "v_panel", "v_trabajo"]
 _cambio = False

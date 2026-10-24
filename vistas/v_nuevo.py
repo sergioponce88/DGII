@@ -15,6 +15,8 @@ def _resultado():
         return
     ui.alerta("✅", f"Expediente registrado en el libro del {C.SECRETARIAS[C.sec_de(r.get('secretaria'))]['sigla']}: N° {r['identificador']} (Año {r['anio']})",
               f"{r['tipo']} · Asiento en libro {r['libro']}, folio {r['folio']}, orden {r['orden']}", C.STATUS["ok"])
+    if st.session_state.get("alta_avisada"):
+        st.caption("📲 Se envió el aviso automático por WhatsApp a los oficiales.")
     c1, c2, c3 = st.columns(3)
     c1.link_button("📲 Avisar por WhatsApp", R.link_whatsapp(R.msg_alta(r), K.tel_dep(r.get("ubicacion_actual"))))
     if c2.button("🔎 Abrir ficha", key="alta_ficha"):
@@ -203,6 +205,10 @@ def render():
         st.error(f"No se pudo registrar: {e}")
         return
     st.session_state["ultimo_alta"] = {**exp, "id": exp_id, "identificador": ident_db}
+    import auth
+    import avisos
+
+    st.session_state["alta_avisada"] = avisos.avisar_expediente({**exp, "identificador": ident_db}, "alta", K.usuario(), auth.rol())
     for k in ["n_tipo", "n_nf", "n_nro", "n_lib", "n_dep_org", "n_destino"]:
         st.session_state.pop(k, None)
     st.rerun()

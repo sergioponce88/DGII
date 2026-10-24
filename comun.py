@@ -352,6 +352,11 @@ def form_reingreso(exp, key):
         }
         try:
             db.registrar_movimiento(int(exp["id"]), mov, "EN TRÁMITE", usuario(), fecha_termino=f_term if urgente else None)
+            import auth
+            import avisos
+
+            avisos.avisar_expediente({**dict(exp), "prioridad": "URGENTE TRÁMITE" if urgente else exp.get("prioridad")}, "reingreso",
+                                     usuario(), auth.rol())
             st.session_state[f"ultimo_mov_{key}"] = {"exp": dict(exp), "mov": mov}
             st.toast(f"Reingreso registrado: {exp['identificador']} · queda PENDIENTE DE TRÁMITE", icon="📥")
             st.rerun()
