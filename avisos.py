@@ -16,7 +16,7 @@ import streamlit as st
 
 import db
 
-PROVEEDORES = ["DESACTIVADO", "META", "CALLMEBOT"]
+PROVEEDORES = ["DESACTIVADO", "TEXTMEBOT", "CALLMEBOT", "META"]
 NOMBRE = "Sistema de Expedientes DGII"
 EVENTOS = {"alta_sub": "Expediente nuevo cargado por un suboficial", "alta_todos": "Expediente nuevo (cualquier usuario)",
            "reingreso": "Reingreso de un expediente", "urgente": "Solo si es URGENTE"}
@@ -69,6 +69,8 @@ def estado(cfg=None):
         return False, "Falta cargar los números de los oficiales."
     if prov == "META" and not (_secret("WA_TOKEN") and _secret("WA_PHONE_ID")):
         return False, "Faltan WA_TOKEN y WA_PHONE_ID en los Secrets de Streamlit."
+    if prov == "TEXTMEBOT" and not _secret("TEXTMEBOT_KEY"):
+        return False, "Falta TEXTMEBOT_KEY en los Secrets de Streamlit."
     if prov == "CALLMEBOT":
         claves = _claves_callmebot()
         faltan = [n or t for n, t in destinatarios(cfg) if t not in claves]
@@ -99,6 +101,14 @@ def _enviar_meta(tel, campos, cfg, sec):
     r = requests.post(url, json=cuerpo, headers={"Authorization": f"Bearer {sec['token']}"}, timeout=20)
     if r.status_code >= 300:
         raise RuntimeError(f"Meta {r.status_code}: {r.text[:200]}")
+
+
+def _enviar_textmebot(tel, texto, sec):
+    url = (f"https://api.textmebot.com/send.php?recipient=%2B{tel}&apikey={urllib.parse.quote(sec['tmb'] or '')}"
+           f"&text={urllib.parse.quote(texto)}")
+    r = requests.get(url, timeout=30)
+    if r.status_code >= 300 or "error" in r.text.lower()[:300]:
+        raise RuntimeError(f"TextMeBot {r.status_code}: {r.text[:160]}")
 
 
 def _enviar_callmebot(tel, texto, sec):
@@ -133,13 +143,15 @@ def enviar(campos, cfg=None, esperar=False):
     prov = cfg.get("wa_proveedor")
     dest = destinatarios(cfg)
     res = []
-    sec = {"token": _secret("WA_TOKEN"), "phone_id": _secret("WA_PHONE_ID"), "claves": _claves_callmebot()}  # se leen antes del hilo
+    sec = {"token": _secret("WA_TOKEN"), "phone_id": _secret("WA_PHONE_ID"), "claves": _claves_callmebot(), "tmb": _secret("TEXTMEBOT_KEY")}  # se leen antes del hilo
 
     def _run():
         for n, t in dest:
             try:
                 if prov == "META":
                     _enviar_meta(t, campos, cfg, sec)
+                elif prov == "TEXTMEBOT":
+                    _enviar_textmebot(t, texto_expediente(campos), sec)
                 else:
                     _enviar_callmebot(t, texto_expediente(campos), sec)
                 res.append((n or t, True, "enviado"))

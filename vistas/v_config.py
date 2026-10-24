@@ -332,8 +332,8 @@ def _avisos(cfg):
               C.STATUS["ok"] if listo else C.STATUS["warning"])
     with st.form("cfg_avisos"):
         prov = st.radio("¿Cómo se envían?", AV.PROVEEDORES, index=AV.PROVEEDORES.index(cfg.get("wa_proveedor") or "DESACTIVADO"),
-                        horizontal=True, format_func={"DESACTIVADO": "Desactivado", "META": "WhatsApp Business (número propio del sistema)",
-                                                      "CALLMEBOT": "CallMeBot (gratis)"}.get)
+                        horizontal=True, format_func={"DESACTIVADO": "Desactivado", "TEXTMEBOT": "WhatsApp común del sistema (TextMeBot)",
+                                                      "CALLMEBOT": "CallMeBot (gratis)", "META": "WhatsApp Business (Meta)"}.get)
         dest = st.text_area("Oficiales que reciben el aviso (uno por línea: Nombre | número)", cfg.get("wa_destinos") or "", height=90,
                             placeholder="OF. AUX. ALVAREZ | 381 512-3456\nOF. PPAL. GÓMEZ | 381 654-3210")
         ev = st.multiselect("¿Cuándo avisar?", list(AV.EVENTOS), default=[e for e in AV.eventos_activos(cfg) if e in AV.EVENTOS],
@@ -353,7 +353,16 @@ def _avisos(cfg):
 
     with st.expander("📘 Cómo activarlo (paso a paso)"):
         st.markdown(f"""
-**Opción A — WhatsApp Business (recomendada: llega como «{AV.NOMBRE}»)**
+**Opción recomendada — WhatsApp común del sistema (TextMeBot)**
+1. Consiga un **chip** para el sistema e instale **WhatsApp común** (o use uno que ya tenga). En *Ajustes → Perfil* ponga de nombre **{AV.NOMBRE}** y el logo de la Dirección como foto.
+2. Entre a **textmebot.com**, regístrese con un correo y **vincule ese WhatsApp escaneando el código QR** (como WhatsApp Web).
+3. Copie la **apikey** que le envían y en Streamlit Cloud → *Settings → Secrets* agregue `TEXTMEBOT_KEY = "…"`.
+4. Aquí: elija **WhatsApp común del sistema**, cargue los números de los oficiales, guarde y pruebe.
+5. Los oficiales agendan ese número como **{AV.NOMBRE}**: el aviso les llega con ese nombre.
+
+Tiene 2 días de prueba gratis; luego el plan para varios destinatarios es pago (bajo costo mensual). El teléfono con el chip debe quedar encendido y con internet.
+
+**Opción A — WhatsApp Business (Meta)**
 1. Con un **número de teléfono nuevo** (que no esté usando WhatsApp), cree una cuenta en *Meta for Developers* → app de tipo **Business** → producto **WhatsApp**.
 2. Registre el número y ponga como nombre visible **{AV.NOMBRE}**.
 3. En *WhatsApp Manager → Plantillas* cree una plantilla de categoría **Utilidad**, nombre `aviso_expediente`, idioma *Español (ARG)*, con este cuerpo:
@@ -373,7 +382,7 @@ Revíselo en Mi trabajo → Para tramitar.
 
 Meta cobra un monto bajo por cada mensaje de plantilla según el país; revise el costo vigente en su panel.
 
-**Opción B — CallMeBot (gratis, para probar ya)**
+**Opción B — CallMeBot (gratis, uso personal; a veces no admite nuevos usuarios)**
 1. Cada oficial agenda el número de CallMeBot (ver callmebot.com → WhatsApp) y le envía: `I allow callmebot to send me messages`.
 2. Recibe por WhatsApp su **apikey**.
 3. En *Secrets* agregue `CALLMEBOT_KEYS = "5493815123456:123456,5493816543210:654321"` (número:apikey de cada oficial).
