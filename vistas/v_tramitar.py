@@ -531,21 +531,18 @@ def _asentar(m, r, v, clave, dest):
     return hecho
 
 
-def _cambiar_encargo(r, p, clave, desp):
-    lista = [d for d in K.deps() if d != C.DEP_PROPIA]
-    with st.expander("✏️ Cambiar destino o dejar indicaciones al comisionista"):
-        c1, c2 = st.columns(2)
-        dest = c1.selectbox("Llevar a", lista, index=K.idx(lista, r.get("entrega_destino")), key=p + "cd_dest")
-        ind = c2.text_input("Indicaciones (opcional)", r.get("entrega_indicaciones") or "", key=p + "cd_ind",
-                            placeholder="Ej.: entregar en mano al Secretario")
-        b1, b2 = st.columns(2)
-        if b1.button("💾 Guardar cambios", key=p + "cd_ok", width="stretch"):
-            db.solicitar_entrega(int(r["id"]), dest, desp, ind, K.usuario())
-            db.asociar_dependencia(clave, dest)
-            st.toast(f"Encargo actualizado → {dest}", icon="🚚")
-            st.rerun()
-        if b2.button("✋ No encargar (lo lleva usted / queda aquí)", key=p + "cd_no", width="stretch"):
-            db.cancelar_entrega(int(r["id"]), K.usuario())
+def _cambiar_encargo(r, p, clave, desp, abierto=False):
+    """Cambiar el destino, entregarlo uno mismo ahora (registra la salida) o dejarlo en la Dirección."""
+    with st.expander("✏️ Cambiar: otro destino, lo entrego yo ahora, o queda aquí", expanded=abierto):
+        sal = K.ui_salida(r, p + "cs", 0)
+        if st.button("💾 Confirmar", key=p + "cs_ok", type="primary", width="stretch"):
+            if sal["modo"] == "queda":
+                db.cancelar_entrega(int(r["id"]), K.usuario())
+                st.toast("Queda en la Dirección", icon="🏠")
+            else:
+                sal["despacho"] = sal.get("despacho") or desp
+                st.toast(f"Exp. {r['identificador']}: {K.despachar(r, sal)}", icon="✅")
+                db.asociar_dependencia(clave, sal["destino"])
             st.rerun()
 
 
@@ -566,16 +563,11 @@ def _resultado(m, r, p):
                         + (f' y <b>encargado al comisionista</b> → {ui.esc(r.get("entrega_destino"))}. Ya le aparece en «Para entregar»; '
                            'cuando lo entregue se asienta solo la salida con quién lo recibió.' if pend else '.')
                         + ' No hace falta cargarlo en Trámite ni en Movimiento.</div>', unsafe_allow_html=True)
-            if pend:
-                _cambiar_encargo(r, p, doc.get("clave"), desp)
-            else:
-                st.caption("No se pudo saber a qué dependencia va. Elíjala una vez y el sistema la recuerda para las próximas notas.")
-                dest_c, ind = K.ui_encargo(r, p, doc.get("destino"))
-                if dest_c and st.button("🚚 Encargar la entrega al comisionista", key=p + "enc", type="primary", width="stretch"):
-                    db.solicitar_entrega(int(r["id"]), dest_c, desp, ind, K.usuario())
-                    db.asociar_dependencia(doc.get("clave"), dest_c)
-                    st.toast(f"Entrega encargada → {dest_c}", icon="🚚")
-                    st.rerun()
+            K._aviso_salida(r)
+            if (r.get("ubicacion_actual") or C.DEP_PROPIA) == C.DEP_PROPIA:
+                if not pend:
+                    st.caption("Elija a dónde va; el sistema recuerda la dependencia para las próximas notas a esa autoridad.")
+                _cambiar_encargo(r, p, doc.get("clave"), desp, abierto=not pend)
             if auto.get("tramito") and st.button("↩️ Deshacer (no estaba terminado)", key=p + "undo", width="stretch"):
                 db.cancelar_entrega(int(r["id"]), K.usuario())
                 db.marcar_tramitado([int(r["id"])], None, "Deshecho desde Tramitar", db.ahora(), K.usuario(), K.usuario(), revertir=True)

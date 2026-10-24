@@ -1,5 +1,5 @@
 """Piezas compartidas entre vistas: navegación, selectores, formulario de movimiento y motor de alertas."""
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 import pandas as pd
 import streamlit as st
@@ -361,29 +361,80 @@ def form_reingreso(exp, key):
 
 
 # ───────────────────────── Trámite ─────────────────────────
+MODOS_SALIDA = ["🚚 Lo lleva el comisionista", "📤 Sale ahora (lo entrego yo)", "🏠 Queda en la Dirección"]
+
+
+def ui_salida(exp, key, modo_def=0, dest_texto=None):
+    """Qué pasa con el expediente después del trámite, en el mismo lugar. Devuelve un dict con lo elegido."""
+    modo = st.segmented_control("¿Y después?", MODOS_SALIDA, default=MODOS_SALIDA[modo_def], key=f"sal_m_{key}") or MODOS_SALIDA[2]
+    if modo == MODOS_SALIDA[2]:
+        return {"modo": "queda"}
+    lista = [d for d in deps() if d != C.DEP_PROPIA]
+    defecto = dep_parecida(dest_texto, lista) or exp.get("entrega_destino") or exp.get("destino")
+    c1, c2 = st.columns(2)
+    dest = c1.selectbox("Destino ➜", lista, index=idx(lista, defecto), key=f"sal_d_{key}")
+    desp = campo_despacho(c2, "Despacho con el que sale", f"sal_p_{key}", exp.get("despacho"))
+    if modo == MODOS_SALIDA[0]:
+        ind = st.text_input("Indicaciones para el comisionista (opcional)", key=f"sal_i_{key}",
+                            placeholder="Ej.: entregar en mano al Secretario")
+        return {"modo": "comision", "destino": dest, "despacho": desp, "ind": ind}
+    c3, c4 = st.columns([3, 1])
+    recibe = campo_persona(c3, "Quién lo recibe", f"sal_r_{key}")
+    fojas = c4.number_input("Fojas", min_value=0, value=num(exp.get("fojas")), step=1, key=f"sal_f_{key}")
+    return {"modo": "sale", "destino": dest, "despacho": desp, "recibe": recibe, "fojas": int(fojas)}
+
+
+def despachar(exp, sal, quien=None, cuando=None):
+    """Ejecuta lo elegido en ui_salida: encargo al comisionista o salida inmediata (queda en la hoja de ruta)."""
+    u = usuario()
+    if sal.get("modo") == "comision":
+        db.solicitar_entrega(int(exp["id"]), sal["destino"], sal.get("despacho") or None, sal.get("ind"), u)
+        return f"encargado al comisionista → {sal['destino']}"
+    if sal.get("modo") == "sale":
+        if bool(exp.get("entrega_pendiente")):
+            db.cancelar_entrega(int(exp["id"]), u)
+        mov = {"fecha_hora": cuando or db.ahora(), "tipo": "SALIDA", "origen": C.DEP_PROPIA, "destino": sal["destino"],
+               "despacho": sal.get("despacho") or None, "entregado_por": quien or u, "recibido_por": sal.get("recibe") or None,
+               "fojas": sal.get("fojas") or None, "urgente": exp.get("prioridad") == "URGENTE TRÁMITE", "observaciones": None}
+        db.registrar_movimiento(int(exp["id"]), mov, "REMITIDO", u)
+        st.session_state["_ult_salida"] = {"exp": dict(exp), "mov": mov}
+        return f"salió → {sal['destino']}"
+    return "queda en la Dirección"
+
+
+def _aviso_salida(exp):
+    ult = st.session_state.get("_ult_salida")
+    if ult and ult["exp"]["id"] == exp["id"]:
+        m = ult["mov"]
+        st.success(f"✔ Salió ➜ {m['destino']} ({ui.fmt_fecha(m['fecha_hora'], True)})" + (f" · recibió {m['recibido_por']}" if m.get("recibido_por") else ""))
+        st.link_button("📲 Avisar por WhatsApp", R.link_whatsapp(R.msg_movimiento(ult["exp"], m), tel_dep(m["destino"])))
+
+
 def form_tramite(exp, key):
-    """Marca el expediente como TRAMITADO: qué se hizo, quién y cuándo. Permite anular la marca."""
+    """Trámite + salida en un solo paso: qué se hizo y a dónde va (comisionista, sale ahora o queda)."""
+    import auth
+
+    en_casa = (exp.get("ubicacion_actual") or C.DEP_PROPIA) == C.DEP_PROPIA
     if bool(exp.get("tramitado")):
         ui.alerta("✅", f"TRAMITADO el {ui.fmt_fecha(exp.get('fecha_tramite'), True)} por {exp.get('tramitado_por') or '—'}",
                   f"{exp.get('accion_tramite') or ''} · {exp.get('detalle_tramite') or ''}", C.STATUS["ok"])
-        import auth
-
+        _aviso_salida(exp)
         if not auth.puede("tramitar"):
             return
         if bool(exp.get("entrega_pendiente")):
             ui.alerta("🚚", f"Encargado al comisionista → {exp.get('entrega_destino') or '—'}",
                       f"Pedido por {exp.get('entrega_solicitada_por') or '—'} · {ui.fmt_fecha(exp.get('entrega_solicitada_en'), True)}",
                       C.STATUS["warning"])
-            if st.button("Cancelar el encargo", key=f"enc_cancel_{key}"):
-                db.cancelar_entrega(int(exp["id"]), usuario())
-                st.rerun()
-        elif (exp.get("ubicacion_actual") or C.DEP_PROPIA) == C.DEP_PROPIA:
-            with st.expander("🚚 Encargar la entrega al comisionista"):
-                dest, ind = ui_encargo(exp, f"ft_{key}", exp.get("destino"))
-                desp = campo_despacho(st, "Despacho con el que sale", f"enc_desp_{key}", exp.get("despacho"))
-                if dest and st.button("🚚 Encargar", key=f"enc_ok_{key}", type="primary"):
-                    db.solicitar_entrega(int(exp["id"]), dest, desp, ind, usuario())
-                    st.toast(f"Entrega encargada → {dest}", icon="🚚")
+        if en_casa:
+            with st.container(border=True):
+                st.markdown("**📦 Despachar el expediente**" + (" (cambia el encargo)" if exp.get("entrega_pendiente") else ""))
+                sal = ui_salida(exp, f"ya_{key}", 1 if exp.get("entrega_pendiente") else 0)
+                b1, b2 = st.columns(2)
+                if sal["modo"] != "queda" and b1.button("✅ Despachar", key=f"ya_ok_{key}", type="primary", width="stretch"):
+                    st.toast(f"Exp. {exp['identificador']}: {despachar(exp, sal)}", icon="✅")
+                    st.rerun()
+                if exp.get("entrega_pendiente") and b2.button("Cancelar el encargo", key=f"enc_cancel_{key}", width="stretch"):
+                    db.cancelar_entrega(int(exp["id"]), usuario())
                     st.rerun()
         with st.expander("↺ Anular la marca de tramitado"):
             motivo = st.text_input("Motivo", key=f"anu_m_{key}")
@@ -391,28 +442,34 @@ def form_tramite(exp, key):
                 db.marcar_tramitado([int(exp["id"])], None, motivo, db.ahora(), usuario(), usuario(), revertir=True)
                 st.rerun()
         return
-    import auth
 
-    ui.alerta("⏳", "PENDIENTE DE TRÁMITE", "Registre lo realizado para dejarlo asentado en la hoja de ruta.", C.STATUS["warning"])
+    ui.alerta("⏳", "PENDIENTE DE TRÁMITE", "Asiente lo realizado y a dónde va, todo en un solo paso.", C.STATUS["warning"])
     if not auth.puede("tramitar"):
         auth.aviso_sin_permiso("la marca de tramitado")
         return
-    if st.button("📝 Tramitar con modelos (nota en Word)", key=f"ir_tram_{key}", type="primary", width="stretch"):
+    if st.button("📝 Tramitar con modelos (nota en Word)", key=f"ir_tram_{key}", width="stretch"):
         st.session_state["tram_sel"] = int(exp["id"])
         ir_a(PAG_TRAMITAR, exp["id"])
-    st.caption("…o registre manualmente lo realizado:")
-    with st.form(f"ftr_{key}", clear_on_submit=True):
+    with st.container(border=True):
+        st.markdown("**✅ Tramitar y despachar**")
         c1, c2 = st.columns(2)
         accion = c1.selectbox("¿Qué se hizo?", C.ACCIONES_TRAMITE, key=f"tr_ac_{key}")
         quien = campo_persona(c2, "Tramitado por", f"tr_q_{key}", defecto=usuario())
-        c3, c4 = st.columns(2)
-        f = c3.date_input("Fecha", db.hoy(), format="DD/MM/YYYY", key=f"tr_f_{key}")
-        h = c4.time_input("Hora", db.ahora().time().replace(second=0), step=300, key=f"tr_h_{key}")
-        det = st.text_area("Detalle (N° de nota, providencia, a quién se respondió…)", height=70, key=f"tr_d_{key}")
-        if st.form_submit_button("✅ Marcar como TRAMITADO"):
-            db.marcar_tramitado([int(exp["id"])], accion, det.strip() or None, datetime.combine(f, h),
-                                quien.strip().upper() or usuario(), usuario())
-            st.toast(f"Exp. {exp['identificador']} tramitado", icon="✅")
+        det = st.text_input("Detalle (N° de nota, providencia, a quién se respondió…)", key=f"tr_d_{key}")
+        with st.expander("🕒 Otra fecha u hora (si no fue ahora)"):
+            c3, c4 = st.columns(2)
+            f = c3.date_input("Fecha", db.hoy(), format="DD/MM/YYYY", key=f"tr_f_{key}")
+            h = c4.time_input("Hora", db.ahora().time().replace(second=0), step=300, key=f"tr_h_{key}")
+        sal = ui_salida(exp, f"tr_{key}", 0 if en_casa else 2) if en_casa else {"modo": "queda"}
+        if st.button("✅ Tramitar" + ("" if sal["modo"] == "queda" else " y despachar"), key=f"tr_ok_{key}", type="primary", width="stretch"):
+            cuando = datetime.combine(f, h if isinstance(h, time) else time(0, 0))
+            q = quien or usuario()
+            db.marcar_tramitado([int(exp["id"])], accion, det.strip() or None, cuando, q, usuario())
+            res = despachar(exp, sal, q, cuando + timedelta(minutes=1))
+            for k in list(st.session_state):
+                if k.endswith(f"_{key}") and k.startswith(("tr_", "sal_")):
+                    st.session_state.pop(k, None)
+            st.toast(f"Exp. {exp['identificador']} tramitado · {res}", icon="✅")
             st.rerun()
 
 

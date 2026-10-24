@@ -24,6 +24,14 @@ def _resultado():
         st.session_state.pop("ultimo_alta", None)
         st.session_state.pop("n_sec", None)  # vuelve a preguntar a qué libro corresponde
         st.rerun()
+    import auth
+
+    if auth.puede("tramitar"):
+        fila = db.df_expedientes()
+        fila = fila[fila["id"] == r["id"]]
+        if not fila.empty:
+            ui.seccion("✅ ¿Ya lo tramitó? Asiéntelo aquí mismo")
+            K.form_tramite(fila.iloc[0], "alta")
 
 
 def render():
