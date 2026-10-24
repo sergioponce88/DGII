@@ -400,11 +400,16 @@ def _ia_permitida(m, ctx):
     return RD.gemini_disponible() and (not m.sensible or ctx["cfg"].get("ia_datos_personales") == "SI")
 
 
+INSTR_RAPIDAS = ["Opinión FAVORABLE", "Opinión DESFAVORABLE", "A consideración del Comando Superior", "Breve (2–3 líneas)",
+                 "Detallado", "Mencionar las fojas", "Pedir que se notifique al causante", "Pedir informe a la dependencia",
+                 "Tono más formal"]
+
+
 def _fotos_ia(m, r, ctx, p):
     campos = [c for c in m.campos if c.ia]
     if not campos:
         return
-    with st.expander("📷 Completar con fotos del expediente (IA)", expanded=False):
+    with st.expander("📷 Completar con IA · fotos del expediente e instrucciones", expanded=False):
         if not RD.gemini_disponible():
             st.info("Para leer las fojas con IA hay que activar Gemini (gratis): ⚙️ Configuración → 📝 Notas y autoridades.")
             return
@@ -412,19 +417,27 @@ def _fotos_ia(m, r, ctx, p):
             st.caption("🔒 Este documento lleva datos personales y la configuración no permite enviarlos a IA externa. "
                        "El administrador puede habilitarlo en ⚙️ Configuración → 📝 Notas y autoridades.")
             return
-        st.caption("Saque fotos de las fojas (o suba el PDF). La IA las lee y propone el texto de: "
+        st.caption("Saque fotos de las fojas (o suba el PDF) y, si quiere, indíquele cómo redactarlo. La IA propone el texto de: "
                    + ", ".join(c.label.split(" (")[0] for c in campos) + ". Usted revisa y corrige antes de generar el Word.")
         arch = st.file_uploader("Fotos o PDF de las fojas", type=["jpg", "jpeg", "png", "webp", "pdf"], accept_multiple_files=True,
                                 key=p + "fotos", label_visibility="collapsed")
-        if st.button("🤖 Leer fojas y proponer el texto", key=p + "ia_go", type="primary", width="stretch", disabled=not arch):
+        st.markdown("**🗣️ Instrucciones para la IA** <small>(opcional · cómo quiere que lo redacte)</small>", unsafe_allow_html=True)
+        rapidas = st.pills("Indicaciones rápidas", INSTR_RAPIDAS, selection_mode="multi", key=p + "ia_pills",
+                           label_visibility="collapsed")
+        libre = st.text_area("Instrucciones", key=p + "ia_instr", height=90, label_visibility="collapsed",
+                             placeholder="Ej.: opinar favorablemente porque cumple los requisitos de la Res. ___; destacar que el cursante "
+                                         "tiene buen concepto; pedir que se notifique al causante; no mencionar la sanción anterior…")
+        instr = "\n".join([f"- {x}" for x in (rapidas or [])] + ([libre.strip()] if libre and libre.strip() else []))
+        txt_btn = "🤖 Leer fojas y proponer el texto" if arch else "🤖 Proponer el texto con mis instrucciones"
+        if st.button(txt_btn, key=p + "ia_go", type="primary", width="stretch", disabled=not arch and not instr):
             e = ctx["exp"]
             exp_txt = (f"N° {e.get('identificador')}; tipo: {e.get('tipo')}; asunto: {e.get('asunto') or '—'}; "
                        f"origen: {e.get('dependencia_origen') or '—'}; fojas: {e.get('fojas') or '—'}")
             try:
                 with st.spinner("Leyendo las fojas… puede tardar unos segundos"):
-                    archivos = [RD.preparar_archivo(a.name, a.getvalue()) for a in arch]
+                    archivos = [RD.preparar_archivo(a.name, a.getvalue()) for a in (arch or [])]
                     st.session_state[p + "_ia"] = RD.gemini_desde_fotos(
-                        archivos, m.nombre, m.descripcion, [(c.key, c.label, c.ayuda) for c in campos], exp_txt)
+                        archivos, m.nombre, m.descripcion, [(c.key, c.label, c.ayuda) for c in campos], exp_txt, instr)
             except Exception as ex:
                 st.error(str(ex))
         prop = st.session_state.get(p + "_ia")
@@ -441,7 +454,9 @@ def _fotos_ia(m, r, ctx, p):
                     usar[c.key] = prop[c.key]
             if not usar:
                 st.caption("La IA no encontró contenido para estos campos. Pruebe con fotos más nítidas.")
-            elif st.button("✔️ Usar estos textos en el formulario", key=p + "ia_ok", type="primary", width="stretch"):
+            else:
+                st.caption("¿No es lo que quería? Cambie o agregue instrucciones arriba y vuelva a tocar 🤖 para otra propuesta.")
+            if usar and st.button("✔️ Usar estos textos en el formulario", key=p + "ia_ok", type="primary", width="stretch"):
                 st.session_state[p + "_aplicar"] = usar
                 st.session_state.pop(p + "_ia", None)
                 st.rerun()

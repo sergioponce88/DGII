@@ -203,7 +203,7 @@ tramitación de un expediente. Te adjunto fotos/escaneos de las fojas del expedi
 
 Datos del expediente en el sistema: {exp}
 Documento a redactar: {modelo} — {desc}
-
+{instr}
 Leé las fojas y redactá el contenido de estos campos (clave: descripción · ejemplo de estilo):
 {campos}
 
@@ -213,22 +213,29 @@ Reglas:
   Si un dato no se lee o no figura, escribí ________ en su lugar.
 - No incluyas saludos, encabezados, referencias al expediente ni firma: solo el contenido de cada campo.
 - Si un campo no corresponde según lo leído, devolvelo vacío "".
+- Si hay INSTRUCCIONES DEL OFICIAL, seguilas siempre (enfoque, opinión, extensión, qué destacar o pedir), salvo que
+  impliquen inventar datos: en ese caso usá ________.
 - Agregá además la clave "_resumen" con un resumen de 1 a 3 líneas de lo que pide el expediente.
 Respondé SOLO un objeto JSON con esas claves."""
 
 
-def gemini_desde_fotos(archivos, modelo_nombre, modelo_desc, campos, exp_txt):
-    """archivos: [(mime, bytes)] · campos: [(clave, etiqueta, ayuda)] → dict clave → texto propuesto."""
+def gemini_desde_fotos(archivos, modelo_nombre, modelo_desc, campos, exp_txt, instrucciones=""):
+    """archivos: [(mime, bytes)] · campos: [(clave, etiqueta, ayuda)] → dict clave → texto propuesto.
+    instrucciones: indicaciones del oficial (opinión, enfoque, extensión…). Sin fotos, redacta con los datos y las instrucciones."""
     import base64
     import json
 
-    if not archivos:
-        raise ValueError("Agregue al menos una foto o PDF del expediente.")
+    instrucciones = (instrucciones or "").strip()
+    if not archivos and not instrucciones:
+        raise ValueError("Agregue fotos o PDF de las fojas, o escriba instrucciones para la IA.")
     total = sum(len(b) for _, b in archivos)
     if total > 18 * 1024 * 1024:
         raise ValueError("Las fotos superan el máximo (18 MB). Suba menos fojas o fotos más livianas.")
     lista = "\n".join(f"- {k}: {lab}" + (f" · {ay}" if ay else "") for k, lab, ay in campos)
-    parts = [{"text": PROMPT_FOTOS.format(exp=exp_txt, modelo=modelo_nombre, desc=modelo_desc, campos=lista)}]
+    instr = f"\nINSTRUCCIONES DEL OFICIAL (prioritarias):\n{instrucciones}\n" if instrucciones else ""
+    if not archivos:
+        instr += "\n(No se adjuntaron fojas: redactá con los datos del expediente y las instrucciones.)\n"
+    parts = [{"text": PROMPT_FOTOS.format(exp=exp_txt, modelo=modelo_nombre, desc=modelo_desc, campos=lista, instr=instr)}]
     parts += [{"inline_data": {"mime_type": mime, "data": base64.b64encode(b).decode()}} for mime, b in archivos]
     txt = _gemini(parts, json_out=True, timeout=150, rapido=False)
     try:
