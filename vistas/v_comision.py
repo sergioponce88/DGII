@@ -121,21 +121,33 @@ def _formulario(r, yo):
         lista_dep = [dest_def] + lista_dep
     if r.get("entrega_indicaciones"):
         ui.alerta("📝", "Indicaciones del oficial", r["entrega_indicaciones"], C.STATUS["warning"])
+    import auth
+
+    solo = auth.rol() == "COMISIONISTA"  # el comisionista solo carga fecha, hora, quién recibe y observaciones
+    desp_def = r.get("entrega_despacho") or r.get("despacho") or ""
     with st.form(f"com_form_{r['id']}"):
         c1, c2 = st.columns(2)
-        tipo = c1.selectbox("Tipo de movimiento", TIPOS_ENTREGA)
-        destino = c2.selectbox("Destino ➜", lista_dep, index=K.idx(lista_dep, dest_def))
+        tipo = c1.selectbox("Tipo de movimiento", TIPOS_ENTREGA, disabled=solo)
+        destino = c2.selectbox("Destino ➜", lista_dep, index=K.idx(lista_dep, dest_def), disabled=solo)
         c3, c4 = st.columns(2)
         c3.text_input("Desde", C.DEP_PROPIA, disabled=True)
-        despacho = K.campo_despacho(c4, "Despacho / Resolución", f"com_desp_{r['id']}", r.get("entrega_despacho") or r.get("despacho"))
+        if solo:
+            c4.text_input("Despacho / Resolución", desp_def or "— Sin indicar —", disabled=True)
+            despacho = desp_def
+        else:
+            despacho = K.campo_despacho(c4, "Despacho / Resolución", f"com_desp_{r['id']}", desp_def)
         c5, c6 = st.columns(2)
         f = c5.date_input("Fecha", db.hoy(), format="DD/MM/YYYY")
         h = c6.time_input("Hora", db.ahora().time().replace(second=0), step=60)
         c7, c8 = st.columns(2)
-        lleva = K.campo_persona(c7, "Quién lo lleva / entrega", f"com_lleva_{r['id']}", defecto=yo)
-        recibe = K.campo_persona(c8, "Quién lo recibe *", f"com_recibe_{r['id']}")
+        if solo:
+            lleva = c7.text_input("Quién lo lleva / entrega", yo, disabled=True)
+            recibe = c8.text_input("Quién lo recibe *", key=f"com_recibe_t_{r['id']}", placeholder="Grado, apellido y nombre de quien lo recibe")
+        else:
+            lleva = K.campo_persona(c7, "Quién lo lleva / entrega", f"com_lleva_{r['id']}", defecto=yo)
+            recibe = K.campo_persona(c8, "Quién lo recibe *", f"com_recibe_{r['id']}")
         c9, c10 = st.columns([1, 2])
-        fojas = c9.number_input("Fojas", min_value=0, value=K.num(r.get("fojas")), step=1)
+        fojas = c9.number_input("Fojas", min_value=0, value=K.num(r.get("fojas")), step=1, disabled=solo)
         obs = c10.text_input("Observaciones", placeholder="Ej.: se entregó en Mesa de Entradas de la Escuela")
         ok = st.form_submit_button("✅ Registrar entrega", type="primary")
     if ok:
@@ -143,7 +155,7 @@ def _formulario(r, yo):
             st.error("Indique quién recibe el expediente en la dependencia.")
             return
         mov = {"fecha_hora": datetime.combine(f, h if isinstance(h, time) else time(0, 0)), "tipo": tipo, "origen": C.DEP_PROPIA,
-               "destino": destino, "despacho": despacho or None, "entregado_por": lleva.strip().upper() or yo,
+               "destino": destino, "despacho": despacho or None, "entregado_por": yo if solo else (lleva.strip().upper() or yo),
                "recibido_por": recibe.strip().upper(), "fojas": int(fojas) or None, "observaciones": obs.strip() or None}
         estado = C.ESTADO_POR_MOVIMIENTO.get(tipo, "REMITIDO")
         try:
