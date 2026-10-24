@@ -12,6 +12,7 @@ import ui
 LOGO = "assets/logo_policia.png"
 LOGO_IESP = "assets/logo_iesp.png"
 
+PAG_TRABAJO = "🧭 Mi trabajo"
 PAG_PANEL = "📊 Panel de Control"
 PAG_NUEVO = "➕ Nuevo Expediente"
 PAG_MOV = "🔁 Movimiento Rápido"
@@ -24,7 +25,7 @@ PAG_ALERTAS = "🔔 Alertas y Agenda"
 PAG_CARGA = "📥 Carga Masiva"
 PAG_INFORMES = "📈 Informes"
 PAG_CONFIG = "⚙️ Configuración"
-PAGINAS = [PAG_PANEL, PAG_NUEVO, PAG_MOV, PAG_TRAMITAR, PAG_COMISION, PAG_LIBRO, PAG_FICHA, PAG_CURSOS, PAG_ALERTAS, PAG_CARGA, PAG_INFORMES, PAG_CONFIG]
+PAGINAS = [PAG_TRABAJO, PAG_PANEL, PAG_NUEVO, PAG_MOV, PAG_TRAMITAR, PAG_COMISION, PAG_LIBRO, PAG_FICHA, PAG_CURSOS, PAG_ALERTAS, PAG_CARGA, PAG_INFORMES, PAG_CONFIG]
 
 
 def usuario():

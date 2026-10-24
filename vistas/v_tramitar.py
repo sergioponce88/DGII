@@ -570,6 +570,9 @@ def _resultado(m, r, p):
         st.download_button("⬇️ Descargar Word para imprimir", doc["bytes"], file_name=doc["nombre"], type="primary", width="stretch",
                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=p + "dl")
         st.caption(f"Hoja {'media oficio' if m.hoja == 'media' else 'oficio'} · quedó registrado en el historial del expediente.")
+        if st.button("🧭 Listo: volver a Mi trabajo (siguiente expediente)", key=p + "volver", width="stretch"):
+            st.session_state.pop(p + "_doc", None)
+            K.ir_a(K.PAG_TRABAJO)
         desp = m.despacho(doc["v"]) if m.despacho else None
         auto = doc.get("auto")
         if auto is not None:

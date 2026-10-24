@@ -17,7 +17,7 @@ import sys  # noqa: E402
 
 _PROPIOS = ["catalogos", "docword", "redaccion", "db", "auth", "gdrive", "reportes", "ui", "comun", "modelos"]
 _VISTAS = ["v_alertas", "v_carga", "v_config", "v_cursos", "v_ficha", "v_informes", "v_libro", "v_movimiento",
-           "v_tramitar", "v_comision", "v_nuevo", "v_panel"]
+           "v_tramitar", "v_comision", "v_nuevo", "v_panel", "v_trabajo"]
 _cambio = False
 for _n in _PROPIOS + [f"vistas.{v}" for v in _VISTAS]:
     _m = sys.modules.get(_n)
@@ -48,6 +48,7 @@ from vistas import (  # noqa: E402
     v_movimiento,
     v_tramitar,
     v_comision,
+    v_trabajo,
     v_nuevo,
     v_panel,
 )
@@ -166,7 +167,9 @@ def _desde_movil():
 if auth.rol() == "COMISIONISTA":  # el comisionista solo ve sus entregas
     PAGINAS_OK = [K.PAG_COMISION]
 else:
-    PAGINAS_OK = [p for p in K.PAGINAS if (p != K.PAG_CONFIG or auth.puede("configurar")) and (p != K.PAG_TRAMITAR or auth.puede("tramitar"))]
+    PAGINAS_OK = [p for p in K.PAGINAS if (p not in (K.PAG_CONFIG, K.PAG_CARGA) or auth.puede("configurar"))
+                  and (p != K.PAG_TRAMITAR or auth.puede("tramitar"))
+                  and (p != K.PAG_COMISION or auth.puede("entregar"))]
 if st.session_state.get("nav") not in PAGINAS_OK:
     st.session_state["nav"] = PAGINAS_OK[0]
 st.session_state.setdefault("nav", PAGINAS_OK[0])
@@ -221,6 +224,7 @@ if n_crit and not st.session_state.get("_avisado"):
     st.session_state["_avisado"] = True
 
 VISTAS = {
+    K.PAG_TRABAJO: v_trabajo.render,
     K.PAG_PANEL: v_panel.render,
     K.PAG_NUEVO: v_nuevo.render,
     K.PAG_MOV: v_movimiento.render,
