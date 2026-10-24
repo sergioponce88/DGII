@@ -16,7 +16,7 @@ import streamlit as st
 
 import db
 
-PROVEEDORES = ["DESACTIVADO", "TEXTMEBOT", "CALLMEBOT", "META"]
+PROVEEDORES = ["DESACTIVADO", "TELEGRAM", "TEXTMEBOT", "CALLMEBOT", "META"]
 NOMBRE = "Sistema de Expedientes DGII"
 EVENTOS = {"alta_sub": "Expediente nuevo cargado por un suboficial", "alta_todos": "Expediente nuevo (cualquier usuario)",
            "reingreso": "Reingreso de un expediente", "urgente": "Solo si es URGENTE"}
@@ -43,6 +43,13 @@ def destinatarios(cfg=None):
     """[(nombre, número)] desde config «wa_destinos» (una línea por oficial: Nombre | número)."""
     cfg = cfg or db.get_config()
     out = []
+    if (cfg.get("wa_proveedor") or "") == "TELEGRAM":  # Telegram: «Nombre | chat_id»
+        for linea in str(cfg.get("tg_destinos") or "").splitlines():
+            n, t = linea.split("|", 1) if "|" in linea else ("", linea)
+            t = re.sub(r"[^\d-]", "", t)
+            if t:
+                out.append((n.strip(), t))
+        return out
     for linea in str(cfg.get("wa_destinos") or "").splitlines():
         if "|" in linea:
             n, t = linea.split("|", 1)
@@ -65,8 +72,11 @@ def estado(cfg=None):
     prov = cfg.get("wa_proveedor") or "DESACTIVADO"
     if prov == "DESACTIVADO":
         return False, "Avisos automáticos desactivados."
+    if prov == "TELEGRAM" and not _secret("TELEGRAM_BOT_TOKEN"):
+        return False, "Falta TELEGRAM_BOT_TOKEN en los Secrets de Streamlit."
     if not destinatarios(cfg):
-        return False, "Falta cargar los números de los oficiales."
+        return False, ("Ningún oficial vinculado: cada uno escribe /start al bot y luego use «Buscar oficiales»."
+                       if prov == "TELEGRAM" else "Falta cargar los números de los oficiales.")
     if prov == "META" and not (_secret("WA_TOKEN") and _secret("WA_PHONE_ID")):
         return False, "Faltan WA_TOKEN y WA_PHONE_ID en los Secrets de Streamlit."
     if prov == "TEXTMEBOT" and not _secret("TEXTMEBOT_KEY"):
@@ -101,6 +111,51 @@ def _enviar_meta(tel, campos, cfg, sec):
     r = requests.post(url, json=cuerpo, headers={"Authorization": f"Bearer {sec['token']}"}, timeout=20)
     if r.status_code >= 300:
         raise RuntimeError(f"Meta {r.status_code}: {r.text[:200]}")
+
+
+def _tg(metodo, token, **datos):
+    r = requests.post(f"https://api.telegram.org/bot{token}/{metodo}", json=datos, timeout=20)
+    j = r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
+    if not j.get("ok"):
+        raise RuntimeError(f"Telegram: {j.get('description') or r.text[:160]}")
+    return j.get("result")
+
+
+def _html(s):
+    return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _enviar_telegram(chat, campos, sec):
+    acc, nro, tipo, asunto, origen, quien = [_html(_plano(c, 300)) for c in campos]
+    texto = (f"📁 <b>{NOMBRE}</b>\n🔔 {acc}\n<b>Exp. N° {nro}</b>\nTipo: {tipo}\nAsunto: {asunto}\nOrigen: {origen}\n"
+             f"Cargó: {quien}\n👉 Revíselo en <i>Mi trabajo → Para tramitar</i>.")
+    datos = {"chat_id": chat, "text": texto, "parse_mode": "HTML", "disable_web_page_preview": True}
+    if sec.get("url"):
+        datos["reply_markup"] = {"inline_keyboard": [[{"text": "📂 Abrir el sistema", "url": sec["url"]}]]}
+    _tg("sendMessage", sec["tg"], **datos)
+
+
+def buscar_chats():
+    """Personas que escribieron al bot (/start): [(nombre, chat_id)]."""
+    token = _secret("TELEGRAM_BOT_TOKEN")
+    if not token:
+        raise RuntimeError("Falta TELEGRAM_BOT_TOKEN en los Secrets.")
+    vistos = {}
+    for u in _tg("getUpdates", token, limit=100) or []:
+        m = u.get("message") or u.get("edited_message") or {}
+        c = m.get("chat") or {}
+        if c.get("id") is not None:
+            nom = " ".join(x for x in [c.get("first_name"), c.get("last_name")] if x) or c.get("title") or c.get("username") or ""
+            vistos[str(c["id"])] = nom
+    return [(n, i) for i, n in vistos.items()]
+
+
+def nombre_bot():
+    try:
+        r = _tg("getMe", _secret("TELEGRAM_BOT_TOKEN"))
+        return r.get("username")
+    except Exception:
+        return None
 
 
 def _enviar_textmebot(tel, texto, sec):
@@ -143,13 +198,16 @@ def enviar(campos, cfg=None, esperar=False):
     prov = cfg.get("wa_proveedor")
     dest = destinatarios(cfg)
     res = []
-    sec = {"token": _secret("WA_TOKEN"), "phone_id": _secret("WA_PHONE_ID"), "claves": _claves_callmebot(), "tmb": _secret("TEXTMEBOT_KEY")}  # se leen antes del hilo
+    sec = {"token": _secret("WA_TOKEN"), "phone_id": _secret("WA_PHONE_ID"), "claves": _claves_callmebot(), "tmb": _secret("TEXTMEBOT_KEY"),
+           "tg": _secret("TELEGRAM_BOT_TOKEN"), "url": cfg.get("app_url") or "https://expedientesdgii.streamlit.app/"}  # se leen antes del hilo
 
     def _run():
         for n, t in dest:
             try:
                 if prov == "META":
                     _enviar_meta(t, campos, cfg, sec)
+                elif prov == "TELEGRAM":
+                    _enviar_telegram(t, campos, sec)
                 elif prov == "TEXTMEBOT":
                     _enviar_textmebot(t, texto_expediente(campos), sec)
                 else:

@@ -324,26 +324,58 @@ def _tramitacion(cfg):
 
 
 def _avisos(cfg):
-    """Avisos automáticos por WhatsApp a los oficiales cuando se carga o reingresa un expediente."""
+    """Avisos automáticos (Telegram o WhatsApp) a los oficiales cuando se carga o reingresa un expediente."""
     import avisos as AV
 
     listo, expl = AV.estado(cfg)
     ui.alerta("✅" if listo else "⚙️", "Avisos automáticos " + ("ACTIVOS" if listo else "sin activar"), expl,
               C.STATUS["ok"] if listo else C.STATUS["warning"])
+    nombres = {"DESACTIVADO": "Desactivado", "TELEGRAM": "Telegram (gratis)", "TEXTMEBOT": "WhatsApp común (TextMeBot)",
+               "CALLMEBOT": "WhatsApp (CallMeBot)", "META": "WhatsApp Business (Meta)"}
+    prov = st.radio("¿Por dónde se envían?", AV.PROVEEDORES, index=AV.PROVEEDORES.index(cfg.get("wa_proveedor") or "DESACTIVADO"),
+                    horizontal=True, format_func=nombres.get, key="av_prov")
+    if prov == "TELEGRAM":
+        bot = AV.nombre_bot()
+        if bot:
+            st.markdown(f"🤖 Bot conectado: **@{bot}** · Cada oficial abre **t.me/{bot}** y toca **Iniciar** (o escribe /start).")
+        if st.button("🔎 Buscar oficiales que escribieron al bot", key="av_buscar"):
+            try:
+                st.session_state["av_chats"] = AV.buscar_chats()
+            except Exception as e:
+                st.error(str(e))
+        chats = st.session_state.get("av_chats")
+        if chats is not None:
+            if not chats:
+                st.info("Todavía nadie escribió al bot. Pida a cada oficial que lo abra y toque «Iniciar», y vuelva a buscar.")
+            actuales = str(cfg.get("tg_destinos") or "")
+            for n, i in chats:
+                c1, c2 = st.columns([3, 1], vertical_alignment="center")
+                c1.markdown(f"**{n or 'Sin nombre'}** · id `{i}`" + (" · ✅ ya agregado" if i in actuales else ""))
+                if i not in actuales and c2.button("➕ Agregar", key=f"av_add_{i}"):
+                    db.set_config({"tg_destinos": (actuales.strip() + f"\n{n.upper()} | {i}").strip()})
+                    st.session_state.pop("av_chats", None)
+                    st.rerun()
     with st.form("cfg_avisos"):
-        prov = st.radio("¿Cómo se envían?", AV.PROVEEDORES, index=AV.PROVEEDORES.index(cfg.get("wa_proveedor") or "DESACTIVADO"),
-                        horizontal=True, format_func={"DESACTIVADO": "Desactivado", "TEXTMEBOT": "WhatsApp común del sistema (TextMeBot)",
-                                                      "CALLMEBOT": "CallMeBot (gratis)", "META": "WhatsApp Business (Meta)"}.get)
-        dest = st.text_area("Oficiales que reciben el aviso (uno por línea: Nombre | número)", cfg.get("wa_destinos") or "", height=90,
-                            placeholder="OF. AUX. ALVAREZ | 381 512-3456\nOF. PPAL. GÓMEZ | 381 654-3210")
+        if prov == "TELEGRAM":
+            dest = st.text_area("Oficiales que reciben el aviso (Nombre | id de Telegram)", cfg.get("tg_destinos") or "", height=90,
+                                help="Se completa solo con «Buscar oficiales». Para quitar a alguien, borre su línea.")
+        elif prov != "DESACTIVADO":
+            dest = st.text_area("Oficiales que reciben el aviso (uno por línea: Nombre | número)", cfg.get("wa_destinos") or "", height=90,
+                                placeholder="OF. AUX. ALVAREZ | 381 512-3456")
+        else:
+            dest = None
         ev = st.multiselect("¿Cuándo avisar?", list(AV.EVENTOS), default=[e for e in AV.eventos_activos(cfg) if e in AV.EVENTOS],
                             format_func=AV.EVENTOS.get)
-        c1, c2 = st.columns(2)
-        plant = c1.text_input("Plantilla aprobada en Meta (solo WhatsApp Business)", cfg.get("wa_plantilla") or "aviso_expediente")
-        idioma = c2.text_input("Idioma de la plantilla", cfg.get("wa_idioma") or "es_AR")
+        plant, idioma = cfg.get("wa_plantilla") or "aviso_expediente", cfg.get("wa_idioma") or "es_AR"
+        if prov == "META":
+            c1, c2 = st.columns(2)
+            plant = c1.text_input("Plantilla aprobada en Meta", plant)
+            idioma = c2.text_input("Idioma de la plantilla", idioma)
         if st.form_submit_button("💾 Guardar avisos", type="primary"):
-            db.set_config({"wa_proveedor": prov, "wa_destinos": dest.strip(), "wa_eventos": ",".join(ev), "wa_plantilla": plant.strip(),
-                           "wa_idioma": idioma.strip()})
+            val = {"wa_proveedor": prov, "wa_eventos": ",".join(ev), "wa_plantilla": plant.strip(), "wa_idioma": idioma.strip()}
+            if dest is not None:
+                val["tg_destinos" if prov == "TELEGRAM" else "wa_destinos"] = dest.strip()
+            db.set_config(val)
             st.toast("Avisos guardados", icon="📲")
             st.rerun()
     if listo and st.button("📤 Enviar un aviso de prueba ahora"):
@@ -351,40 +383,18 @@ def _avisos(cfg):
         for d, ok, det in r:
             (st.success if ok else st.error)(f"{d}: {det}")
 
-    with st.expander("📘 Cómo activarlo (paso a paso)"):
+    with st.expander("📘 Cómo activar Telegram (gratis, 5 minutos)", expanded=prov == "TELEGRAM" and not listo):
         st.markdown(f"""
-**Opción recomendada — WhatsApp común del sistema (TextMeBot)**
-1. Consiga un **chip** para el sistema e instale **WhatsApp común** (o use uno que ya tenga). En *Ajustes → Perfil* ponga de nombre **{AV.NOMBRE}** y el logo de la Dirección como foto.
-2. Entre a **textmebot.com**, regístrese con un correo y **vincule ese WhatsApp escaneando el código QR** (como WhatsApp Web).
-3. Copie la **apikey** que le envían y en Streamlit Cloud → *Settings → Secrets* agregue `TEXTMEBOT_KEY = "…"`.
-4. Aquí: elija **WhatsApp común del sistema**, cargue los números de los oficiales, guarde y pruebe.
-5. Los oficiales agendan ese número como **{AV.NOMBRE}**: el aviso les llega con ese nombre.
-
-Tiene 2 días de prueba gratis; luego el plan para varios destinatarios es pago (bajo costo mensual). El teléfono con el chip debe quedar encendido y con internet.
-
-**Opción A — WhatsApp Business (Meta)**
-1. Con un **número de teléfono nuevo** (que no esté usando WhatsApp), cree una cuenta en *Meta for Developers* → app de tipo **Business** → producto **WhatsApp**.
-2. Registre el número y ponga como nombre visible **{AV.NOMBRE}**.
-3. En *WhatsApp Manager → Plantillas* cree una plantilla de categoría **Utilidad**, nombre `aviso_expediente`, idioma *Español (ARG)*, con este cuerpo:
-
-```
-📁 Sistema de Expedientes DGII
-🔔 {{{{1}}}}
-Exp. N° {{{{2}}}} · {{{{3}}}}
-Asunto: {{{{4}}}}
-Origen: {{{{5}}}}
-Cargó: {{{{6}}}}
-Revíselo en Mi trabajo → Para tramitar.
-```
-4. Cree un **token permanente** (usuario del sistema) y copie el **Phone number ID**.
-5. En Streamlit Cloud → *Settings → Secrets* agregue `WA_TOKEN = "…"` y `WA_PHONE_ID = "…"` (nunca los pegue en el chat ni en otro lado).
-6. Aquí: elija **WhatsApp Business**, cargue los números de los oficiales, guarde y pruebe.
-
-Meta cobra un monto bajo por cada mensaje de plantilla según el país; revise el costo vigente en su panel.
-
-**Opción B — CallMeBot (gratis, uso personal; a veces no admite nuevos usuarios)**
-1. Cada oficial agenda el número de CallMeBot (ver callmebot.com → WhatsApp) y le envía: `I allow callmebot to send me messages`.
-2. Recibe por WhatsApp su **apikey**.
-3. En *Secrets* agregue `CALLMEBOT_KEYS = "5493815123456:123456,5493816543210:654321"` (número:apikey de cada oficial).
-4. Aquí: elija **CallMeBot**, cargue los números, guarde y pruebe. El mensaje llega desde el número de CallMeBot, encabezado con «{AV.NOMBRE}».
+1. En Telegram abra **@BotFather** → escriba `/newbot`.
+2. Nombre: **{AV.NOMBRE}** · usuario: por ejemplo `ExpedientesDGII_bot` (debe terminar en *bot*).
+3. BotFather le da un **token**. En Streamlit Cloud → *Settings → Secrets* agregue `TELEGRAM_BOT_TOKEN = "…"` (no lo pegue en el chat ni en otro lado).
+4. Opcional: `/setuserpic` para ponerle el logo de la Dirección.
+5. Cada oficial instala Telegram, abre el bot y toca **Iniciar**.
+6. Aquí: elija **Telegram**, toque **Buscar oficiales**, **➕ Agregar** a cada uno, **Guardar** y **Enviar un aviso de prueba**.
+""")
+    with st.expander("📘 Otras opciones por WhatsApp"):
+        st.markdown(f"""
+- **WhatsApp común (TextMeBot):** un WhatsApp del sistema vinculado por QR en textmebot.com; secret `TEXTMEBOT_KEY`. Pago mensual bajo; el teléfono debe quedar encendido.
+- **CallMeBot:** gratis, uso personal; cada oficial obtiene su apikey; secret `CALLMEBOT_KEYS = "549381…:clave,…"`.
+- **WhatsApp Business (Meta):** número propio con nombre «{AV.NOMBRE}», plantilla aprobada; secrets `WA_TOKEN` y `WA_PHONE_ID`. Costo por mensaje.
 """)
