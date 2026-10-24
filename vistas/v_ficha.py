@@ -113,7 +113,7 @@ def render():
         K.form_tramite(r, f"ficha_{exp_id}")
 
     with t1:
-        ui.timeline(movs, mapa)
+        ui.timeline(movs, mapa, r)
         if not movs.empty:
             import auth
 

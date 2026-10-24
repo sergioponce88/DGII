@@ -302,19 +302,32 @@ def tarjeta_expediente(r, mapa=None, detalle=True):
     )
 
 
-def timeline(movs, mapa=None):
+def timeline(movs, mapa=None, exp=None):
+    """Hoja de ruta. Si se pasa el expediente, muestra arriba la entrega pendiente con el comisionista."""
     mapa = mapa if mapa is not None else mapa_dependencias()
-    if movs.empty:
+    items = []
+    if exp is not None and bool(exp.get("entrega_pendiente")):
+        dest = exp.get("entrega_destino") or "—"
+        det = [f"Encargó: <b>{esc(exp.get('entrega_solicitada_por') or '—')}</b>"]
+        if exp.get("entrega_despacho"):
+            det.append(f"Despacho: <b>{esc(exp['entrega_despacho'])}</b>")
+        if exp.get("entrega_indicaciones"):
+            det.append(esc(exp["entrega_indicaciones"]))
+        items.append(
+            f'<div class="it" style="--c:#F59E0B"><div class="t1">🚚 PARA ENTREGAR · con el comisionista ➜ {esc(dest)}</div>'
+            f'<div class="t2">🕒 {fmt_fecha(exp.get("entrega_solicitada_en"), True)} · pendiente: al entregarlo se asienta la SALIDA '
+            f'con quién lo recibe</div><div class="t3">{" · ".join(det)}</div></div>')
+    if movs.empty and not items:
         st.info("Sin movimientos registrados.")
         return
-    items = []
     for _, m in movs.iterrows():
         c = color_dep(m.get("destino"), mapa)
+        tram = m.get("tipo") == "TRÁMITE"
         extra = []
         if m.get("despacho"):
-            extra.append(f"Despacho: <b>{esc(m['despacho'])}</b>")
+            extra.append(f"{'Se hizo' if tram else 'Despacho'}: <b>{esc(m['despacho'])}</b>")
         if m.get("entregado_por"):
-            extra.append(f"Lleva/entrega: <b>{esc(m['entregado_por'])}</b>")
+            extra.append(f"{'Tramitó' if tram else 'Lleva/entrega'}: <b>{esc(m['entregado_por'])}</b>")
         if m.get("recibido_por"):
             extra.append(f"Recibe: <b>{esc(m['recibido_por'])}</b>")
         if pd.notna(m.get("fojas")) and m.get("fojas"):
@@ -322,9 +335,11 @@ def timeline(movs, mapa=None):
         if m.get("observaciones"):
             extra.append(esc(m["observaciones"]))
         urg = " ⚡" if m.get("urgente") else ""
+        org, dst = m.get("origen") or "—", m.get("destino") or "—"
+        lugar = f"en {esc(dst)}" if org == dst else f"{esc(org)} ➜ {esc(dst)}"
+        titulo = "✅ TRAMITADO" if tram else esc(m["tipo"])
         items.append(
-            f'<div class="it" style="--c:{c}"><div class="t1">{esc(m["tipo"])}{urg} · '
-            f'{esc(m.get("origen") or "—")} ➜ {esc(m.get("destino") or "—")}</div>'
+            f'<div class="it" style="--c:{c}"><div class="t1">{titulo}{urg} · {lugar}</div>'
             f'<div class="t2">🕒 {fmt_fecha(m["fecha_hora"], True)} · registró {esc(m.get("registrado_por") or "—")}</div>'
             f'<div class="t3">{" · ".join(extra)}</div></div>'
         )

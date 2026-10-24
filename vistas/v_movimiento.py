@@ -33,4 +33,4 @@ def render():
         K.form_tramite(r, "rapido")
     with st.expander("🧭 Hoja de ruta"):
         movs = db.df_movimientos()
-        ui.timeline(movs[movs["expediente_id"] == r["id"]].head(10))
+        ui.timeline(movs[movs["expediente_id"] == r["id"]].head(10), exp=r)
