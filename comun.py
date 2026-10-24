@@ -12,6 +12,7 @@ import ui
 LOGO = "assets/logo_policia.png"
 LOGO_IESP = "assets/logo_iesp.png"
 
+URL_APP = "https://sergioponce88.github.io/DGII/app/"  # app instalable (Android / iPhone)
 PAG_TRABAJO = "🧭 Mi trabajo"
 PAG_PANEL = "📊 Panel de Control"
 PAG_NUEVO = "➕ Nuevo Expediente"

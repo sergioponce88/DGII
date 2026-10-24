@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Expedientes DGII</title>
+<meta name="description" content="Registro y control de expedientes · Dirección General de Institutos e Instrucción · Policía de Tucumán">
+<meta name="theme-color" content="#0F1E46">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Expedientes DGII">
+<style>
+  :root { --navy:#0F1E46; --ink:#F8FAFC; --muted:#94A3B8; --azul:#2563EB; --amarillo:#FACC15; }
+  html, body { margin:0; height:100%; background:var(--navy); color:var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow:hidden; }
+  #app { position:fixed; inset:0; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); box-sizing:border-box; }
+  iframe { width:100%; height:100%; border:0; display:block; background:#070A14; }
+  #splash { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    background:var(--navy); text-align:center; padding:24px; transition:opacity .4s; z-index:5; }
+  #splash img { width:120px; height:auto; }
+  #splash h1 { font-size:1.3rem; margin:6px 0 0; }
+  #splash p { color:var(--muted); margin:0; font-size:.95rem; max-width:320px; }
+  .spin { width:34px; height:34px; border:4px solid rgba(255,255,255,.2); border-top-color:var(--amarillo); border-radius:50%; animation:g 1s linear infinite; }
+  @keyframes g { to { transform:rotate(360deg); } }
+  #lento { display:none; }
+  a.btn, button.btn { display:inline-block; background:var(--azul); color:#fff; border:0; border-radius:12px; padding:12px 18px;
+    font-weight:700; font-size:1rem; text-decoration:none; cursor:pointer; }
+  #instalar { position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:10; display:none;
+    background:#111C3A; border:2px solid var(--amarillo); border-radius:16px; padding:14px 16px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+  #instalar b { display:block; font-size:1.02rem; margin-bottom:4px; }
+  #instalar span { color:#CBD5E1; font-size:.92rem; line-height:1.4; }
+  #instalar .fila { display:flex; gap:10px; margin-top:10px; }
+  #instalar .x { background:transparent; color:var(--muted); border:1px solid #334155; }
+</style>
+</head>
+<body>
+<div id="app"><iframe id="sis" title="Sistema de expedientes" allow="camera; microphone; clipboard-write; fullscreen"
+  referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+
+<div id="splash">
+  <img src="icons/icon-512.png" alt="">
+  <h1>Expedientes D.G.I.I.</h1>
+  <div class="spin"></div>
+  <p>Abriendo el sistema…</p>
+  <div id="lento">
+    <p style="margin:10px 0">Si es la primera vez del día, el sistema puede tardar unos segundos en despertar.</p>
+    <a class="btn" id="abrir" href="#" target="_blank" rel="noopener">Abrir en el navegador</a>
+  </div>
+</div>
+
+<div id="instalar" role="dialog" aria-live="polite">
+  <b>📲 Instalar la aplicación</b>
+  <span id="instr">Agréguela a la pantalla de inicio para abrirla como una app.</span>
+  <div class="fila">
+    <button class="btn" id="btnInst" style="display:none">Instalar</button>
+    <button class="btn x" id="btnCerrar">Ahora no</button>
+  </div>
+</div>
+
+<script>
+  const SISTEMA = "https://expedientesdgii.streamlit.app/";
+  const ifr = document.getElementById("sis");
+  ifr.src = SISTEMA + "?embed=true";
+  document.getElementById("abrir").href = SISTEMA;
+  const splash = document.getElementById("splash");
+  ifr.addEventListener("load", () => setTimeout(() => { splash.style.opacity = 0; setTimeout(() => splash.remove(), 450); }, 1200));
+  setTimeout(() => { const l = document.getElementById("lento"); if (l) l.style.display = "block"; }, 12000);
+
+  // Service worker (necesario para instalar)
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+  // Aviso de instalación (solo si todavía no está instalada)
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  let visto = false; try { visto = localStorage.getItem("dgii_inst") === "1"; } catch (e) {}
+  const caja = document.getElementById("instalar"), instr = document.getElementById("instr"), bInst = document.getElementById("btnInst");
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  document.getElementById("btnCerrar").onclick = () => { caja.style.display = "none"; try { localStorage.setItem("dgii_inst", "1"); } catch (e) {} };
+  let evento = null;
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault(); evento = e;
+    if (!standalone && !visto) { instr.textContent = "Instálela en este teléfono para abrirla como una app, sin buscar el enlace."; bInst.style.display = "inline-block"; caja.style.display = "block"; }
+  });
+  bInst.onclick = async () => { if (!evento) return; evento.prompt(); await evento.userChoice; caja.style.display = "none"; };
+  if (ios && !standalone && !visto) {
+    instr.innerHTML = "En Safari toque <b>Compartir</b> (□↑) y luego <b>Agregar a inicio</b>.";
+    setTimeout(() => caja.style.display = "block", 2500);
+  }
+</script>
+</body>
+</html>

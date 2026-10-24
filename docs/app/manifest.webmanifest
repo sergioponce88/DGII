@@ -1,0 +1,18 @@
+{
+  "name": "Expedientes D.G.I.I. – Policía de Tucumán",
+  "short_name": "Expedientes DGII",
+  "description": "Registro y control de expedientes de la Dirección General de Institutos e Instrucción.",
+  "id": "./",
+  "start_url": "./?source=app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F1E46",
+  "theme_color": "#0F1E46",
+  "lang": "es-AR",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

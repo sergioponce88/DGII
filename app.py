@@ -120,6 +120,7 @@ def _pantalla_acceso():
             else:
                 st.session_state["usuario"] = u
                 st.rerun()
+    mid.caption(f"📲 ¿Usa el celular? [Instale la aplicación]({K.URL_APP}) (Android y iPhone).")
     st.stop()
 
 
@@ -211,6 +212,7 @@ with st.sidebar:
                         st.success("Clave actualizada.")
                     except ValueError as e:
                         st.error(str(e))
+    st.caption(f"📲 [Instalar la app en el celular]({K.URL_APP})")
     cs1, cs2 = st.columns(2)
     if cs1.button("🔄 Actualizar"):
         db.invalidar()
