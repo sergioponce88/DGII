@@ -65,14 +65,14 @@ class Pantalla:
             pass
         self.text(150, 128, "MESA DE ENTRADAS", 15, "ExtraBold", anchor="mm")
         self.text(150, 150, "DIRECCIÓN GRAL. DE INSTITUTOS E INSTRUCCIÓN", 10, "SemiBold", (96, 165, 250), anchor="mm")
-        items = ["Panel de Control", "Nuevo Expediente", "Movimiento Rápido", "Libro de Registro", "Ficha de Expediente",
-                 "Actividades y Personal", "Alertas y Agenda", "Carga Masiva", "Informes", "Configuración"]
-        y = 185
+        items = ["Mi trabajo", "Panel de Control", "Nuevo Expediente", "Movimiento Rápido", "Tramitar", "Comisión (entregas)",
+                 "Libro de Registro", "Ficha de Expediente", "Actividades y Personal", "Alertas y Agenda", "Informes", "Configuración"]
+        y = 180
         for it in items:
             if it == activo:
                 d.rounded_rectangle([14, y - 4, 286, y + 30], 9, fill=(30, 58, 138), outline=(96, 165, 250))
             self.text(34, y + 13, it, 15, "SemiBold" if it == activo else "Medium", INK if it == activo else INK2, anchor="lm")
-            y += 40
+            y += 38
         d.line([20, y + 6, 280, y + 6], fill=(30, 41, 59))
         self.text(24, y + 30, "OF. PPAL. GÓMEZ JUAN", 13, "Bold")
         self.text(24, y + 50, "Legajo 15670 · JEFE MESA DE ENTRADAS", 11, "Regular", MUTED)
