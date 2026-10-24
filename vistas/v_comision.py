@@ -30,8 +30,11 @@ def _tramitados_en_direccion(exp):
 
 
 def render():
-    ui.header("Comisión", "Entrega de expedientes tramitados · registre quién los recibe")
     import auth
+
+    if auth.rol() == "COMISIONISTA":
+        return render_simple()
+    ui.header("Comisión", "Entrega de expedientes tramitados · registre quién los recibe")
 
     if not auth.puede("entregar"):
         auth.aviso_sin_permiso("la entrega de expedientes")
@@ -182,3 +185,90 @@ def _hechas(hechas):
         st.markdown(f"<small>{ui.fmt_fecha(m['fecha_hora'], True)} · <b>{ui.esc(m['identificador'])}</b> → {ui.esc(m['destino'])} · "
                     f"recibió <b>{ui.esc(m.get('recibido_por') or '—')}</b> · llevó {ui.esc(m.get('entregado_por') or '—')}</small>",
                     unsafe_allow_html=True)
+
+
+# ───────────────────────── Pantalla simple del comisionista ─────────────────────────
+CSS_SIMPLE = """<style>
+.ent{border-radius:18px;padding:18px 20px;margin:6px 0 8px;background:rgba(245,158,11,.10);border:2px solid rgba(245,158,11,.55)}
+.ent .n{font-size:2.1rem;font-weight:900;letter-spacing:.5px;line-height:1.1}
+.ent .l{font-size:.78rem;font-weight:800;color:#94A3B8;letter-spacing:1px;margin-top:10px}
+.ent .d{font-size:1.35rem;font-weight:800;color:#FDE68A;line-height:1.25}
+.ent .i{font-size:.95rem;color:#E2E8F0;margin-top:8px}
+.ok-ent{font-size:.95rem;color:#CBD5E1;padding:6px 0;border-bottom:1px solid #1E293B}
+</style>"""
+
+
+def _tarjeta_simple(r):
+    ind = f'<div class="i">📝 {ui.esc(r["entrega_indicaciones"])}</div>' if r.get("entrega_indicaciones") else ""
+    st.markdown(f'<div class="ent"><div class="l">N° DE EXPEDIENTE</div><div class="n">{ui.esc(r["identificador"])}</div>'
+                f'<div class="l">LLEVAR A</div><div class="d">{ui.esc(r.get("entrega_destino") or "—")}</div>{ind}</div>',
+                unsafe_allow_html=True)
+
+
+def render_simple():
+    st.markdown(CSS_SIMPLE, unsafe_allow_html=True)
+    yo = K.usuario()
+    exp = db.df_expedientes()
+    if "entrega_pendiente" not in exp.columns:
+        exp["entrega_pendiente"] = False
+    exp["entrega_solicitada_en"] = pd.to_datetime(exp.get("entrega_solicitada_en"), errors="coerce")
+    pend = _pendientes(exp)
+    sel = st.session_state.get("com_sel")
+    fila = exp[exp["id"] == sel] if sel is not None else exp.iloc[0:0]
+
+    if sel is not None and not fila.empty:
+        r = fila.iloc[0]
+        if st.button("← Volver", key="cs_volver"):
+            st.session_state.pop("com_sel", None)
+            st.rerun()
+        _tarjeta_simple(r)
+        with st.form(f"cs_form_{r['id']}"):
+            c1, c2 = st.columns(2)
+            f = c1.date_input("Fecha", db.hoy(), format="DD/MM/YYYY")
+            h = c2.time_input("Hora", db.ahora().time().replace(second=0), step=60)
+            recibe = st.text_input("¿Quién lo recibió?", placeholder="Grado, apellido y nombre")
+            obs = st.text_input("Observaciones (opcional)")
+            ok = st.form_submit_button("✅ ENTREGADO", type="primary", width="stretch")
+        if ok:
+            if not recibe.strip():
+                st.error("Escriba quién recibió el expediente.")
+                return
+            mov = {"fecha_hora": datetime.combine(f, h if isinstance(h, time) else time(0, 0)), "tipo": "SALIDA", "origen": C.DEP_PROPIA,
+                   "destino": r.get("entrega_destino"), "despacho": r.get("entrega_despacho") or None, "entregado_por": yo,
+                   "recibido_por": recibe.strip().upper(), "fojas": K.num(r.get("fojas")) or None, "observaciones": obs.strip() or None}
+            try:
+                db.registrar_entrega(int(r["id"]), mov, "REMITIDO", yo)
+            except Exception as e:
+                st.error(f"No se pudo guardar: {e}")
+                return
+            st.session_state["com_ult"] = {"exp": dict(r), "mov": mov}
+            st.session_state.pop("com_sel", None)
+            st.rerun()
+        return
+    st.session_state.pop("com_sel", None)
+
+    ult = st.session_state.get("com_ult")
+    if ult:
+        m = ult["mov"]
+        st.success(f"✔ Entregado: {ult['exp']['identificador']} → {m['destino']} · recibió {m['recibido_por']}")
+        st.link_button("📲 Avisar por WhatsApp", R.link_whatsapp(R.msg_movimiento(ult["exp"], m), K.tel_dep(m["destino"])), width="stretch")
+
+    st.markdown(f"## 🚚 Para entregar: {len(pend)}")
+    if pend.empty:
+        st.info("No tiene expedientes para entregar. Cuando un oficial le encargue uno, aparecerá aquí.")
+    for _, r in pend.iterrows():
+        _tarjeta_simple(r)
+        if st.button(f"Entregar {r['identificador']}", key=f"cs_ent_{r['id']}", type="primary", width="stretch"):
+            st.session_state["com_sel"] = int(r["id"])
+            st.session_state.pop("com_ult", None)
+            st.rerun()
+
+    movs = db.df_movimientos()
+    if not movs.empty:
+        hoy = movs[(movs["fecha_hora"].dt.normalize() == pd.Timestamp(db.hoy())) & (movs["registrado_por"].fillna("") == yo)
+                   & movs["tipo"].isin(TIPOS_ENTREGA)]
+        if not hoy.empty:
+            st.markdown(f"#### ✅ Entregados hoy: {len(hoy)}")
+            for _, m in hoy.iterrows():
+                st.markdown(f'<div class="ok-ent"><b>{ui.esc(m["identificador"])}</b> → {ui.esc(m["destino"])} · '
+                            f'recibió {ui.esc(m.get("recibido_por") or "—")} · {m["fecha_hora"]:%H:%M}</div>', unsafe_allow_html=True)
