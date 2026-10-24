@@ -237,8 +237,11 @@ def render():
                             fojas=int(fojas) or None, observaciones=obs.strip() or None), K.usuario())
                         st.toast("Expediente actualizado", icon="✅")
                         st.rerun()
-            if auth.puede("eliminar"):
-                with st.expander("🗑️ Eliminar expediente"):
+            propio = auth.puede("tramitar") and (r.get("creado_por") or "") == K.usuario()
+            if auth.puede("eliminar") or propio:
+                with st.expander("🗑️ Eliminar expediente" + (" (lo cargó usted)" if not auth.puede("eliminar") else "")):
+                    st.caption("Para expedientes de prueba o cargados por error. Se borra con toda su hoja de ruta y no se puede recuperar. "
+                               "Queda registrado quién lo eliminó.")
                     conf = st.text_input(f"Escriba {r['identificador']} para confirmar", key="del_conf")
                     if st.button("Eliminar definitivamente", disabled=conf.strip() != r["identificador"], key="del_exp"):
                         db.eliminar_expediente(exp_id, K.usuario())
