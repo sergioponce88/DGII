@@ -317,6 +317,21 @@ CREATE TABLE IF NOT EXISTS documentos (
 );
 CREATE INDEX IF NOT EXISTS ix_doc_exp ON documentos (expediente_id);
 
+-- Lo que el comisionista RETIRA de otra dependencia y trae a la Dirección
+CREATE TABLE IF NOT EXISTS recepciones (
+    id SERIAL PRIMARY KEY,
+    fecha_hora TIMESTAMP NOT NULL,
+    origen TEXT,
+    numero TEXT,
+    entrego_en_origen TEXT,
+    traido_por TEXT,
+    observaciones TEXT,
+    estado TEXT DEFAULT 'PENDIENTE',
+    expediente_id INTEGER REFERENCES expedientes (id) ON DELETE SET NULL,
+    cerrado_por TEXT,
+    cerrado_en TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS auditoria (
     id SERIAL PRIMARY KEY,
     fecha TIMESTAMP DEFAULT NOW(),
@@ -877,7 +892,7 @@ def registrar_adjunto(exp_id, nombre, drive_id, link, n_bytes, paginas, descripc
 
 
 def respaldo_completo():
-    tablas = ["expedientes", "movimientos", "adjuntos", "usuarios", "cursos", "personal_curso", "eventos", "dependencias", "tipos_expediente", "config", "auditoria", "autoridades", "actuaciones", "documentos"]
+    tablas = ["expedientes", "movimientos", "adjuntos", "usuarios", "cursos", "personal_curso", "eventos", "dependencias", "tipos_expediente", "config", "auditoria", "autoridades", "actuaciones", "documentos", "recepciones"]
     out = {t: leer(f"SELECT * FROM {t} ORDER BY 1") for t in tablas}
     out["usuarios"] = out["usuarios"].drop(columns=["clave_hash"], errors="ignore")
     out["config"] = out["config"][~out["config"]["clave"].str.startswith("gdrive_refresh")]  # nunca exportar credenciales
@@ -970,4 +985,34 @@ def registrar_entrega(exp_id, mov, nuevo_estado, usuario=""):
     with conexion() as c, c.cursor() as cur:
         _update(cur, "expedientes", {"entrega_pendiente": False}, exp_id)
     log(usuario, "ENTREGA", f"{exp_id} → {mov.get('destino')} ({mov.get('recibido_por')})")
+    invalidar()
+
+
+# ───────────────────────── Retiros del comisionista ─────────────────────────
+def buscar_por_numero(numero):
+    """Expedientes cuyo identificador, N° o N° de origen coincide exactamente con lo escrito."""
+    n = " ".join(str(numero or "").split()).upper()
+    if not n:
+        return leer("SELECT * FROM expedientes WHERE false")
+    return leer("SELECT * FROM expedientes WHERE UPPER(identificador) = %s OR UPPER(COALESCE(nro_exp_origen,'')) = %s "
+                "OR CAST(nro_exp AS TEXT) = %s ORDER BY fecha_ingreso DESC", (n, n, n))
+
+
+def registrar_recepcion(rec, usuario=""):
+    with conexion() as c, c.cursor() as cur:
+        (rid,) = _insert(cur, "recepciones", {**rec, "traido_por": rec.get("traido_por") or usuario})
+    log(usuario, "RETIRO COMISIÓN", f"{rec.get('numero')} desde {rec.get('origen')}")
+    invalidar()
+    return rid
+
+
+def df_recepciones(pendientes=True):
+    df = leer("SELECT * FROM recepciones" + (" WHERE estado = 'PENDIENTE'" if pendientes else "") + " ORDER BY fecha_hora DESC")
+    df["fecha_hora"] = pd.to_datetime(df["fecha_hora"], errors="coerce")
+    return df
+
+
+def cerrar_recepcion(rid, exp_id=None, usuario=""):
+    ejecutar("UPDATE recepciones SET estado = 'REGISTRADO', expediente_id = COALESCE(%s, expediente_id), cerrado_por = %s, "
+             "cerrado_en = %s WHERE id = %s", (exp_id, usuario, ahora(), rid))
     invalidar()

@@ -41,7 +41,36 @@ def _en_casa(exp):
 
 
 # ───────────────────────── Mesa de entradas (suboficial / todos) ─────────────────────────
+def traidos_comision():
+    """Lo que trajo el comisionista y el sistema no pudo asociar: la mesa de entradas lo registra."""
+    rid, ult = st.session_state.get("tb_rec"), st.session_state.get("ultimo_mov_tb")
+    if rid and ult and ult["mov"].get("tipo") == "REINGRESO":  # se registró el reingreso de lo que trajo el comisionista
+        db.cerrar_recepcion(rid, int(ult["exp"]["id"]), K.usuario())
+        st.session_state.pop("tb_rec", None)
+    try:
+        rec = db.df_recepciones()
+    except Exception:
+        return
+    if rec.empty:
+        return
+    ui.seccion(f"📦 Traídos por el comisionista para registrar ({len(rec)})")
+    for _, r in rec.iterrows():
+        st.markdown(f"<div class='card acc' style='--c:#F59E0B;padding:10px 14px'><b>{ui.esc(r['numero'])}</b> ← {ui.esc(r['origen'] or '—')}"
+                    f"<div class='meta'>Trajo {ui.esc(r['traido_por'] or '—')} · {ui.fmt_fecha(r['fecha_hora'], True)}"
+                    f"{' · lo entregó ' + ui.esc(r['entrego_en_origen']) if r.get('entrego_en_origen') else ''}"
+                    f"{' · ' + ui.esc(r['observaciones']) if r.get('observaciones') else ''}</div></div>", unsafe_allow_html=True)
+        b1, b2 = st.columns(2)
+        if b1.button("🔎 Buscarlo y registrarlo", key=f"rc_b_{r['id']}", width="stretch"):
+            st.session_state["tb_q"] = r["numero"]
+            st.session_state["tb_rec"] = int(r["id"])
+            st.rerun()
+        if b2.button("✔ Ya está registrado", key=f"rc_ok_{r['id']}", width="stretch"):
+            db.cerrar_recepcion(int(r["id"]), None, K.usuario())
+            st.rerun()
+
+
 def mesa_entradas(exp):
+    traidos_comision()
     ui.seccion("📥 Llegó un expediente")
     q = st.text_input("Busque por N° (de la Dirección o de origen) o por asunto", key="tb_q",
                       placeholder="Ej.: 546  ·  J-1234/26  ·  curso de tiro").strip()
@@ -153,6 +182,8 @@ def form_anterior(q=""):
         import avisos
 
         avisos.avisar_expediente({**exp, "identificador": ident}, "reingreso", K.usuario(), auth.rol())
+        if st.session_state.get("tb_rec"):
+            db.cerrar_recepcion(st.session_state.pop("tb_rec"), exp_id, K.usuario())
         for k in ("tb_viejo_on", "tv_sec", "tb_q"):
             st.session_state.pop(k, None)
         st.toast(f"Exp. {ident} cargado del libro y reingresado: queda PARA TRAMITAR", icon="📥")
@@ -243,7 +274,12 @@ def render():
             exp[c] = None
     movs = db.df_movimientos()
     if auth.puede("tramitar"):
-        with st.expander("📥 Llegó un expediente (buscar · reingreso · nuevo)", expanded=bool(st.session_state.get("tb_q"))):
+        try:
+            n_rec = len(db.df_recepciones())
+        except Exception:
+            n_rec = 0
+        titulo = "📥 Llegó un expediente (buscar · reingreso · nuevo)" + (f" · 📦 {n_rec} traído(s) por el comisionista" if n_rec else "")
+        with st.expander(titulo, expanded=bool(st.session_state.get("tb_q")) or bool(n_rec)):
             mesa_entradas(exp)
         if exp.empty:
             return

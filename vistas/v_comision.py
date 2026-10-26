@@ -207,6 +207,11 @@ def _tarjeta_simple(r):
 
 def render_simple():
     st.markdown(CSS_SIMPLE, unsafe_allow_html=True)
+    modo = st.segmented_control("¿Qué va a hacer?", ["🚚 Llevar", "📥 Traer a la Dirección"], default="🚚 Llevar", key="cs_modo",
+                                label_visibility="collapsed")
+    if modo == "📥 Traer a la Dirección":
+        st.session_state.pop("com_sel", None)
+        return _traer()
     yo = K.usuario()
     exp = db.df_expedientes()
     if "entrega_pendiente" not in exp.columns:
@@ -272,3 +277,65 @@ def render_simple():
             for _, m in hoy.iterrows():
                 st.markdown(f'<div class="ok-ent"><b>{ui.esc(m["identificador"])}</b> → {ui.esc(m["destino"])} · '
                             f'recibió {ui.esc(m.get("recibido_por") or "—")} · {m["fecha_hora"]:%H:%M}</div>', unsafe_allow_html=True)
+
+
+def _traer():
+    """El comisionista retiró expedientes de otra dependencia y los trae: si el sistema ya lo conoce, se registra el reingreso;
+    si no, queda para que la mesa de entradas lo registre."""
+    yo = K.usuario()
+    ult = st.session_state.pop("cs_traido", None)
+    if ult:
+        (st.success if ult[0] else st.info)(ult[1])
+    st.markdown("## 📥 Traje expedientes a la Dirección")
+    deps = [d for d in K.deps() if d != C.DEP_PROPIA]
+    with st.form("cs_traer", clear_on_submit=True):
+        origen = st.selectbox("¿De dónde lo retiró?", deps, index=None, placeholder="Elija la dependencia")
+        numero = st.text_input("N° de expediente o de nota", placeholder="Ej.: 584/56/6 · J-1234/26")
+        quien = st.text_input("¿Quién se lo entregó allá? (opcional)", placeholder="Grado, apellido y nombre")
+        c1, c2 = st.columns(2)
+        f = c1.date_input("Fecha", db.hoy(), format="DD/MM/YYYY")
+        h = c2.time_input("Hora", db.ahora().time().replace(second=0), step=60)
+        obs = st.text_input("Observaciones (opcional)")
+        ok = st.form_submit_button("✅ TRAÍDO A LA DIRECCIÓN", type="primary", width="stretch")
+    if ok:
+        if not origen or not numero.strip():
+            st.error("Indique de dónde lo retiró y el número.")
+            return
+        cuando = datetime.combine(f, h if isinstance(h, time) else time(0, 0))
+        rec = {"fecha_hora": cuando, "origen": origen, "numero": " ".join(numero.split()).upper(),
+               "entrego_en_origen": quien.strip().upper() or None, "traido_por": yo, "observaciones": obs.strip() or None}
+        coinc = db.buscar_por_numero(rec["numero"])
+        coinc = coinc[coinc["ubicacion_actual"].fillna(C.DEP_PROPIA) != C.DEP_PROPIA] if not coinc.empty else coinc
+        try:
+            rid = db.registrar_recepcion(rec, yo)
+            if len(coinc) == 1:  # lo conocemos y estaba afuera: reingreso automático
+                e = coinc.iloc[0]
+                det = "Retirado por el comisionista" + (f"; lo entregó {rec['entrego_en_origen']}" if rec["entrego_en_origen"] else "")
+                mov = {"fecha_hora": cuando, "tipo": "REINGRESO", "origen": origen, "destino": C.DEP_PROPIA, "entregado_por": yo,
+                       "recibido_por": None, "fojas": None, "urgente": False,
+                       "observaciones": "; ".join(x for x in [det, rec["observaciones"]] if x)}
+                db.registrar_movimiento(int(e["id"]), mov, "EN TRÁMITE", yo)
+                db.cerrar_recepcion(rid, int(e["id"]), yo)
+                try:
+                    import auth
+                    import avisos
+
+                    avisos.avisar_expediente(e.to_dict(), "reingreso", yo, auth.rol())
+                except Exception:
+                    pass
+                st.session_state["cs_traido"] = (True, f"✔ {e['identificador']} registrado como REINGRESO desde {origen}. Ya lo ve el oficial.")
+            else:
+                st.session_state["cs_traido"] = (False, f"✔ Anotado: {rec['numero']} desde {origen}. Entréguelo en mesa de entradas: "
+                                                        "allí lo registran.")
+        except Exception as ex:
+            st.error(f"No se pudo guardar: {ex}")
+            return
+        st.rerun()
+    rec = db.df_recepciones(False)
+    hoy = rec[(rec["fecha_hora"].dt.normalize() == pd.Timestamp(db.hoy())) & (rec["traido_por"].fillna("") == yo)] if not rec.empty else rec
+    if not hoy.empty:
+        st.markdown(f"#### 📥 Traídos hoy: {len(hoy)}")
+        for _, r in hoy.iterrows():
+            est = "✅ registrado" if r["estado"] == "REGISTRADO" else "⏳ en mesa de entradas"
+            st.markdown(f'<div class="ok-ent"><b>{ui.esc(r["numero"])}</b> ← {ui.esc(r["origen"])} · {r["fecha_hora"]:%H:%M} · {est}</div>',
+                        unsafe_allow_html=True)
