@@ -43,6 +43,11 @@ def link_whatsapp(mensaje, tel=None):
     return f"{base}?text={urllib.parse.quote(mensaje)}"
 
 
+def link_telegram(mensaje, url="https://expedientesdgii.streamlit.app/"):
+    """Abre Telegram para elegir el chat o grupo, con el mensaje armado (los * de WhatsApp se quitan)."""
+    return f"https://t.me/share/url?url={urllib.parse.quote(url)}&text={urllib.parse.quote(mensaje.replace('*', ''))}"
+
+
 def _f(x, hora=False):
     if x is None or pd.isna(x):
         return "—"

@@ -129,11 +129,21 @@ def avisar_oficiales_wp(mensaje, key):
     """Botones grandes para que quien registró avise desde SU WhatsApp a cada oficial (un toque y Enviar)."""
     ofs = oficiales_wp()
     with st.container(border=True):
-        st.markdown("**📲 Informe el registro a los oficiales desde su WhatsApp**")
-        cols = st.columns(max(1, len(ofs)) + 1)
+        try:
+            import avisos
+
+            cfg = db.get_config()
+            bot = cfg.get("wa_proveedor") == "TELEGRAM" and avisos.estado(cfg)[0]
+        except Exception:
+            bot = False
+        if bot:
+            st.markdown("✈️ **El bot de Telegram ya avisó automáticamente a los oficiales.**")
+        st.markdown("**📲 Informe el registro a los oficiales**")
+        cols = st.columns(max(1, len(ofs)) + 2)
         for i, (n, t) in enumerate(ofs):
             cols[i].link_button(f"📲 {n}", R.link_whatsapp(mensaje, t), type="primary", width="stretch")
-        cols[-1].link_button("👥 Elegir grupo o contacto", R.link_whatsapp(mensaje), width="stretch")
+        cols[-2].link_button("👥 WhatsApp: grupo o contacto", R.link_whatsapp(mensaje), width="stretch")
+        cols[-1].link_button("✈️ Telegram", R.link_telegram(mensaje), width="stretch")
         if not ofs:
             st.caption("El administrador puede cargar los números de los oficiales en Configuración → 📲 Avisos para que aparezca un botón por cada uno.")
 
@@ -151,6 +161,7 @@ def compartir_wp(mensaje, key, etiqueta="📲 Informar por WhatsApp", dep=None, 
         txt = st.text_area("Mensaje (puede editarlo)", mensaje, height=260, key=f"wpt_{key}_{h}")
         tel = None if a == ops[0] else tel_dep(a)
         st.link_button("📲 Abrir WhatsApp", R.link_whatsapp(txt, tel), type="primary", width="stretch")
+        st.link_button("✈️ Enviar por Telegram", R.link_telegram(txt), width="stretch")
 
 
 def num(x, defecto=0):
