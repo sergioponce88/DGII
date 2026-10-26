@@ -57,8 +57,13 @@ def mesa_entradas(exp):
     res = exp[m].sort_values("fecha_ingreso", ascending=False).head(6)
     if res.empty:
         st.warning(f"No hay ningún expediente registrado con «{q}».")
-        if st.button("➕ Registrarlo como expediente nuevo", key="tb_nuevo", type="primary", width="stretch"):
+        b1, b2 = st.columns(2)
+        if b1.button("➕ Es nuevo: registrarlo", key="tb_nuevo", type="primary", width="stretch"):
             K.ir_a(K.PAG_NUEVO)
+        if b2.button("📜 Es viejo: ya figura en el libro físico", key="tb_viejo", width="stretch"):
+            st.session_state["tb_viejo_on"] = True
+        if st.session_state.get("tb_viejo_on"):
+            form_anterior(q)
         return
     sel = st.session_state.get("tb_rei")
     for _, r in res.iterrows():
@@ -71,8 +76,87 @@ def mesa_entradas(exp):
         elif st.button(f"↩️ Volvió: registrar reingreso de {r['identificador']}", key=f"tb_rei_{r['id']}", width="stretch"):
             st.session_state["tb_rei"] = int(r["id"])
             st.rerun()
-    if st.button("➕ No es ninguno: cargar como nuevo", key="tb_nuevo2"):
+    c1, c2 = st.columns(2)
+    if c1.button("➕ No es ninguno: cargar como nuevo", key="tb_nuevo2", width="stretch"):
         K.ir_a(K.PAG_NUEVO)
+    if c2.button("📜 No es ninguno: es viejo (libro físico)", key="tb_viejo2", width="stretch"):
+        st.session_state["tb_viejo_on"] = True
+    if st.session_state.get("tb_viejo_on"):
+        form_anterior(q)
+
+
+def form_anterior(q=""):
+    """Expediente viejo, asentado en el libro físico antes del sistema, que vuelve: se carga con su N°/folio/orden ORIGINAL
+    y en el mismo paso se registra el reingreso de hoy."""
+    from datetime import datetime, time
+
+    with st.container(border=True):
+        st.markdown("**📜 Expediente anterior al sistema que vuelve**")
+        st.caption("Copie los datos tal como figuran en el libro físico. Se respeta su numeración original y queda registrado el reingreso de hoy.")
+        sec = K.elegir_secretaria("tv_sec", "¿En qué libro está asentado?")
+        if not sec:
+            return
+        n = "".join(ch for ch in q if ch.isdigit())
+        lista_dep, lista_tipos = K.deps(), K.tipos()
+        with st.form("tv_form"):
+            st.markdown("**Asiento original (del libro físico)**")
+            a1, a2, a3, a4, a5 = st.columns(5)
+            nro = a1.number_input("N° exp.", min_value=1, value=int(n) if n and len(n) <= 6 else 1, step=1)
+            folio = a2.number_input("Folio", min_value=1, value=1, step=1)
+            orden = a3.number_input("Orden", min_value=1, value=1, step=1)
+            libro = a4.number_input("Libro", min_value=1, value=1, step=1)
+            f_ing = a5.date_input("Fecha de ingreso original", None, format="DD/MM/YYYY")
+            b1, b2 = st.columns(2)
+            tipo = b1.selectbox("Tipo de expediente", lista_tipos, index=None, placeholder="Elija…")
+            dep_org = b2.selectbox("Dependencia de origen", lista_dep, index=None, placeholder="De dónde vino la primera vez")
+            asunto = st.text_input("Asunto / carátula")
+            c1, c2 = st.columns(2)
+            nro_org = c1.text_input("N° de origen (opcional)")
+            iniciador = c2.text_input("Iniciador / causante (opcional)")
+            st.markdown("**Reingreso de hoy**")
+            d1, d2 = st.columns(2)
+            desde = d1.selectbox("Vuelve desde", lista_dep, index=None, placeholder="¿De dónde vuelve?")
+            despacho = K.campo_despacho(d2, "Vuelve con (despacho / resolución)", "tv_desp")
+            e1, e2, e3 = st.columns([2, 2, 1])
+            trae = K.campo_persona(e1, "Quién lo trae", "tv_trae")
+            recibe = K.campo_persona(e2, "Quién lo recibe", "tv_recibe", defecto=K.usuario())
+            fojas = e3.number_input("Fojas", min_value=0, value=0, step=1)
+            motivo = st.text_input("Motivo / qué se solicita ahora", placeholder="Ej.: vuelve con informe para nueva providencia")
+            ok = st.form_submit_button("📥 Cargar del libro y registrar el reingreso", type="primary", width="stretch")
+        if not ok:
+            return
+        faltan = [x for x, v in [("fecha de ingreso original", f_ing), ("tipo", tipo), ("de dónde vuelve", desde)] if not v]
+        if faltan:
+            st.error("Falta: " + ", ".join(faltan) + ".")
+            return
+        choque = db.conflicto_numeracion(int(nro), int(folio), int(orden), int(libro), f_ing.year, sec=sec)
+        if choque:
+            st.error(f"Ese N° / folio / orden ya está registrado ({choque}). Búsquelo y registre el reingreso sobre ese expediente.")
+            return
+        exp = dict(secretaria=sec, nro_exp=int(nro), folio=int(folio), orden=int(orden), libro=int(libro), anio=f_ing.year,
+                   fecha_ingreso=f_ing, origen=C.ORIGENES[1] if dep_org and dep_org != C.DEP_PROPIA else C.ORIGENES[0],
+                   dependencia_origen=dep_org, nro_exp_origen=nro_org.strip() or None, tipo=tipo, asunto=asunto.strip().upper() or None,
+                   iniciador=iniciador.strip().upper() or None, prioridad=C.PRIORIDADES[0], estado="EN TRÁMITE", ubicacion_actual=desde,
+                   fojas=int(fojas) or None, observaciones="Asiento anterior al sistema, cargado desde el libro físico")
+        mov0 = dict(fecha_hora=datetime.combine(f_ing, time(8, 0)), tipo="INGRESO", origen=dep_org, destino=C.DEP_PROPIA,
+                    observaciones="Asiento original del libro físico (anterior al sistema)")
+        try:
+            exp_id, ident = db.crear_expediente(exp, mov0, usuario=K.usuario())
+            mov = {"fecha_hora": db.ahora(), "tipo": "REINGRESO", "origen": desde, "destino": C.DEP_PROPIA, "despacho": despacho or None,
+                   "entregado_por": trae or None, "recibido_por": recibe or None, "fojas": int(fojas) or None, "urgente": False,
+                   "observaciones": motivo.strip() or None}
+            db.registrar_movimiento(exp_id, mov, "EN TRÁMITE", K.usuario())
+        except Exception as e:
+            st.error(f"No se pudo cargar: {e}")
+            return
+        import auth
+        import avisos
+
+        avisos.avisar_expediente({**exp, "identificador": ident}, "reingreso", K.usuario(), auth.rol())
+        for k in ("tb_viejo_on", "tv_sec", "tb_q"):
+            st.session_state.pop(k, None)
+        st.toast(f"Exp. {ident} cargado del libro y reingresado: queda PARA TRAMITAR", icon="📥")
+        st.rerun()
 
 
 def _recibidos_hoy(movs):
