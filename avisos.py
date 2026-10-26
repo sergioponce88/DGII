@@ -156,6 +156,13 @@ def buscar_chats():
     return [(n, i) for i, n in vistos.items()]
 
 
+def bienvenida(chat_id, nombre=""):
+    """Confirma en Telegram que el oficial quedó vinculado."""
+    _tg("sendMessage", _secret("TELEGRAM_BOT_TOKEN"), chat_id=chat_id, parse_mode="HTML",
+        text=f"✅ <b>{NOMBRE}</b>\nHola {_html(nombre)}: desde ahora recibirá aquí los avisos de expedientes "
+             "(nuevos, reingresos, trámites y entregas).")
+
+
 def nombre_bot():
     try:
         r = _tg("getMe", _secret("TELEGRAM_BOT_TOKEN"))

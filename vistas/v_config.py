@@ -336,6 +336,8 @@ def _avisos(cfg):
                     horizontal=True, format_func=nombres.get, key="av_prov")
     if prov == "TELEGRAM":
         bot = AV.nombre_bot()
+        if not bot:
+            st.error("❌ El sistema no encuentra el bot: falta TELEGRAM_BOT_TOKEN en los Secrets de Streamlit o el token está mal copiado.")
         if bot:
             st.markdown(f"🤖 Bot conectado: **@{bot}** · Cada oficial abre **t.me/{bot}** y toca **Iniciar** (o escribe /start).")
         if st.button("🔎 Buscar oficiales que escribieron al bot", key="av_buscar"):
@@ -353,6 +355,10 @@ def _avisos(cfg):
                 c1.markdown(f"**{n or 'Sin nombre'}** · id `{i}`" + (" · ✅ ya agregado" if i in actuales else ""))
                 if i not in actuales and c2.button("➕ Agregar", key=f"av_add_{i}"):
                     db.set_config({"tg_destinos": (actuales.strip() + f"\n{n.upper()} | {i}").strip()})
+                    try:
+                        AV.bienvenida(i, n)
+                    except Exception as e:
+                        st.warning(f"Se agregó, pero no se pudo enviar la bienvenida: {e}")
                     st.session_state.pop("av_chats", None)
                     st.rerun()
     with st.form("cfg_avisos"):
