@@ -17,8 +17,9 @@ def _resultado():
               f"{r['tipo']} · Asiento en libro {r['libro']}, folio {r['folio']}, orden {r['orden']}", C.STATUS["ok"])
     if st.session_state.get("alta_avisada"):
         st.caption("📲 Se envió el aviso automático por WhatsApp a los oficiales.")
+    K.avisar_oficiales_wp(K.msg_registro(r, "Nuevo expediente registrado"), "alta")
     c1, c2, c3 = st.columns(3)
-    c1.link_button("📲 Avisar por WhatsApp", R.link_whatsapp(R.msg_alta(r), K.tel_dep(r.get("ubicacion_actual"))))
+    c1.link_button("📲 Avisar a la dependencia", R.link_whatsapp(R.msg_alta(r), K.tel_dep(r.get("ubicacion_actual"))))
     if c2.button("🔎 Abrir ficha", key="alta_ficha"):
         st.session_state.pop("ultimo_alta", None)
         K.ir_a(K.PAG_FICHA, r["id"])

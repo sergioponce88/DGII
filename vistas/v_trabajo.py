@@ -70,6 +70,13 @@ def traidos_comision():
 
 
 def mesa_entradas(exp):
+    msg = st.session_state.get("ult_registro")
+    if msg:
+        st.success("✔ Registrado. Avise a los oficiales:")
+        K.avisar_oficiales_wp(msg, "ult_reg")
+        if st.button("Listo", key="ult_reg_ok"):
+            st.session_state.pop("ult_registro", None)
+            st.rerun()
     traidos_comision()
     ui.seccion("📥 Llegó un expediente")
     q = st.text_input("Busque por N° (de la Dirección o de origen) o por asunto", key="tb_q",
@@ -184,6 +191,7 @@ def form_anterior(q=""):
         avisos.avisar_expediente({**exp, "identificador": ident}, "reingreso", K.usuario(), auth.rol())
         if st.session_state.get("tb_rec"):
             db.cerrar_recepcion(st.session_state.pop("tb_rec"), exp_id, K.usuario())
+        st.session_state["ult_registro"] = K.msg_registro({**exp, "identificador": ident}, "Reingreso (expediente del libro físico)", mov)
         for k in ("tb_viejo_on", "tv_sec", "tb_q"):
             st.session_state.pop(k, None)
         st.toast(f"Exp. {ident} cargado del libro y reingresado: queda PARA TRAMITAR", icon="📥")

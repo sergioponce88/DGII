@@ -100,6 +100,44 @@ def tel_dep(nombre):
     return tel or db.get_config().get("wp_por_defecto") or None
 
 
+def oficiales_wp(cfg=None):
+    """[(nombre, número)] de Configuración → Avisos: «wp_oficiales» (Nombre | número)."""
+    cfg = cfg or db.get_config()
+    out = []
+    for linea in str(cfg.get("wp_oficiales") or "").splitlines():
+        n, t = linea.split("|", 1) if "|" in linea else ("", linea)
+        if R.normalizar_tel(t):
+            out.append((n.strip() or t.strip(), t.strip()))
+    return out
+
+
+def msg_registro(exp, accion, mov=None):
+    """Mensaje que manda quien registró, desde su propio WhatsApp, a los oficiales."""
+    urg = "⚡ *URGENTE TRÁMITE*\n" if exp.get("prioridad") == "URGENTE TRÁMITE" else ""
+    sig = C.SECRETARIAS[C.sec_de(exp.get("secretaria"))]["sigla"]
+    lin = [f"📁 *Mesa de Entradas {sig} – {accion}*", urg + f"*Exp. N° {exp.get('identificador')}* (Año {exp.get('anio') or '—'})",
+           f"Tipo: {exp.get('tipo') or '—'}", f"Asunto: {exp.get('asunto') or '—'}"]
+    if mov:
+        lin.append(f"Desde: {mov.get('origen') or '—'}" + (f" · con {mov['despacho']}" if mov.get("despacho") else ""))
+    else:
+        lin.append(f"Origen: {exp.get('dependencia_origen') or exp.get('origen') or '—'}")
+    lin += [f"Registró: {usuario()}", "👉 Pendiente de trámite en *Mi trabajo*."]
+    return "\n".join(lin)
+
+
+def avisar_oficiales_wp(mensaje, key):
+    """Botones grandes para que quien registró avise desde SU WhatsApp a cada oficial (un toque y Enviar)."""
+    ofs = oficiales_wp()
+    with st.container(border=True):
+        st.markdown("**📲 Informe el registro a los oficiales desde su WhatsApp**")
+        cols = st.columns(max(1, len(ofs)) + 1)
+        for i, (n, t) in enumerate(ofs):
+            cols[i].link_button(f"📲 {n}", R.link_whatsapp(mensaje, t), type="primary", width="stretch")
+        cols[-1].link_button("👥 Elegir grupo o contacto", R.link_whatsapp(mensaje), width="stretch")
+        if not ofs:
+            st.caption("El administrador puede cargar los números de los oficiales en Configuración → 📲 Avisos para que aparezca un botón por cada uno.")
+
+
 def compartir_wp(mensaje, key, etiqueta="📲 Informar por WhatsApp", dep=None, ancho=False):
     """Botón que abre un panel: elegir a quién (dependencia con WhatsApp o contacto libre), revisar el texto y enviar."""
     import hashlib
@@ -365,6 +403,7 @@ def form_reingreso(exp, key):
     ult = st.session_state.get(f"ultimo_mov_{key}")
     if ult and ult["exp"]["id"] == exp["id"] and ult["mov"]["tipo"] == "REINGRESO":
         st.success(f"✔ Reingreso desde {ult['mov']['origen']} ({ui.fmt_fecha(ult['mov']['fecha_hora'], True)}). Ya puede tramitarse nuevamente.")
+        avisar_oficiales_wp(msg_registro(ult["exp"], "Reingreso", ult["mov"]), f"rei_{key}")
 
 
 # ───────────────────────── Trámite ─────────────────────────

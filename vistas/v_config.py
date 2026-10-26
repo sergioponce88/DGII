@@ -383,6 +383,17 @@ def _avisos(cfg):
         for d, ok, det in r:
             (st.success if ok else st.error)(f"{d}: {det}")
 
+    ui.seccion("📲 Aviso desde el WhatsApp de quien registra")
+    st.caption("Al registrar un expediente o un reingreso, el suboficial ve un botón por cada oficial: se abre SU WhatsApp con el mensaje "
+               "armado y solo toca Enviar. El mensaje sale desde su propio número.")
+    with st.form("cfg_wp_of"):
+        wo = st.text_area("Oficiales (uno por línea: Nombre | número)", cfg.get("wp_oficiales") or "", height=80,
+                          placeholder="OF. AUX. ALVAREZ | 381 512-3456\nOF. PPAL. GÓMEZ | 381 654-3210")
+        if st.form_submit_button("💾 Guardar números"):
+            db.set_config({"wp_oficiales": wo.strip()})
+            st.toast("Números guardados", icon="📲")
+            st.rerun()
+
     with st.expander("📘 Cómo activar Telegram (gratis, 5 minutos)", expanded=prov == "TELEGRAM" and not listo):
         st.markdown(f"""
 1. En Telegram abra **@BotFather** → escriba `/newbot`.
