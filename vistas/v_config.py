@@ -372,7 +372,7 @@ def _avisos(cfg):
             plant = c1.text_input("Plantilla aprobada en Meta", plant)
             idioma = c2.text_input("Idioma de la plantilla", idioma)
         if st.form_submit_button("💾 Guardar avisos", type="primary"):
-            val = {"wa_proveedor": prov, "wa_eventos": ",".join(ev), "wa_plantilla": plant.strip(), "wa_idioma": idioma.strip()}
+            val = {"wa_proveedor": prov, "wa_eventos": ",".join(ev), "wa_ev_v2": "1", "wa_plantilla": plant.strip(), "wa_idioma": idioma.strip()}
             if dest is not None:
                 val["tg_destinos" if prov == "TELEGRAM" else "wa_destinos"] = dest.strip()
             db.set_config(val)

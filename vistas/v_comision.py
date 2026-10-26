@@ -163,6 +163,7 @@ def _formulario(r, yo):
         estado = C.ESTADO_POR_MOVIMIENTO.get(tipo, "REMITIDO")
         try:
             db.registrar_entrega(int(r["id"]), mov, estado, yo)
+            K._bot(r, "entrega", f"ENTREGADO → {destino}", f"Recibió: {mov['recibido_por']}", yo)
         except Exception as e:
             st.error(f"No se pudo registrar la entrega: {e}")
             return
@@ -243,6 +244,7 @@ def render_simple():
                    "recibido_por": recibe.strip().upper(), "fojas": K.num(r.get("fojas")) or None, "observaciones": obs.strip() or None}
             try:
                 db.registrar_entrega(int(r["id"]), mov, "REMITIDO", yo)
+                K._bot(r, "entrega", f"ENTREGADO → {mov['destino']}", f"Recibió: {mov['recibido_por']}", yo)
             except Exception as e:
                 st.error(f"No se pudo guardar: {e}")
                 return
@@ -325,6 +327,8 @@ def _traer():
                     pass
                 st.session_state["cs_traido"] = (True, f"✔ {e['identificador']} registrado como REINGRESO desde {origen}. Ya lo ve el oficial.")
             else:
+                K._bot({"identificador": rec["numero"], "tipo": "—", "asunto": "Para registrar en el libro (mesa de entradas)"},
+                       "entrega", f"TRAÍDO A LA DIRECCIÓN desde {origen}", rec.get("entrego_en_origen") and f"Lo entregó: {rec['entrego_en_origen']}", yo)
                 st.session_state["cs_traido"] = (False, f"✔ Anotado: {rec['numero']} desde {origen}. Entréguelo en mesa de entradas: "
                                                         "allí lo registran.")
         except Exception as ex:

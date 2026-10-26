@@ -430,6 +430,15 @@ def ui_salida(exp, key, modo_def=0, dest_texto=None):
     return {"modo": "sale", "destino": dest, "despacho": desp, "recibe": recibe, "fojas": int(fojas)}
 
 
+def _bot(exp, evento, titulo, detalle, quien=None):
+    try:
+        import avisos
+
+        avisos.avisar_movimiento(dict(exp), evento, titulo, detalle, quien or usuario())
+    except Exception:
+        pass
+
+
 def despachar(exp, sal, quien=None, cuando=None):
     """Ejecuta lo elegido en ui_salida: encargo al comisionista o salida inmediata (queda en la hoja de ruta)."""
     u = usuario()
@@ -477,7 +486,9 @@ def form_tramite(exp, key):
                 sal = ui_salida(exp, f"ya_{key}", 1 if exp.get("entrega_pendiente") else 0)
                 b1, b2 = st.columns(2)
                 if sal["modo"] != "queda" and b1.button("✅ Despachar", key=f"ya_ok_{key}", type="primary", width="stretch"):
-                    st.toast(f"Exp. {exp['identificador']}: {despachar(exp, sal)}", icon="✅")
+                    res = despachar(exp, sal)
+                    _bot(exp, "tramite", "DESPACHADO", res + (f" · {sal['despacho']}" if sal.get("despacho") else ""))
+                    st.toast(f"Exp. {exp['identificador']}: {res}", icon="✅")
                     st.rerun()
                 if exp.get("entrega_pendiente") and b2.button("Cancelar el encargo", key=f"enc_cancel_{key}", width="stretch"):
                     db.cancelar_entrega(int(exp["id"]), usuario())
@@ -512,6 +523,7 @@ def form_tramite(exp, key):
             q = quien or usuario()
             db.marcar_tramitado([int(exp["id"])], accion, det.strip() or None, cuando, q, usuario())
             res = despachar(exp, sal, q, cuando + timedelta(minutes=1))
+            _bot(exp, "tramite", f"TRAMITADO · {accion}", " · ".join(x for x in [det.strip(), res, sal.get("despacho")] if x), q)
             for k in list(st.session_state):
                 if k.endswith(f"_{key}") and k.startswith(("tr_", "sal_")):
                     st.session_state.pop(k, None)

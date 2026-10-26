@@ -543,6 +543,8 @@ def _asentar(m, r, v, clave, dest):
         if dep:
             db.solicitar_entrega(int(r["id"]), dep, m.despacho(v) if m.despacho else None, None, u)
             hecho["encargo"] = dep
+    K._bot(r, "tramite", f"TRAMITADO · {m.nombre}", " · ".join(x for x in [dest.get("cargo"),
+           f"encargado al comisionista → {hecho['encargo']}" if hecho["encargo"] else "queda en la Dirección"] if x), u)
     return hecho
 
 
@@ -556,7 +558,9 @@ def _cambiar_encargo(r, p, clave, desp, abierto=False):
                 st.toast("Queda en la Dirección", icon="🏠")
             else:
                 sal["despacho"] = sal.get("despacho") or desp
-                st.toast(f"Exp. {r['identificador']}: {K.despachar(r, sal)}", icon="✅")
+                res = K.despachar(r, sal)
+                K._bot(r, "tramite", "DESPACHADO", res + (f" · {sal['despacho']}" if sal.get("despacho") else ""))
+                st.toast(f"Exp. {r['identificador']}: {res}", icon="✅")
                 db.asociar_dependencia(clave, sal["destino"])
             st.rerun()
 

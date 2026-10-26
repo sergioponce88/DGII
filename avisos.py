@@ -19,7 +19,9 @@ import db
 PROVEEDORES = ["DESACTIVADO", "TELEGRAM", "TEXTMEBOT", "CALLMEBOT", "META"]
 NOMBRE = "Sistema de Expedientes DGII"
 EVENTOS = {"alta_sub": "Expediente nuevo cargado por un suboficial", "alta_todos": "Expediente nuevo (cualquier usuario)",
-           "reingreso": "Reingreso de un expediente", "urgente": "Solo si es URGENTE"}
+           "reingreso": "Reingreso de un expediente", "tramite": "Un oficial tramitó o despachó",
+           "entrega": "El comisionista entregó o trajo un expediente", "urgente": "Solo si es URGENTE"}
+ETQ_REGISTRO = {"origen": "Origen", "quien": "Cargó", "pie": "👉 Revíselo en Mi trabajo → Para tramitar."}
 
 
 def _secret(k):
@@ -63,7 +65,10 @@ def destinatarios(cfg=None):
 
 def eventos_activos(cfg=None):
     cfg = cfg or db.get_config()
-    return {e for e in str(cfg.get("wa_eventos") or "alta_sub").split(",") if e}
+    ev = {e for e in str(cfg.get("wa_eventos") or "alta_sub").split(",") if e}
+    if cfg.get("wa_ev_v2") != "1":  # configuraciones anteriores: trámites y entregas avisan por defecto
+        ev |= {"tramite", "entrega"}
+    return ev
 
 
 def estado(cfg=None):
@@ -125,10 +130,11 @@ def _html(s):
     return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def _enviar_telegram(chat, campos, sec):
+def _enviar_telegram(chat, campos, sec, etq=None):
+    etq = etq or ETQ_REGISTRO
     acc, nro, tipo, asunto, origen, quien = [_html(_plano(c, 300)) for c in campos]
-    texto = (f"📁 <b>{NOMBRE}</b>\n🔔 {acc}\n<b>Exp. N° {nro}</b>\nTipo: {tipo}\nAsunto: {asunto}\nOrigen: {origen}\n"
-             f"Cargó: {quien}\n👉 Revíselo en <i>Mi trabajo → Para tramitar</i>.")
+    texto = (f"📁 <b>{NOMBRE}</b>\n🔔 {acc}\n<b>Exp. N° {nro}</b>\nTipo: {tipo}\nAsunto: {asunto}\n{etq['origen']}: {origen}\n"
+             f"{etq['quien']}: {quien}\n{_html(etq['pie'])}")
     datos = {"chat_id": chat, "text": texto, "parse_mode": "HTML", "disable_web_page_preview": True}
     if sec.get("url"):
         datos["reply_markup"] = {"inline_keyboard": [[{"text": "📂 Abrir el sistema", "url": sec["url"]}]]}
@@ -183,13 +189,14 @@ def campos_expediente(exp, accion, quien):
             exp.get("dependencia_origen") or exp.get("origen"), quien]
 
 
-def texto_expediente(campos):
+def texto_expediente(campos, etq=None):
+    etq = etq or ETQ_REGISTRO
     acc, nro, tipo, asunto, origen, quien = [_plano(c, 300) for c in campos]
-    return (f"📁 *{NOMBRE}*\n🔔 {acc}\n*Exp. N° {nro}*\nTipo: {tipo}\nAsunto: {asunto}\nOrigen: {origen}\nCargó: {quien}\n"
-            f"👉 Revíselo en Mi trabajo → Para tramitar.")
+    return (f"📁 *{NOMBRE}*\n🔔 {acc}\n*Exp. N° {nro}*\nTipo: {tipo}\nAsunto: {asunto}\n{etq['origen']}: {origen}\n"
+            f"{etq['quien']}: {quien}\n{etq['pie']}")
 
 
-def enviar(campos, cfg=None, esperar=False):
+def enviar(campos, cfg=None, esperar=False, etq=None):
     """Envía el aviso a todos los destinatarios. En segundo plano salvo esperar=True (prueba). Devuelve [(destino, ok, detalle)]."""
     cfg = cfg or db.get_config()
     listo, _ = estado(cfg)
@@ -207,11 +214,11 @@ def enviar(campos, cfg=None, esperar=False):
                 if prov == "META":
                     _enviar_meta(t, campos, cfg, sec)
                 elif prov == "TELEGRAM":
-                    _enviar_telegram(t, campos, sec)
+                    _enviar_telegram(t, campos, sec, etq)
                 elif prov == "TEXTMEBOT":
-                    _enviar_textmebot(t, texto_expediente(campos), sec)
+                    _enviar_textmebot(t, texto_expediente(campos, etq), sec)
                 else:
-                    _enviar_callmebot(t, texto_expediente(campos), sec)
+                    _enviar_callmebot(t, texto_expediente(campos, etq), sec)
                 res.append((n or t, True, "enviado"))
             except Exception as e:  # nunca interrumpe el trabajo del usuario
                 res.append((n or t, False, str(e)))
@@ -239,6 +246,24 @@ def avisar_expediente(exp, evento, quien, rol):
             return False
         accion = "Nuevo expediente registrado" if evento == "alta" else "Reingresó un expediente"
         enviar(campos_expediente(exp, accion, quien), cfg)
+        return True
+    except Exception:
+        return False
+
+
+def avisar_movimiento(exp, evento, titulo, detalle, quien):
+    """Aviso de trámite / despacho (evento 'tramite') o de entrega / retiro del comisionista (evento 'entrega')."""
+    try:
+        cfg = db.get_config()
+        ev = eventos_activos(cfg)
+        if evento not in ev or not estado(cfg)[0]:
+            return False
+        if "urgente" in ev and exp.get("prioridad") != "URGENTE TRÁMITE":
+            return False
+        etq = {"origen": "Detalle", "quien": "Entregó" if evento == "entrega" else "Tramitó",
+               "pie": "👉 Ver la hoja de ruta en el sistema."}
+        campos = [titulo, f"{exp.get('identificador')} ({exp.get('anio') or ''})", exp.get("tipo"), exp.get("asunto"), detalle or "—", quien]
+        enviar(campos, cfg, etq=etq)
         return True
     except Exception:
         return False
