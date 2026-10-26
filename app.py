@@ -225,6 +225,25 @@ if n_crit and not st.session_state.get("_avisado"):
     st.toast(f"Hay {n_crit} alertas prioritarias. Revise 🔔 Alertas y Agenda.", icon="🔔")
     st.session_state["_avisado"] = True
 
+# Lo que trajo el comisionista y falta asentar en el libro: aviso visible para quien carga (suboficiales y oficiales)
+if auth.puede("cargar") and auth.rol() != "COMISIONISTA":
+    try:
+        _rec = db.df_recepciones()
+    except Exception:
+        _rec = None
+    if _rec is not None and not _rec.empty:
+        _n = len(_rec)
+        _lst = ", ".join(f"{r['numero']} ({r['origen'] or '—'})" for _, r in _rec.head(4).iterrows()) + (" …" if _n > 4 else "")
+        if pagina != K.PAG_TRABAJO:
+            _a, _b = st.columns([4, 1], vertical_alignment="center")
+            with _a:
+                ui.alerta("📦", f"El comisionista trajo {_n} expediente(s) para registrar en el libro", _lst, C.STATUS["warning"])
+            if _b.button("📥 Registrar ahora", key="rec_ir", type="primary", width="stretch"):
+                K.ir_a(K.PAG_TRABAJO)
+        if st.session_state.get("_rec_avisado") != _n:
+            st.toast(f"📦 {_n} expediente(s) traído(s) por el comisionista para registrar en el libro.", icon="📦")
+            st.session_state["_rec_avisado"] = _n
+
 VISTAS = {
     K.PAG_TRABAJO: v_trabajo.render,
     K.PAG_PANEL: v_panel.render,
