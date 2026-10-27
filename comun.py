@@ -435,8 +435,9 @@ def ui_salida(exp, key, modo_def=0, dest_texto=None):
         ind = st.text_input("Indicaciones para el comisionista (opcional)", key=f"sal_i_{key}",
                             placeholder="Ej.: entregar en mano al Secretario")
         return {"modo": "comision", "destino": dest, "despacho": desp, "ind": ind}
+    st.warning("⚠️ Elija **Sale ahora** solo si **usted ya lo entregó en mano**. Si lo va a llevar el comisionista, elija «Lo lleva el comisionista».")
     c3, c4 = st.columns([3, 1])
-    recibe = campo_persona(c3, "Quién lo recibe", f"sal_r_{key}")
+    recibe = campo_persona(c3, "Quién lo recibió *", f"sal_r_{key}")
     fojas = c4.number_input("Fojas", min_value=0, value=num(exp.get("fojas")), step=1, key=f"sal_f_{key}")
     return {"modo": "sale", "destino": dest, "despacho": desp, "recibe": recibe, "fojas": int(fojas)}
 
@@ -487,6 +488,19 @@ def form_tramite(exp, key):
         ui.alerta("📍", f"Este expediente está en {ub}",
                   "Si volvió a la Dirección para un nuevo trámite, primero registre el reingreso: queda otra vez PENDIENTE DE TRÁMITE.",
                   C.STATUS["warning"])
+        movs = db.df_movimientos()
+        movs = movs[movs["expediente_id"] == int(exp["id"])] if not movs.empty else movs
+        ult = movs.iloc[0] if not movs.empty else None
+        if ult is not None and ult["tipo"] == "SALIDA" and not bool(exp.get("entrega_pendiente")):
+            with st.container(border=True):
+                st.markdown(f"**¿Se cargó por error que salió?** Última SALIDA → {ult['destino']} · {ui.fmt_fecha(ult['fecha_hora'], True)}"
+                            f" · registró {ult.get('registrado_por') or '—'}" + (f" · recibió {ult['recibido_por']}" if ult.get("recibido_por") else ""))
+                if st.button("↩️ No salió todavía: que lo lleve el comisionista", key=f"fix_sal_{key}", type="primary", width="stretch"):
+                    db.eliminar_movimientos([int(ult["id"])], usuario())
+                    db.solicitar_entrega(int(exp["id"]), ult["destino"], ult.get("despacho") or None,
+                                         "Corregido: la salida se había cargado por error", usuario())
+                    st.toast(f"Exp. {exp['identificador']}: vuelve a la Dirección y queda encargado al comisionista → {ult['destino']}", icon="🚚")
+                    st.rerun()
         if st.session_state.get(f"rei_open_{key}") == int(exp["id"]):
             form_reingreso(exp, f"ft_{key}")
         elif st.button(f"📥 Volvió a la Dirección: registrar reingreso", key=f"rei_btn_{key}", type="primary", width="stretch"):
@@ -508,6 +522,9 @@ def form_tramite(exp, key):
                 sal = ui_salida(exp, f"ya_{key}", 1 if exp.get("entrega_pendiente") else 0)
                 b1, b2 = st.columns(2)
                 if sal["modo"] != "queda" and b1.button("✅ Despachar", key=f"ya_ok_{key}", type="primary", width="stretch"):
+                    if sal["modo"] == "sale" and not sal.get("recibe"):
+                        st.error("Indique quién recibió el expediente, o elija «Lo lleva el comisionista».")
+                        st.stop()
                     res = despachar(exp, sal)
                     _bot(exp, "tramite", "DESPACHADO", res + (f" · {sal['despacho']}" if sal.get("despacho") else ""))
                     st.toast(f"Exp. {exp['identificador']}: {res}", icon="✅")
@@ -550,6 +567,9 @@ def form_tramite(exp, key):
             h = c4.time_input("Hora", db.ahora().time().replace(second=0), step=300, key=f"tr_h_{key}")
         sal = ui_salida(exp, f"tr_{key}", 0 if en_casa else 2) if en_casa else {"modo": "queda"}
         if st.button("✅ Tramitar" + ("" if sal["modo"] == "queda" else " y despachar"), key=f"tr_ok_{key}", type="primary", width="stretch"):
+            if sal["modo"] == "sale" and not sal.get("recibe"):
+                st.error("Indique quién recibió el expediente, o elija «Lo lleva el comisionista».")
+                st.stop()
             cuando = datetime.combine(f, h if isinstance(h, time) else time(0, 0))
             q = quien or usuario()
             db.marcar_tramitado([int(exp["id"])], accion, det.strip() or None, cuando, q, usuario())
