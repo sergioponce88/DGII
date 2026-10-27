@@ -33,6 +33,28 @@ def render():
     cur_act = cur[cur["fase"] == "EN CURSO"] if not cur.empty else cur
     fuera = e[e["ubicacion_actual"].fillna("") != C.DEP_PROPIA]
 
+    # ── Estado operativo en anillos (lo crítico en 3 segundos) ──
+    try:
+        import tactico
+
+        n_ab = len(abiertos)
+        al_dia = n_ab - len(vencidos)
+        pend = int((~abiertos["tramitado"]).sum())
+        quietos = abiertos[(h - abiertos["ult_mov"].fillna(abiertos["fecha_ingreso"]).dt.normalize()).dt.days > 15]
+        pct = 100 * al_dia / n_ab if n_ab else 100
+        st.markdown(tactico.hero_html([
+            ("Al día", f"{pct:.0f}%", pct, f"{al_dia} de {n_ab} abiertos sin vencer",
+             tactico.VERDE if pct >= 90 else (tactico.AMBAR if pct >= 70 else tactico.ROJO)),
+            ("Pendientes de trámite", pend, 100 * pend / n_ab if n_ab else 0, f"{n_ab - pend} ya tramitados de los abiertos",
+             tactico.AMBAR if pend else tactico.VERDE),
+            ("Urgentes / vencidos", f"{len(urg)}/{len(vencidos)}", 100 * (len(urg) + len(vencidos)) / n_ab if n_ab else 0,
+             "urgentes activos / con plazo vencido", tactico.ROJO if len(vencidos) else tactico.CIAN),
+            ("Sin moverse +15 días", len(quietos), 100 * len(quietos) / n_ab if n_ab else 0, "expedientes abiertos quietos",
+             tactico.ROJO if len(quietos) > 5 else (tactico.AMBAR if len(quietos) else tactico.VERDE)),
+        ]), unsafe_allow_html=True)
+    except Exception:
+        pass
+
     ui.kpis(
         [
             ("Expedientes " + str(anio), len(e), f"{(e['origen'] == C.ORIGENES[0]).sum()} iniciados · {(e['origen'] == C.ORIGENES[2]).sum()} del IESP · {(e['origen'] == C.ORIGENES[1]).sum()} recibidos", "#3B82F6"),

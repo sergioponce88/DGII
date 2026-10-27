@@ -205,14 +205,26 @@ def header(titulo, sub=C.SUBTITULO, logo=None):
             img = f'<img src="data:image/png;base64,{b64}" width="62">'
         except OSError:
             img = ""
-    st.markdown(
-        f'<div class="hdr">{img}<div><h1>{esc(titulo)}</h1><div class="sub">{esc(sub)}</div></div></div>',
-        unsafe_allow_html=True,
-    )
+    try:  # cabecera «centro de comando»
+        import tactico
+
+        st.markdown(tactico.header_html(img, titulo, sub), unsafe_allow_html=True)
+    except Exception:
+        st.markdown(
+            f'<div class="hdr">{img}<div><h1>{esc(titulo)}</h1><div class="sub">{esc(sub)}</div></div></div>',
+            unsafe_allow_html=True,
+        )
 
 
 def kpis(items):
     """items: lista de (etiqueta, valor, nota, color)."""
+    try:  # indicadores «Tactical Next-Gen»
+        import tactico
+
+        st.markdown(tactico.kpis_html(items), unsafe_allow_html=True)
+        return
+    except Exception:
+        pass
     html_ = "".join(
         f'<div class="kpi" style="--k:{c}"><div class="kl">{esc(l)}</div><div class="kv">{esc(v)}</div>'
         f'<div class="kn">{esc(n)}</div></div>'
