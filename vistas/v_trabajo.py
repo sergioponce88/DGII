@@ -193,7 +193,7 @@ def form_anterior(q=""):
             st.error(f"Ese N° / folio / orden ya está registrado ({choque}). Búsquelo y registre el reingreso sobre ese expediente.")
             return
         exp = dict(secretaria=sec, nro_exp=int(nro), folio=int(folio), orden=int(orden), libro=int(libro), anio=f_ing.year,
-                   fecha_ingreso=f_ing, origen=C.ORIGENES[1] if dep_org and dep_org != C.DEP_PROPIA else C.ORIGENES[0],
+                   fecha_ingreso=f_ing, origen=(C.ORIGENES[2] if dep_org == K.dep_iesp() else C.ORIGENES[1] if dep_org and dep_org != C.DEP_PROPIA else C.ORIGENES[0]),
                    dependencia_origen=dep_org, nro_exp_origen=nro_org.strip() or None, tipo=tipo, asunto=asunto.strip().upper() or None,
                    iniciador=iniciador.strip().upper() or None, prioridad=C.PRIORIDADES[0], estado="EN TRÁMITE", ubicacion_actual=desde,
                    fojas=int(fojas) or None, observaciones="Asiento anterior al sistema, cargado desde el libro físico")

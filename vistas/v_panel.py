@@ -35,7 +35,7 @@ def render():
 
     ui.kpis(
         [
-            ("Expedientes " + str(anio), len(e), f"{(e['origen'] == C.ORIGENES[0]).sum()} iniciados · {(e['origen'] == C.ORIGENES[1]).sum()} recibidos", "#3B82F6"),
+            ("Expedientes " + str(anio), len(e), f"{(e['origen'] == C.ORIGENES[0]).sum()} iniciados · {(e['origen'] == C.ORIGENES[2]).sum()} del IESP · {(e['origen'] == C.ORIGENES[1]).sum()} recibidos", "#3B82F6"),
             ("En trámite", len(abiertos), f"{len(e) - len(abiertos)} resueltos / archivados", C.PALETA[2]),
             ("Pendientes de trámite", int((~abiertos["tramitado"]).sum()), f"{int(e['tramitado'].sum())} tramitados", C.STATUS["warning"]),
             ("Urgentes activos", len(urg), "Urgente trámite", C.STATUS["serious"]),
@@ -105,7 +105,7 @@ def render():
         fig = go.Figure()
         for i, o in enumerate(C.ORIGENES):
             if o in piv.columns:
-                fig.add_bar(x=MESES, y=piv[o], name="Iniciados en la Dirección" if i == 0 else "Recibidos de otras dependencias",
+                fig.add_bar(x=MESES, y=piv[o], name=["Iniciados en la Dirección", "Recibidos de otras dependencias", "Iniciados en el I.E.S.P."][i],
                             marker=dict(color=C.PALETA[i], line=GAP, cornerradius=4),
                             hovertemplate="%{x}: %{y:.0f}<extra>%{fullData.name}</extra>")
         fig.update_layout(barmode="stack", title=f"Ingresos por mes · {anio}", yaxis_title=None)

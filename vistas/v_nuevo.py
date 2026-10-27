@@ -73,6 +73,9 @@ def render():
                                placeholder="¿De dónde llega?", key="n_dep_org")
         with d1b:
             K.boton_nueva_dependencia("org", "n_dep_org")
+    elif origen == C.ORIGENES[2]:
+        dep_org = K.dep_iesp()
+        d1.text_input("🏢 Dependencia de origen", dep_org, disabled=True)
     else:
         dep_org = C.DEP_PROPIA
         d1.text_input("🏢 Dependencia de origen", C.DEP_PROPIA, disabled=True)

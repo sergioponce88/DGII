@@ -135,11 +135,14 @@ def validar(df_std, sec=None):
             avisos.append("dependencia nueva")
         org_txt = _norm(_txt(g("origen")) or "")
         if org_txt:
-            origen = C.ORIGENES[0] if ("INICI" in org_txt or "DIREC" in org_txt) else C.ORIGENES[1]
+            origen = (C.ORIGENES[2] if ("IESP" in org_txt.replace(".", "") and "INICI" in org_txt)
+                      else C.ORIGENES[0] if ("INICI" in org_txt or "DIREC" in org_txt) else C.ORIGENES[1])
         else:
             origen = C.ORIGENES[0] if (not dep or dep == C.DEP_PROPIA) else C.ORIGENES[1]
         if origen == C.ORIGENES[0] and not dep:
             dep = C.DEP_PROPIA
+        if origen == C.ORIGENES[2] and not dep:
+            dep = K.dep_iesp()
         estado = _match(_txt(g("estado")), C.ESTADOS, "EN TRÁMITE")
         if estado is None:
             avisos.append(f"estado '{g('estado')}' → EN TRÁMITE")

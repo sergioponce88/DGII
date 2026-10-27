@@ -8,7 +8,7 @@ SUBTITULO = "Policía de Tucumán · Mesa de Entradas y Registro de Expedientes"
 PALETA = ["#3987E5", "#D95926", "#199E70", "#C98500", "#D55181", "#008300", "#9085E9", "#E66767"]
 STATUS = {"ok": "#0CA30C", "warning": "#FAB219", "serious": "#EC835A", "critical": "#D03B3B", "neutral": "#64748B"}
 
-ORIGENES = ["INICIADO EN LA DIRECCIÓN", "RECIBIDO DE OTRA DEPENDENCIA"]
+ORIGENES = ["INICIADO EN LA DIRECCIÓN", "RECIBIDO DE OTRA DEPENDENCIA", "INICIADO EN EL I.E.S.P."]
 
 # (nombre, sigla, color)
 DEPENDENCIAS_SEED = [
@@ -23,6 +23,7 @@ DEPENDENCIAS_SEED = [
     ("OTRA DEPENDENCIA", "OTRA", "#64748B"),
 ]
 DEP_PROPIA = DEPENDENCIAS_SEED[0][0]
+DEP_IESP = DEPENDENCIAS_SEED[3][0]
 
 GRUPOS = [
     "Formación y Capacitación",

@@ -57,6 +57,7 @@ def render():
         ("Ingresados", len(e), periodo, "#3B82F6"),
         ("Iniciados en la Dirección", int((e["origen"] == C.ORIGENES[0]).sum()), "", C.PALETA[0]),
         ("Recibidos", int((e["origen"] == C.ORIGENES[1]).sum()), "de otras dependencias", C.PALETA[1]),
+        ("Iniciados en el I.E.S.P.", int((e["origen"] == C.ORIGENES[2]).sum()), "", C.PALETA[2]),
         ("Resueltos / archivados", len(cerrados), f"{(len(cerrados) / len(e) * 100 if len(e) else 0):.0f}% del período", C.STATUS["ok"]),
         ("Tiempo medio de trámite", f"{dur.median():.0f} d" if len(dur) else "—", "mediana, expedientes cerrados", C.PALETA[6]),
         ("Movimientos", len(m), "salidas, ingresos y pases", C.PALETA[3]),

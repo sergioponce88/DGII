@@ -79,6 +79,14 @@ def ir_a(pagina, exp_id=None):
     st.rerun()
 
 
+def dep_iesp():
+    """Nombre con que figura el I.E.S.P. en la lista de dependencias."""
+    for d in deps():
+        if "I.E.S.P" in d.upper() or "IESP" in d.upper().replace(".", ""):
+            return d
+    return C.DEP_IESP
+
+
 def deps(solo_activas=True):
     return db.df_dependencias(solo_activas)["nombre"].tolist()
 
