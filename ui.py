@@ -153,6 +153,11 @@ header[data-testid="stHeader"] svg, [data-testid="stSidebarCollapsedControl"] sv
 
 def css():
     st.markdown(CSS, unsafe_allow_html=True)
+    try:
+        from tactico import CAPA  # capa visual «Tactical Next-Gen»
+        st.markdown(CAPA, unsafe_allow_html=True)
+    except Exception:
+        pass
 
 
 def esc(x):
@@ -254,11 +259,11 @@ def dias_desde(x):
     return (pd.Timestamp(db.hoy()) - pd.Timestamp(x).normalize()).days
 
 
-def tarjeta_expediente(r, mapa=None, detalle=True):
+def chips_expediente(r, mapa=None):
+    """(chips de estado, chips de ubicación) del expediente, en HTML. Lo usan la tarjeta simple y la premium."""
     mapa = mapa if mapa is not None else mapa_dependencias()
     ub = r.get("ubicacion_actual") or "—"
     c_ub = color_dep(ub, mapa)
-    d = dias_desde(r.get("ult_mov") if pd.notna(r.get("ult_mov")) else r.get("fecha_ingreso"))
     venc = ""
     if pd.notna(r.get("fecha_termino")) and r.get("estado") not in C.ESTADOS_CERRADOS and not bool(r.get("tramitado")):
         dv = (pd.Timestamp(r["fecha_termino"]) - pd.Timestamp(db.hoy())).days
@@ -279,6 +284,19 @@ def tarjeta_expediente(r, mapa=None, detalle=True):
     rei = r.get("reingresos")
     if pd.notna(rei) and int(rei) > 0:
         venc += chip(f"↩️ REINGRESÓ {int(rei)}×", "#9085E9", punto=False)
+    linea1 = f'{chip(r.get("tipo"), "#60A5FA", False)}{chip_estado(r.get("estado"))}{chip_prioridad(r.get("prioridad"))}{venc}'
+    linea2 = (f'📍 {chip(ub, c_ub)}'
+              f'{"🎯 " + chip(r.get("destino"), color_dep(r.get("destino"), mapa)) if isinstance(r.get("destino"), str) and r.get("destino") else ""}'
+              f'{chip(r.get("despacho"), "#A78BFA", False) if r.get("despacho") else ""}')
+    return linea1, linea2
+
+
+def tarjeta_expediente(r, mapa=None, detalle=True):
+    mapa = mapa if mapa is not None else mapa_dependencias()
+    ub = r.get("ubicacion_actual") or "—"
+    c_ub = color_dep(ub, mapa)
+    d = dias_desde(r.get("ult_mov") if pd.notna(r.get("ult_mov")) else r.get("fecha_ingreso"))
+    linea1, linea2 = chips_expediente(r, mapa)
     meta = ""
     if detalle:
         org = r.get("dependencia_origen") or "—"
@@ -293,11 +311,8 @@ def tarjeta_expediente(r, mapa=None, detalle=True):
         f'<div class="card acc" style="--c:{c_ub}">'
         f'<div class="ident">N° {esc(r.get("nro_exp"))} / F° {esc(r.get("folio"))} / O° {esc(r.get("orden"))}'
         f'<small>AÑO {esc(r.get("anio"))} · LIBRO {esc(r.get("libro"))}</small></div>'
-        f'<div style="margin-top:6px">{chip(r.get("tipo"), "#60A5FA", False)}{chip_estado(r.get("estado"))}'
-        f'{chip_prioridad(r.get("prioridad"))}{venc}</div>'
-        f'<div style="margin-top:4px">📍 {chip(ub, c_ub)}'
-        f'{"🎯 " + chip(r.get("destino"), color_dep(r.get("destino"), mapa)) if isinstance(r.get("destino"), str) and r.get("destino") else ""}'
-        f'{chip(r.get("despacho"), "#A78BFA", False) if r.get("despacho") else ""}</div>{meta}</div>',
+        f'<div style="margin-top:6px">{linea1}</div>'
+        f'<div style="margin-top:4px">{linea2}</div>{meta}</div>',
         unsafe_allow_html=True,
     )
 

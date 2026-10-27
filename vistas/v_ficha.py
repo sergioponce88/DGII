@@ -72,7 +72,6 @@ def render():
         return
     exp_id = int(r["id"])
     mapa = ui.mapa_dependencias()
-    ui.tarjeta_expediente(r, mapa)
 
     movs_all = db.df_movimientos()
     movs = movs_all[movs_all["expediente_id"] == exp_id]
@@ -81,15 +80,21 @@ def render():
     pers = db.df_personal()
     pers = pers[pers["curso_id"].isin(cursos["id"])]
 
-    dias = ui.dias_desde(r["fecha_ingreso"])
-    ui.kpis(
-        [
-            ("Días desde ingreso", dias if dias is not None else "—", ui.fmt_fecha(r["fecha_ingreso"]), "#3B82F6"),
-            ("Movimientos", len(movs), f"último {ui.fmt_fecha(r['ult_mov'], True)}", C.PALETA[6]),
-            ("Dependencias recorridas", movs["destino"].nunique(), "destinos distintos", C.PALETA[2]),
-            ("Personal afectado", len(pers), f"{len(cursos)} curso(s)", C.PALETA[4]),
-        ]
-    )
+    try:  # tarjeta «Tactical Next-Gen»: anillo de plazo, indicadores y hoja de ruta compacta
+        import tactico
+
+        tactico.tarjeta_expediente_pro(r, mapa, movs, len(pers), len(cursos))
+    except Exception:
+        ui.tarjeta_expediente(r, mapa)
+        dias = ui.dias_desde(r["fecha_ingreso"])
+        ui.kpis(
+            [
+                ("Días desde ingreso", dias if dias is not None else "—", ui.fmt_fecha(r["fecha_ingreso"]), "#3B82F6"),
+                ("Movimientos", len(movs), f"último {ui.fmt_fecha(r['ult_mov'], True)}", C.PALETA[6]),
+                ("Dependencias recorridas", movs["destino"].nunique(), "destinos distintos", C.PALETA[2]),
+                ("Personal afectado", len(pers), f"{len(cursos)} curso(s)", C.PALETA[4]),
+            ]
+        )
 
     b1, b2 = st.columns(2)
     b1.download_button("🖨️ Hoja de ruta (PDF)",
