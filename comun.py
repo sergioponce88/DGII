@@ -68,8 +68,10 @@ def campo_persona(col, label, key, defecto=None, ayuda=None):
     if defecto and defecto not in ops:
         ops = [defecto] + ops
     v = col.selectbox(label, ops, index=ops.index(defecto) if defecto else None, key=key, accept_new_options=True,
-                      placeholder="Escriba para buscar o cargue grado, apellido y nombre", help=ayuda)
-    return (v or "").strip().upper()
+                      placeholder="Elija de la lista…", help=ayuda)
+    nuevo = col.text_input(f"{label} (si no está en la lista)", key=f"{key}_nuevo", label_visibility="collapsed",
+                           placeholder="✏️ ¿No está en la lista? Escriba aquí grado, apellido y nombre")
+    return " ".join((nuevo or v or "").split()).upper()
 
 
 def ir_a(pagina, exp_id=None):
