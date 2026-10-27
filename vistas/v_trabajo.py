@@ -41,6 +41,26 @@ def _en_casa(exp):
 
 
 # ───────────────────────── Mesa de entradas (suboficial / todos) ─────────────────────────
+def _prellenar_nuevo():
+    """Si viene de algo que trajo el comisionista: el alta abre con origen, N° de origen, asunto y quién lo trajo ya cargados."""
+    rid = st.session_state.get("tb_rec")
+    if not rid:
+        return
+    rec = db.df_recepciones(False)
+    rec = rec[rec["id"] == rid]
+    if rec.empty:
+        return
+    r = rec.iloc[0]
+    st.session_state["n_origen"] = C.ORIGENES[1]
+    if r.get("origen"):
+        st.session_state["_sel_n_dep_org"] = r["origen"]
+    st.session_state["n_nro_org"] = r.get("numero") or ""
+    if r.get("asunto"):
+        st.session_state["n_asunto"] = r["asunto"]
+    st.session_state["_pref_entrega"] = r.get("traido_por") or ""
+    st.session_state["n_rec"] = int(rid)
+
+
 def traidos_comision():
     """Lo que trajo el comisionista y el sistema no pudo asociar: la mesa de entradas lo registra."""
     rid, ult = st.session_state.get("tb_rec"), st.session_state.get("ultimo_mov_tb")
@@ -56,6 +76,7 @@ def traidos_comision():
     ui.seccion(f"📦 Traídos por el comisionista para registrar ({len(rec)})")
     for _, r in rec.iterrows():
         st.markdown(f"<div class='card acc' style='--c:#F59E0B;padding:10px 14px'><b>{ui.esc(r['numero'])}</b> ← {ui.esc(r['origen'] or '—')}"
+                    f"{('<br>' + ui.esc(r['asunto'])) if r.get('asunto') else ''}"
                     f"<div class='meta'>Trajo {ui.esc(r['traido_por'] or '—')} · {ui.fmt_fecha(r['fecha_hora'], True)}"
                     f"{' · lo entregó ' + ui.esc(r['entrego_en_origen']) if r.get('entrego_en_origen') else ''}"
                     f"{' · ' + ui.esc(r['observaciones']) if r.get('observaciones') else ''}</div></div>", unsafe_allow_html=True)
@@ -95,6 +116,7 @@ def mesa_entradas(exp):
         st.warning(f"No hay ningún expediente registrado con «{q}».")
         b1, b2 = st.columns(2)
         if b1.button("➕ Es nuevo: registrarlo", key="tb_nuevo", type="primary", width="stretch"):
+            _prellenar_nuevo()
             K.ir_a(K.PAG_NUEVO)
         if b2.button("📜 Es viejo: ya figura en el libro físico", key="tb_viejo", width="stretch"):
             st.session_state["tb_viejo_on"] = True
@@ -114,6 +136,7 @@ def mesa_entradas(exp):
             st.rerun()
     c1, c2 = st.columns(2)
     if c1.button("➕ No es ninguno: cargar como nuevo", key="tb_nuevo2", width="stretch"):
+        _prellenar_nuevo()
         K.ir_a(K.PAG_NUEVO)
     if c2.button("📜 No es ninguno: es viejo (libro físico)", key="tb_viejo2", width="stretch"):
         st.session_state["tb_viejo_on"] = True

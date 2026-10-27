@@ -196,6 +196,7 @@ CSS_SIMPLE = """<style>
 .ent .d{font-size:1.35rem;font-weight:800;color:#FDE68A;line-height:1.25}
 .ent .i{font-size:.95rem;color:#E2E8F0;margin-top:8px}
 .ok-ent{font-size:.95rem;color:#CBD5E1;padding:6px 0;border-bottom:1px solid #1E293B}
+@media (max-width:640px){.cs-esp{height:58px}}
 </style>"""
 
 
@@ -208,6 +209,7 @@ def _tarjeta_simple(r):
 
 def render_simple():
     st.markdown(CSS_SIMPLE, unsafe_allow_html=True)
+    st.markdown("<div class='cs-esp'></div>", unsafe_allow_html=True)
     modo = st.segmented_control("¿Qué va a hacer?", ["🚚 Llevar", "📥 Traer a la Dirección"], default="🚚 Llevar", key="cs_modo",
                                 label_visibility="collapsed")
     if modo == "📥 Traer a la Dirección":
@@ -292,7 +294,9 @@ def _traer():
     deps = [d for d in K.deps() if d != C.DEP_PROPIA]
     with st.form("cs_traer", clear_on_submit=True):
         origen = st.selectbox("¿De dónde lo retiró?", deps, index=None, placeholder="Elija la dependencia")
-        numero = st.text_input("N° de expediente o de nota", placeholder="Ej.: 584/56/6 · J-1234/26")
+        numero = st.text_input("N° que figura en la carátula o en la nota", placeholder="Ej.: 584/56/6 · J-1234/26 · 9319/269/26D1",
+                               help="Copie el número tal como está escrito, sea de la Dirección o de la dependencia que lo envía.")
+        asunto = st.text_input("¿De qué se trata? (opcional)", placeholder="Ej.: pedido de curso de tiro, sumario de un cadete…")
         quien = st.text_input("¿Quién se lo entregó allá? (opcional)", placeholder="Grado, apellido y nombre")
         c1, c2 = st.columns(2)
         f = c1.date_input("Fecha", db.hoy(), format="DD/MM/YYYY")
@@ -304,7 +308,7 @@ def _traer():
             st.error("Indique de dónde lo retiró y el número.")
             return
         cuando = datetime.combine(f, h if isinstance(h, time) else time(0, 0))
-        rec = {"fecha_hora": cuando, "origen": origen, "numero": " ".join(numero.split()).upper(),
+        rec = {"fecha_hora": cuando, "origen": origen, "numero": " ".join(numero.split()).upper(), "asunto": asunto.strip().upper() or None,
                "entrego_en_origen": quien.strip().upper() or None, "traido_por": yo, "observaciones": obs.strip() or None}
         coinc = db.buscar_por_numero(rec["numero"])
         coinc = coinc[coinc["ubicacion_actual"].fillna(C.DEP_PROPIA) != C.DEP_PROPIA] if not coinc.empty else coinc
@@ -329,8 +333,8 @@ def _traer():
             else:
                 K._bot({"identificador": rec["numero"], "tipo": "—", "asunto": "Para registrar en el libro (mesa de entradas)"},
                        "entrega", f"TRAÍDO A LA DIRECCIÓN desde {origen}", rec.get("entrego_en_origen") and f"Lo entregó: {rec['entrego_en_origen']}", yo)
-                st.session_state["cs_traido"] = (False, f"✔ Anotado: {rec['numero']} desde {origen}. Entréguelo en mesa de entradas: "
-                                                        "allí lo registran.")
+                st.session_state["cs_traido"] = (False, f"✔ Anotado: {rec['numero']} desde {origen}. Es la primera vez que llega a la "
+                                                        "Dirección: entréguelo en mesa de entradas, allí lo registran en el libro.")
         except Exception as ex:
             st.error(f"No se pudo guardar: {ex}")
             return

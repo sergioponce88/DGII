@@ -114,16 +114,16 @@ def render():
         h_ing = a2.time_input("Hora", db.ahora().time().replace(second=0), step=300)
         despacho = K.campo_despacho(a3, "Sale con", "n_desp", vacio="— A definir —")
         b1, b2 = st.columns(2)
-        nro_org = b1.text_input("N° de expediente / nota de origen", placeholder="Ej: J-1234/26")
+        nro_org = b1.text_input("N° de expediente / nota de origen", placeholder="Ej: J-1234/26", key="n_nro_org")
         iniciador = b2.text_input("Iniciador / causante", placeholder="Jerarquía, apellido y nombre o dependencia")
-        asunto = st.text_area("Asunto / carátula", height=80)
+        asunto = st.text_area("Asunto / carátula", height=80, key="n_asunto")
         d1, d2, d3, d4 = st.columns(4)
         prioridad = d1.radio("Prioridad", C.PRIORIDADES, horizontal=True)
         f_term = d2.date_input("Fecha de término (si es urgente)", value=None, format="DD/MM/YYYY")
         fojas = d3.number_input("Fojas", min_value=0, value=0, step=1)
         ubic = d4.selectbox("Ubicación actual", lista_dep, index=K.idx(lista_dep, C.DEP_PROPIA))
         e1, e2, e3 = st.columns(3)
-        entrega = K.campo_persona(e1, "Entregado por (quien lo trae)", "n_entrega")
+        entrega = K.campo_persona(e1, "Entregado por (quien lo trae)", "n_entrega", defecto=st.session_state.get("_pref_entrega"))
         recibe = K.campo_persona(e2, "Recibido por", "n_recibe", defecto=K.usuario())
         import auth
 
@@ -206,6 +206,11 @@ def render():
         st.error(f"No se pudo registrar: {e}")
         return
     st.session_state["ultimo_alta"] = {**exp, "id": exp_id, "identificador": ident_db}
+    if st.session_state.get("n_rec"):  # era algo que trajo el comisionista: queda registrado
+        db.cerrar_recepcion(st.session_state.pop("n_rec"), exp_id, K.usuario())
+        st.session_state.pop("tb_rec", None)
+    for k in ("_pref_entrega", "n_nro_org", "n_asunto"):
+        st.session_state.pop(k, None)
     import auth
     import avisos
 

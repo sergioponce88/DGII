@@ -331,6 +331,7 @@ CREATE TABLE IF NOT EXISTS recepciones (
     cerrado_por TEXT,
     cerrado_en TIMESTAMP
 );
+ALTER TABLE recepciones ADD COLUMN IF NOT EXISTS asunto TEXT;
 
 CREATE TABLE IF NOT EXISTS auditoria (
     id SERIAL PRIMARY KEY,
@@ -989,13 +990,22 @@ def registrar_entrega(exp_id, mov, nuevo_estado, usuario=""):
 
 
 # ───────────────────────── Retiros del comisionista ─────────────────────────
+def _norm_nro(x):
+    import re as _re
+
+    t = str(x or "").upper().replace("Nº", "").replace("N°", "")
+    t = _re.sub(r"\b(EXPTE|EXP|NRO|NOTA)\b\.?", "", t)
+    return _re.sub(r"[^0-9A-Z/-]", "", t)
+
+
 def buscar_por_numero(numero):
-    """Expedientes cuyo identificador, N° o N° de origen coincide exactamente con lo escrito."""
-    n = " ".join(str(numero or "").split()).upper()
-    if not n:
-        return leer("SELECT * FROM expedientes WHERE false")
-    return leer("SELECT * FROM expedientes WHERE UPPER(identificador) = %s OR UPPER(COALESCE(nro_exp_origen,'')) = %s "
-                "OR CAST(nro_exp AS TEXT) = %s ORDER BY fecha_ingreso DESC", (n, n, n))
+    """Expedientes cuyo N° de la Dirección, identificador o N° de origen coincide con lo escrito (ignora espacios, «N°», «Expte.»)."""
+    n = _norm_nro(numero)
+    df = leer("SELECT * FROM expedientes")
+    if not n or df.empty:
+        return df.iloc[0:0]
+    m = (df["identificador"].map(_norm_nro) == n) | (df["nro_exp_origen"].map(_norm_nro) == n) | (df["nro_exp"].astype(str) == n)
+    return df[m].sort_values("fecha_ingreso", ascending=False)
 
 
 def registrar_recepcion(rec, usuario=""):
