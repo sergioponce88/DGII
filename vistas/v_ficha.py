@@ -113,6 +113,13 @@ def render():
         K.form_tramite(r, f"ficha_{exp_id}")
 
     with t1:
+        segun = db.ubicacion_segun_ruta(exp_id)
+        if segun != (r.get("ubicacion_actual") or C.DEP_PROPIA) and auth_puede("cargar"):
+            ui.alerta("⚠️", "La ubicación no coincide con la hoja de ruta",
+                      f"Figura en {r.get('ubicacion_actual')}, pero según el orden de los movimientos está en {segun}.", C.STATUS["warning"])
+            if st.button(f"🔄 Corregir: el expediente está en {segun}", key="hr_recalc", type="primary"):
+                db.recalcular_expediente(exp_id, K.usuario())
+                st.rerun()
         ui.timeline(movs, mapa, r)
         if not movs.empty:
             import auth

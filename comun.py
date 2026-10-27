@@ -483,6 +483,16 @@ def form_tramite(exp, key):
 
     en_casa = (exp.get("ubicacion_actual") or C.DEP_PROPIA) == C.DEP_PROPIA
     otro = st.session_state.get(f"retram_{key}") == int(exp["id"])  # «registrar otro trámite» sobre uno ya tramitado
+    if not en_casa and auth.puede("cargar"):
+        segun = db.ubicacion_segun_ruta(int(exp["id"]))
+        if segun != (exp.get("ubicacion_actual") or C.DEP_PROPIA):
+            with st.container(border=True):
+                st.markdown(f"⚠️ **La ubicación no coincide con la hoja de ruta.** Figura en *{exp.get('ubicacion_actual')}*, "
+                            f"pero según el orden de los movimientos está en **{segun}**.")
+                if st.button(f"🔄 Corregir: el expediente está en {segun}", key=f"recalc_{key}", type="primary", width="stretch"):
+                    db.recalcular_expediente(int(exp["id"]), usuario())
+                    st.toast(f"Exp. {exp['identificador']}: ubicación corregida → {segun}", icon="🔄")
+                    st.rerun()
     if bool(exp.get("tramitado")) and not en_casa and auth.puede("cargar"):
         ub = exp.get("ubicacion_actual") or "—"
         ui.alerta("📍", f"Este expediente está en {ub}",

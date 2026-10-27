@@ -643,6 +643,9 @@ def registrar_movimiento(exp_id, mov, nuevo_estado=None, usuario="", fecha_termi
                 upd["fecha_termino"] = fecha_termino
             cur.execute("UPDATE expedientes SET reingresos = COALESCE(reingresos, 0) + 1 WHERE id = %s", (_py(exp_id),))
         _update(cur, "expedientes", upd, exp_id)
+        cur.execute("SELECT COUNT(*) FROM movimientos WHERE expediente_id = %s AND fecha_hora > %s", (_py(exp_id), mov.get("fecha_hora")))
+        if (cur.fetchone() or [0])[0]:  # se cargó con fecha/hora anterior a otro movimiento: manda el orden de la hoja de ruta
+            _recalcular(cur, _py(exp_id))
         # Visto bueno sobre un expediente de curso -> curso autorizado
         if mov.get("despacho") == "VISTO BUENO":
             cur.execute(
@@ -702,6 +705,24 @@ def eliminar_movimientos(ids, usuario=""):
                 log(usuario, "BAJA MOVIMIENTO", f"{i} ({f[1]} → {f[2]}) exp {f[0]}")
         for e in afectados:
             _recalcular(cur, e)
+    invalidar()
+
+
+def ubicacion_segun_ruta(exp_id):
+    """Dónde debería estar el expediente según el orden de fecha/hora de su hoja de ruta."""
+    df = leer("SELECT tipo, destino FROM movimientos WHERE expediente_id = %s ORDER BY fecha_hora, id", (int(exp_id),))
+    ubic = C.DEP_PROPIA
+    for _, m in df.iterrows():
+        if m["tipo"] in C.ESTADO_POR_MOVIMIENTO and m["tipo"] != "TRÁMITE":
+            ubic = m["destino"] or ubic
+    return ubic
+
+
+def recalcular_expediente(exp_id, usuario=""):
+    """Corrige ubicación, estado y trámite del expediente según su hoja de ruta (por fecha y hora)."""
+    with conexion() as c, c.cursor() as cur:
+        _recalcular(cur, int(exp_id))
+    log(usuario, "RECALCULA EXPEDIENTE", str(exp_id))
     invalidar()
 
 
