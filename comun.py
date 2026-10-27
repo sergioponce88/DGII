@@ -481,7 +481,18 @@ def form_tramite(exp, key):
     import auth
 
     en_casa = (exp.get("ubicacion_actual") or C.DEP_PROPIA) == C.DEP_PROPIA
-    if bool(exp.get("tramitado")):
+    otro = st.session_state.get(f"retram_{key}") == int(exp["id"])  # «registrar otro trámite» sobre uno ya tramitado
+    if bool(exp.get("tramitado")) and not en_casa and auth.puede("cargar"):
+        ub = exp.get("ubicacion_actual") or "—"
+        ui.alerta("📍", f"Este expediente está en {ub}",
+                  "Si volvió a la Dirección para un nuevo trámite, primero registre el reingreso: queda otra vez PENDIENTE DE TRÁMITE.",
+                  C.STATUS["warning"])
+        if st.session_state.get(f"rei_open_{key}") == int(exp["id"]):
+            form_reingreso(exp, f"ft_{key}")
+        elif st.button(f"📥 Volvió a la Dirección: registrar reingreso", key=f"rei_btn_{key}", type="primary", width="stretch"):
+            st.session_state[f"rei_open_{key}"] = int(exp["id"])
+            st.rerun()
+    if bool(exp.get("tramitado")) and not otro:
         ui.alerta("✅", f"TRAMITADO el {ui.fmt_fecha(exp.get('fecha_tramite'), True)} por {exp.get('tramitado_por') or '—'}",
                   f"{exp.get('accion_tramite') or ''} · {exp.get('detalle_tramite') or ''}", C.STATUS["ok"])
         _aviso_salida(exp)
@@ -504,6 +515,9 @@ def form_tramite(exp, key):
                 if exp.get("entrega_pendiente") and b2.button("Cancelar el encargo", key=f"enc_cancel_{key}", width="stretch"):
                     db.cancelar_entrega(int(exp["id"]), usuario())
                     st.rerun()
+        if en_casa and st.button("➕ Registrar otro trámite sobre este expediente", key=f"retram_b_{key}", width="stretch"):
+            st.session_state[f"retram_{key}"] = int(exp["id"])
+            st.rerun()
         with st.expander("↺ Anular la marca de tramitado"):
             motivo = st.text_input("Motivo", key=f"anu_m_{key}")
             if st.button("Anular", key=f"anu_b_{key}"):
@@ -511,7 +525,13 @@ def form_tramite(exp, key):
                 st.rerun()
         return
 
-    ui.alerta("⏳", "PENDIENTE DE TRÁMITE", "Asiente lo realizado y a dónde va, todo en un solo paso.", C.STATUS["warning"])
+    if otro:
+        ui.alerta("➕", "NUEVO TRÁMITE", "Se agrega a la hoja de ruta; el trámite anterior queda registrado.", C.STATUS["warning"])
+        if st.button("✖ Cancelar", key=f"retram_x_{key}"):
+            st.session_state.pop(f"retram_{key}", None)
+            st.rerun()
+    else:
+        ui.alerta("⏳", "PENDIENTE DE TRÁMITE", "Asiente lo realizado y a dónde va, todo en un solo paso.", C.STATUS["warning"])
     if not auth.puede("tramitar"):
         auth.aviso_sin_permiso("la marca de tramitado")
         return
@@ -538,6 +558,7 @@ def form_tramite(exp, key):
             for k in list(st.session_state):
                 if k.endswith(f"_{key}") and k.startswith(("tr_", "sal_")):
                     st.session_state.pop(k, None)
+            st.session_state.pop(f"retram_{key}", None)
             st.toast(f"Exp. {exp['identificador']} tramitado · {res}", icon="✅")
             st.rerun()
 
