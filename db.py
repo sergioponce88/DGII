@@ -332,6 +332,7 @@ CREATE TABLE IF NOT EXISTS recepciones (
     cerrado_en TIMESTAMP
 );
 ALTER TABLE recepciones ADD COLUMN IF NOT EXISTS asunto TEXT;
+ALTER TABLE recepciones ADD COLUMN IF NOT EXISTS recibido_por TEXT;
 
 CREATE TABLE IF NOT EXISTS auditoria (
     id SERIAL PRIMARY KEY,
@@ -925,6 +926,13 @@ def respaldo_completo():
 @st.cache_data(ttl=300, show_spinner=False)
 def df_autoridades(solo_activas=True):
     return leer("SELECT * FROM autoridades" + (" WHERE activa" if solo_activas else "") + " ORDER BY id")
+
+
+def asignar_titular(clave, titular, usuario=""):
+    """Guarda en la libreta de autoridades el grado y nombre del titular (jefe) de esa autoridad."""
+    ejecutar("UPDATE autoridades SET titular = %s WHERE clave = %s", ((titular or "").strip() or None, clave))
+    log(usuario, "TITULAR AUTORIDAD", f"{clave}: {titular}")
+    invalidar()
 
 
 def asociar_dependencia(clave, dependencia):

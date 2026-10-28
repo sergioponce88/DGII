@@ -237,6 +237,7 @@ def render_simple():
             c1, c2 = st.columns(2)
             f = c1.date_input("Fecha", db.hoy(), format="DD/MM/YYYY")
             h = c2.time_input("Hora", db.ahora().time().replace(second=0), step=60)
+            lleva = K.campo_persona(st, "¿Quién lo entregó?", f"cs_lleva_{r['id']}", defecto=yo)
             recibe = K.campo_persona(st, "¿Quién lo recibió?", f"cs_recibe_{r['id']}")
             obs = st.text_input("Observaciones (opcional)")
             ok = st.form_submit_button("✅ ENTREGADO", type="primary", width="stretch")
@@ -245,7 +246,7 @@ def render_simple():
                 st.error("Escriba quién recibió el expediente.")
                 return
             mov = {"fecha_hora": datetime.combine(f, h if isinstance(h, time) else time(0, 0)), "tipo": "SALIDA", "origen": C.DEP_PROPIA,
-                   "destino": r.get("entrega_destino"), "despacho": r.get("entrega_despacho") or None, "entregado_por": yo,
+                   "destino": r.get("entrega_destino"), "despacho": r.get("entrega_despacho") or None, "entregado_por": lleva or yo,
                    "recibido_por": recibe.strip().upper(), "fojas": K.num(r.get("fojas")) or None, "observaciones": obs.strip() or None}
             try:
                 db.registrar_entrega(int(r["id"]), mov, "REMITIDO", yo)
@@ -307,6 +308,7 @@ def _traer():
                                help="Copie el número tal como está escrito, sea de la Dirección o de la dependencia que lo envía.")
         asunto = st.text_input("¿De qué se trata? (opcional)", placeholder="Ej.: pedido de curso de tiro, sumario de un cadete…")
         quien = K.campo_persona(st, "¿Quién se lo entregó allá? (opcional)", "cs_traer_quien")
+        recibe_d = K.campo_persona(st, "¿Quién lo recibió en la Dirección? (opcional)", "cs_traer_recibe")
         c1, c2 = st.columns(2)
         f = c1.date_input("Fecha", db.hoy(), format="DD/MM/YYYY")
         h = c2.time_input("Hora", db.ahora().time().replace(second=0), step=60)
@@ -318,7 +320,8 @@ def _traer():
             return
         cuando = datetime.combine(f, h if isinstance(h, time) else time(0, 0))
         rec = {"fecha_hora": cuando, "origen": origen, "numero": " ".join(numero.split()).upper(), "asunto": asunto.strip().upper() or None,
-               "entrego_en_origen": quien.strip().upper() or None, "traido_por": yo, "observaciones": obs.strip() or None}
+               "entrego_en_origen": quien.strip().upper() or None, "traido_por": yo, "observaciones": obs.strip() or None,
+               "recibido_por": recibe_d or None}
         coinc = db.buscar_por_numero(rec["numero"])
         coinc = coinc[coinc["ubicacion_actual"].fillna(C.DEP_PROPIA) != C.DEP_PROPIA] if not coinc.empty else coinc
         try:
@@ -327,7 +330,7 @@ def _traer():
                 e = coinc.iloc[0]
                 det = "Retirado por el comisionista" + (f"; lo entregó {rec['entrego_en_origen']}" if rec["entrego_en_origen"] else "")
                 mov = {"fecha_hora": cuando, "tipo": "REINGRESO", "origen": origen, "destino": C.DEP_PROPIA, "entregado_por": yo,
-                       "recibido_por": None, "fojas": None, "urgente": False,
+                       "recibido_por": rec["recibido_por"], "fojas": None, "urgente": False,
                        "observaciones": "; ".join(x for x in [det, rec["observaciones"]] if x)}
                 db.registrar_movimiento(int(e["id"]), mov, "EN TRÁMITE", yo)
                 db.cerrar_recepcion(rid, int(e["id"]), yo)

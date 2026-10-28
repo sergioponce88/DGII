@@ -267,6 +267,11 @@ def _widget(c, p, ctx, cont):
         cont.time_input(lab, key=k, step=300)
     elif c.tipo == "select":
         cont.selectbox(lab, c.opciones, key=k, help=c.ayuda or None)
+        if c.key == "fin":  # la finalidad se puede editar a mano
+            kt = f"{p}fin_txt_{st.session_state.get(k)}"
+            if kt not in st.session_state:
+                st.session_state[kt] = M.FINES.get(st.session_state.get(k), "")
+            cont.text_area("Texto de la finalidad (puede editarlo)", key=kt, height=80)
     elif c.tipo == "check":
         cont.checkbox(lab, key=k)
     elif c.tipo == "autoridad":
@@ -320,6 +325,19 @@ def _bloque(titulo, campos, p, ctx, dos_col=True):
             if c.tipo in ("area", "check", "autoridad"):
                 _vaciar()
                 _widget(c, p, ctx, st)
+                clave = st.session_state.get(p + c.key)
+                if c.tipo == "autoridad" and clave != OTRA and clave in ctx["aut"]:
+                    kt = f"{p}tit_{clave}"
+                    actual = ctx["aut"][clave].get("titular") or ""
+                    if kt not in st.session_state:
+                        st.session_state[kt] = actual
+                    t1, t2 = st.columns([3, 1], vertical_alignment="bottom")
+                    t1.text_input("Jefe / titular (grado, apellido y nombre)", key=kt,
+                                  placeholder="Ej.: Crio. Insp. MEDINA DANIEL OSCAR — sale en la nota debajo del cargo")
+                    nuevo = (st.session_state.get(kt) or "").strip()
+                    if nuevo != actual and t2.button("💾 Guardar en la libreta", key=f"{kt}_g", width="stretch"):
+                        db.asignar_titular(clave, nuevo, K.usuario())
+                        st.toast("Titular guardado para las próximas notas", icon="💾")
                 if c.tipo == "autoridad" and st.session_state.get(p + c.key) == OTRA:
                     o1, o2 = st.columns([1, 2])
                     o1.selectbox("Tratamiento", ["Señor", "Señora", "Al Señor", "A la Señora"], key=p + "o_trat")
@@ -354,6 +372,12 @@ def _formulario(m, r, ctx):
                 _bloque("Opcional", g["adv"], p, ctx)
 
     v = {c.key: st.session_state.get(p + c.key) for c in m.campos}
+    if "fin" in v:
+        v["fin_txt"] = st.session_state.get(f"{p}fin_txt_{v.get('fin')}")
+    for c in m.campos:  # titular escrito en el formulario (aunque no se haya guardado en la libreta)
+        cl = v.get(c.key) if c.tipo == "autoridad" else None
+        if cl and cl != OTRA and cl in ctx["aut"] and f"{p}tit_{cl}" in st.session_state:
+            ctx["aut"][cl] = {**ctx["aut"][cl], "titular": (st.session_state.get(f"{p}tit_{cl}") or "").strip()}
     if v.get("destino") == OTRA:
         ctx["aut"][OTRA] = {"clave": OTRA, "tratamiento": st.session_state.get(p + "o_trat") or "Señor",
                             "cargo": st.session_state.get(p + "o_cargo") or "", "titular": st.session_state.get(p + "o_tit") or "",

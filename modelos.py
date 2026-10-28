@@ -231,7 +231,7 @@ FINES = {
 
 
 def r_pase(v, ctx):
-    fin = FINES.get(v.get("fin"), FINES["conocimiento"])
+    fin = _s(v.get("fin_txt")) or FINES.get(v.get("fin"), FINES["conocimiento"])
     cuerpo = [intro(ctx, v, fin=fin) + "."] + parrafos(v.get("detalle"))
     if v.get("cumplido"):
         cuerpo.append(f"**CUMPLIDO**, {_s(v.get('cumplido_txt')) or 'vuelva para trámites ulteriores'}.")
