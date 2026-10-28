@@ -210,8 +210,11 @@ def _tarjeta_simple(r):
 def render_simple():
     st.markdown(CSS_SIMPLE, unsafe_allow_html=True)
     st.markdown("<div class='cs-esp'></div>", unsafe_allow_html=True)
-    modo = st.segmented_control("¿Qué va a hacer?", ["🚚 Llevar", "📥 Traer a la Dirección"], default="🚚 Llevar", key="cs_modo",
-                                label_visibility="collapsed")
+    modo = st.segmented_control("¿Qué va a hacer?", ["🚚 Llevar", "📥 Traer a la Dirección", "📋 Mi historial"], default="🚚 Llevar",
+                                key="cs_modo", label_visibility="collapsed")
+    if modo == "📋 Mi historial":
+        st.session_state.pop("com_sel", None)
+        return _historial()
     if modo == "📥 Traer a la Dirección":
         st.session_state.pop("com_sel", None)
         return _traer()
@@ -234,7 +237,7 @@ def render_simple():
             c1, c2 = st.columns(2)
             f = c1.date_input("Fecha", db.hoy(), format="DD/MM/YYYY")
             h = c2.time_input("Hora", db.ahora().time().replace(second=0), step=60)
-            recibe = st.text_input("¿Quién lo recibió?", placeholder="Grado, apellido y nombre")
+            recibe = K.campo_persona(st, "¿Quién lo recibió?", f"cs_recibe_{r['id']}")
             obs = st.text_input("Observaciones (opcional)")
             ok = st.form_submit_button("✅ ENTREGADO", type="primary", width="stretch")
         if ok:
@@ -260,7 +263,8 @@ def render_simple():
     if ult:
         m = ult["mov"]
         st.success(f"✔ Entregado: {ult['exp']['identificador']} → {m['destino']} · recibió {m['recibido_por']}")
-        st.link_button("📲 Avisar por WhatsApp", R.link_whatsapp(R.msg_movimiento(ult["exp"], m), K.tel_dep(m["destino"])), width="stretch")
+        _avisar_grupo(_msg_comision("ENTREGADO", ult["exp"].get("identificador"), m["destino"], f"Recibió: {m['recibido_por']}",
+                                    m["fecha_hora"], m.get("observaciones")), "ent")
 
     st.markdown(f"## 🚚 Para entregar: {len(pend)}")
     if pend.empty:
@@ -287,9 +291,14 @@ def _traer():
     """El comisionista retiró expedientes de otra dependencia y los trae: si el sistema ya lo conoce, se registra el reingreso;
     si no, queda para que la mesa de entradas lo registre."""
     yo = K.usuario()
-    ult = st.session_state.pop("cs_traido", None)
+    ult = st.session_state.get("cs_traido")
     if ult:
         (st.success if ult[0] else st.info)(ult[1])
+        if len(ult) > 2:
+            _avisar_grupo(ult[2], "tra")
+        if st.button("Listo", key="cs_traido_ok"):
+            st.session_state.pop("cs_traido", None)
+            st.rerun()
     st.markdown("## 📥 Traje expedientes a la Dirección")
     deps = [d for d in K.deps() if d != C.DEP_PROPIA]
     with st.form("cs_traer", clear_on_submit=True):
@@ -297,7 +306,7 @@ def _traer():
         numero = st.text_input("N° que figura en la carátula o en la nota", placeholder="Ej.: 584/56/6 · J-1234/26 · 9319/269/26D1",
                                help="Copie el número tal como está escrito, sea de la Dirección o de la dependencia que lo envía.")
         asunto = st.text_input("¿De qué se trata? (opcional)", placeholder="Ej.: pedido de curso de tiro, sumario de un cadete…")
-        quien = st.text_input("¿Quién se lo entregó allá? (opcional)", placeholder="Grado, apellido y nombre")
+        quien = K.campo_persona(st, "¿Quién se lo entregó allá? (opcional)", "cs_traer_quien")
         c1, c2 = st.columns(2)
         f = c1.date_input("Fecha", db.hoy(), format="DD/MM/YYYY")
         h = c2.time_input("Hora", db.ahora().time().replace(second=0), step=60)
@@ -329,12 +338,18 @@ def _traer():
                     avisos.avisar_expediente(e.to_dict(), "reingreso", yo, auth.rol())
                 except Exception:
                     pass
-                st.session_state["cs_traido"] = (True, f"✔ {e['identificador']} registrado como REINGRESO desde {origen}. Ya lo ve el oficial.")
+                st.session_state["cs_traido"] = (True, f"✔ {e['identificador']} registrado como REINGRESO desde {origen}. Ya lo ve el oficial.",
+                                                 _msg_comision("TRAÍDO A LA DIRECCIÓN", e["identificador"], origen,
+                                                               rec["entrego_en_origen"] and f"Lo entregó: {rec['entrego_en_origen']}",
+                                                               cuando, rec["observaciones"], desde=True))
             else:
                 K._bot({"identificador": rec["numero"], "tipo": "—", "asunto": "Para registrar en el libro (mesa de entradas)"},
                        "entrega", f"TRAÍDO A LA DIRECCIÓN desde {origen}", rec.get("entrego_en_origen") and f"Lo entregó: {rec['entrego_en_origen']}", yo)
                 st.session_state["cs_traido"] = (False, f"✔ Anotado: {rec['numero']} desde {origen}. Es la primera vez que llega a la "
-                                                        "Dirección: entréguelo en mesa de entradas, allí lo registran en el libro.")
+                                                        "Dirección: entréguelo en mesa de entradas, allí lo registran en el libro.",
+                                                 _msg_comision("TRAÍDO A LA DIRECCIÓN (para registrar)", rec["numero"], origen,
+                                                               rec["entrego_en_origen"] and f"Lo entregó: {rec['entrego_en_origen']}",
+                                                               cuando, rec["observaciones"], desde=True))
         except Exception as ex:
             st.error(f"No se pudo guardar: {ex}")
             return
@@ -347,3 +362,66 @@ def _traer():
             est = "✅ registrado" if r["estado"] == "REGISTRADO" else "⏳ en mesa de entradas"
             st.markdown(f'<div class="ok-ent"><b>{ui.esc(r["numero"])}</b> ← {ui.esc(r["origen"])} · {r["fecha_hora"]:%H:%M} · {est}</div>',
                         unsafe_allow_html=True)
+
+
+# ───────────────────────── Aviso al grupo y mi historial ─────────────────────────
+def _msg_comision(accion, numero, lugar, quien, cuando, obs=None, desde=False):
+    lin = [f"🚚 *Comisión – {accion}*", f"*Exp. N° {numero}*", f"{'Desde' if desde else 'Destino'}: {lugar}"]
+    if quien:
+        lin.append(quien)
+    lin.append(f"Fecha: {pd.Timestamp(cuando):%d/%m/%Y %H:%M}")
+    if obs:
+        lin.append(f"Obs.: {obs}")
+    lin.append(f"Comisionista: {K.usuario()}")
+    return "\n".join(lin)
+
+
+def _avisar_grupo(msg, key):
+    """Botón grande: abre SU WhatsApp con el mensaje armado para enviarlo al grupo de trabajo."""
+    st.link_button("👥 Enviar al grupo de trabajo (WhatsApp)", R.link_whatsapp(msg), type="primary", width="stretch")
+    st.caption("Se abre su WhatsApp: elija el grupo de trabajo y toque Enviar.")
+    st.link_button("✈️ Enviar por Telegram", R.link_telegram(msg), width="stretch")
+
+
+def _historial():
+    """Solo lo que hizo el usuario conectado: entregas y retiros, con búsqueda por N°, dependencia o persona."""
+    yo = K.usuario()
+    st.markdown("## 📋 Mi historial")
+    c1, c2 = st.columns(2)
+    desde = c1.date_input("Desde", db.hoy() - pd.Timedelta(days=30), format="DD/MM/YYYY", key="hs_desde")
+    hasta = c2.date_input("Hasta", db.hoy(), format="DD/MM/YYYY", key="hs_hasta")
+    q = st.text_input("Buscar", key="hs_q", placeholder="N° de expediente, dependencia o persona").strip().lower()
+    filas = []
+    movs = db.df_movimientos()
+    if not movs.empty:
+        m = movs[(movs["registrado_por"].fillna("") == yo) & movs["tipo"].isin(TIPOS_ENTREGA + ["REINGRESO"])]
+        for _, x in m.iterrows():
+            entrega = x["tipo"] != "REINGRESO"
+            filas.append({"Fecha": x["fecha_hora"], "Qué": "🚚 Entregado" if entrega else "📥 Traído",
+                          "Expediente": x["identificador"], "Dependencia": x["destino"] if entrega else x["origen"],
+                          "Persona": x.get("recibido_por") if entrega else (x.get("observaciones") or ""),
+                          "Obs.": x.get("observaciones") if entrega else ""})
+    rec = db.df_recepciones(False)
+    if not rec.empty:
+        rec = rec[(rec["traido_por"].fillna("") == yo) & (rec["estado"] == "PENDIENTE")]
+        for _, x in rec.iterrows():
+            filas.append({"Fecha": x["fecha_hora"], "Qué": "📥 Traído (para registrar)", "Expediente": x["numero"],
+                          "Dependencia": x["origen"], "Persona": x.get("entrego_en_origen") or "", "Obs.": x.get("observaciones") or ""})
+    df = pd.DataFrame(filas, columns=["Fecha", "Qué", "Expediente", "Dependencia", "Persona", "Obs."])
+    if not df.empty:
+        df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
+        df = df[(df["Fecha"].dt.date >= desde) & (df["Fecha"].dt.date <= hasta)]
+        if q:
+            df = df[df.astype(str).apply(lambda col: col.str.lower().str.contains(q, regex=False)).any(axis=1)]
+        df = df.sort_values("Fecha", ascending=False)
+    ent = int(df["Qué"].str.startswith("🚚").sum()) if not df.empty else 0
+    st.markdown(f"**{len(df)}** registros · 🚚 {ent} entregados · 📥 {len(df) - ent} traídos")
+    if df.empty:
+        st.info("No hay actividad suya en ese período.")
+        return
+    for _, x in df.head(200).iterrows():
+        st.markdown(f'<div class="ok-ent">{x["Fecha"]:%d/%m %H:%M} · {x["Qué"]} · <b>{ui.esc(x["Expediente"])}</b> '
+                    f'{"→" if x["Qué"].startswith("🚚") else "←"} {ui.esc(x["Dependencia"] or "—")}'
+                    f'{" · " + ui.esc(x["Persona"]) if x["Persona"] else ""}</div>', unsafe_allow_html=True)
+    st.download_button("📥 Descargar mi historial (Excel)", R.excel({"Mi historial": df.assign(Fecha=df["Fecha"].dt.strftime("%d/%m/%Y %H:%M"))}),
+                       file_name=f"historial_comision_{db.hoy():%Y%m%d}.xlsx", width="stretch")
