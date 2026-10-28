@@ -54,8 +54,11 @@ def _s(x):
     return "" if x is None else str(x).strip()
 
 
+SOLO_DESPACHO = ("JEFE", "SUBJEFE")  # únicos con «Su Despacho»; las demás jefaturas: «Su Oficina»
+
+
 def autoridad(ctx, clave):
-    return ctx["aut"].get(clave) or {"clave": clave, "cargo": clave, "tratamiento": "Señor", "saludo": "Despacho", "relacion": "PAR"}
+    return ctx["aut"].get(clave) or {"clave": clave, "cargo": clave, "tratamiento": "Señor", "saludo": "Oficina", "relacion": "PAR"}
 
 
 def clave_elevacion(ctx):

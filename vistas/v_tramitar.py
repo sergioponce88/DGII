@@ -331,9 +331,14 @@ def _bloque(titulo, campos, p, ctx, dos_col=True):
                     actual = ctx["aut"][clave].get("titular") or ""
                     if kt not in st.session_state:
                         st.session_state[kt] = actual
-                    t1, t2 = st.columns([3, 1], vertical_alignment="bottom")
+                    ks = f"{p}sal_{clave}"
+                    if ks not in st.session_state:
+                        st.session_state[ks] = ctx["aut"][clave].get("saludo") or ("Despacho" if clave in M.SOLO_DESPACHO else "Oficina")
+                    t1, t3, t2 = st.columns([3, 1.3, 1], vertical_alignment="bottom")
                     t1.text_input("Jefe / titular (grado, apellido y nombre)", key=kt,
                                   placeholder="Ej.: Crio. Insp. MEDINA DANIEL OSCAR — sale en la nota debajo del cargo")
+                    t3.segmented_control("Su …", ["Despacho", "Oficina"], key=ks,
+                                         help="Por norma: Su Despacho solo el Jefe y el Subjefe de Policía; el resto, Su Oficina")
                     nuevo = (st.session_state.get(kt) or "").strip()
                     if nuevo != actual and t2.button("💾 Guardar en la libreta", key=f"{kt}_g", width="stretch"):
                         db.asignar_titular(clave, nuevo, K.usuario())
@@ -377,7 +382,8 @@ def _formulario(m, r, ctx):
     for c in m.campos:  # titular escrito en el formulario (aunque no se haya guardado en la libreta)
         cl = v.get(c.key) if c.tipo == "autoridad" else None
         if cl and cl != OTRA and cl in ctx["aut"] and f"{p}tit_{cl}" in st.session_state:
-            ctx["aut"][cl] = {**ctx["aut"][cl], "titular": (st.session_state.get(f"{p}tit_{cl}") or "").strip()}
+            ctx["aut"][cl] = {**ctx["aut"][cl], "titular": (st.session_state.get(f"{p}tit_{cl}") or "").strip(),
+                              "saludo": st.session_state.get(f"{p}sal_{cl}") or ctx["aut"][cl].get("saludo")}
     if v.get("destino") == OTRA:
         ctx["aut"][OTRA] = {"clave": OTRA, "tratamiento": st.session_state.get(p + "o_trat") or "Señor",
                             "cargo": st.session_state.get(p + "o_cargo") or "", "titular": st.session_state.get(p + "o_tit") or "",

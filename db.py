@@ -378,6 +378,12 @@ def init_db(version=VERSION_ESQUEMA):
                         (C.CONFIG_DEFAULT["firmante_caracter"], "%y Rector del Instituto%"))
             cur.execute("UPDATE autoridades SET relacion = 'PAR' WHERE clave IN ('ESC_SUPERIOR', 'ESC_SUBOF') AND relacion = 'INTERNO'")
             cur.execute("INSERT INTO config (clave, valor) VALUES ('mig_formato_nota_v1', 'OK') ON CONFLICT DO NOTHING")
+        # Solo el Jefe y el Subjefe de Policía tienen «Su Despacho»; el resto de las jefaturas, «Su Oficina»
+        cur.execute("SELECT valor FROM config WHERE clave = 'mig_saludo_v1'")
+        if not cur.fetchone():  # una sola vez: después cada nota permite elegir
+            cur.execute("UPDATE autoridades SET saludo = 'Oficina' WHERE clave NOT IN ('JEFE', 'SUBJEFE')")
+            cur.execute("UPDATE autoridades SET saludo = 'Despacho' WHERE clave IN ('JEFE', 'SUBJEFE')")
+            cur.execute("INSERT INTO config (clave, valor) VALUES ('mig_saludo_v1', 'OK') ON CONFLICT DO NOTHING")
         for fila in C.AUTORIDADES_SEED:
             cur.execute("INSERT INTO autoridades (clave, tratamiento, cargo, titular, saludo, relacion) "
                         "VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (clave) DO NOTHING", fila)
