@@ -69,8 +69,8 @@ def campo_persona(col, label, key, defecto=None, ayuda=None):
         ops = [defecto] + ops
     v = col.selectbox(label, ops, index=ops.index(defecto) if defecto else None, key=key, accept_new_options=True,
                       placeholder="Elija de la lista…", help=ayuda)
-    nuevo = col.text_input(f"{label} (si no está en la lista)", key=f"{key}_nuevo", label_visibility="collapsed",
-                           placeholder="✏️ ¿No está en la lista? Escriba aquí grado, apellido y nombre")
+    nuevo = col.text_input("✏️ ¿No está en la lista? Escríbalo aquí", key=f"{key}_nuevo",
+                           placeholder="Grado, apellido y nombre")
     return " ".join((nuevo or v or "").split()).upper()
 
 
