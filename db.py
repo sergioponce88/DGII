@@ -111,8 +111,6 @@ CREATE TABLE IF NOT EXISTS dependencias (
     telefono_wp TEXT,
     activa BOOLEAN DEFAULT TRUE
 );
--- Dependencia (de la lista) a la que el comisionista lleva lo dirigido a esa autoridad
-ALTER TABLE autoridades ADD COLUMN IF NOT EXISTS dependencia TEXT;
 
 CREATE TABLE IF NOT EXISTS tipos_expediente (
     id SERIAL PRIMARY KEY,
@@ -283,6 +281,8 @@ CREATE TABLE IF NOT EXISTS autoridades (
     relacion TEXT DEFAULT 'PAR',
     activa BOOLEAN DEFAULT TRUE
 );
+-- Dependencia (de la lista) a la que el comisionista lleva lo dirigido a esa autoridad
+ALTER TABLE autoridades ADD COLUMN IF NOT EXISTS dependencia TEXT;
 
 CREATE TABLE IF NOT EXISTS actuaciones (
     id SERIAL PRIMARY KEY,
