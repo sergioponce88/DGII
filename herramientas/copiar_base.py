@@ -33,11 +33,24 @@ def esquema():
 
 
 def _limpiar(txt):
-    """Quita espacios, comillas y el «SUPABASE_URL =» si se pegó la línea entera de los Secrets."""
+    """Se queda solo con la dirección: descarta lo que haya antes de postgresql:// (p. ej. «VIEJA:» o
+    «SUPABASE_URL =»), las comillas y los espacios."""
     txt = (txt or "").strip()
-    if "=" in txt.split("://")[0]:
-        txt = txt.split("=", 1)[1]
-    return txt.strip().strip('"').strip("'").strip()
+    for inicio in ("postgresql://", "postgres://"):
+        if inicio in txt:
+            txt = txt[txt.index(inicio):]
+            break
+    return txt.split()[0].strip('"\'') if txt else ""
+
+
+def _oculta(url):
+    """La dirección con la contraseña tapada, para mostrar en pantalla."""
+    if "://" in url and "@" in url:
+        pre, resto = url.split("://", 1)
+        cred, host = resto.rsplit("@", 1)
+        usuario = cred.split(":", 1)[0]
+        return f"{pre}://{usuario}:****@{host}"
+    return (url[:25] + "…") if len(url) > 25 else (url or "(vacía)")
 
 
 def columnas(cur, tabla):
@@ -61,7 +74,9 @@ def main():
     print("=== Copia de la base del Sistema de Expedientes DGII ===\n")
     for nombre, url in (("VIEJA", origen), ("NUEVA", destino)):
         if not url.startswith(("postgresql://", "postgres://")) or "[" in url:
-            sys.exit(f"❌ La dirección {nombre} no es válida: debe empezar con postgresql:// y no tener [YOUR-PASSWORD].")
+            sys.exit(f"❌ La dirección {nombre} no es válida: debe empezar con postgresql:// y no tener [YOUR-PASSWORD].\n"
+                     f"   Se recibió: {_oculta(url)}")
+        print(f"  {nombre}: {_oculta(url)}")
     if origen == destino:
         sys.exit("❌ Las dos direcciones son iguales.")
 
