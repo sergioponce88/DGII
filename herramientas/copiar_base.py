@@ -8,12 +8,12 @@ Uso (desde la carpeta del repo, en la PC):
     pip install psycopg2-binary
     python herramientas/copiar_base.py
 
-Pide las dos direcciones (connection string «Session pooler», puerto 5432) sin mostrarlas en pantalla.
+Pide las dos direcciones (connection string «Session pooler», puerto 5432) y después limpia la pantalla.
 """
 import ast
 import io
+import os
 import sys
-from getpass import getpass
 from pathlib import Path
 
 import psycopg2
@@ -32,6 +32,14 @@ def esquema():
     sys.exit("No se encontró ESQUEMA en db.py")
 
 
+def _limpiar(txt):
+    """Quita espacios, comillas y el «SUPABASE_URL =» si se pegó la línea entera de los Secrets."""
+    txt = (txt or "").strip()
+    if "=" in txt.split("://")[0]:
+        txt = txt.split("=", 1)[1]
+    return txt.strip().strip('"').strip("'").strip()
+
+
 def columnas(cur, tabla):
     """Columnas copiables (las calculadas, como «identificador», las genera la base sola)."""
     cur.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' "
@@ -46,10 +54,16 @@ def contar(cur, tabla):
 
 def main():
     print("=== Copia de la base del Sistema de Expedientes DGII ===\n")
-    origen = getpass("Pegue la dirección de la base VIEJA (no se ve al pegar) y Enter: ").strip()
-    destino = getpass("Pegue la dirección de la base NUEVA (no se ve al pegar) y Enter: ").strip()
-    if not origen or not destino or origen == destino:
-        sys.exit("❌ Faltan las direcciones o son iguales.")
+    print("Pegue cada dirección con clic derecho (o Ctrl+V) y apriete Enter.\n")
+    origen = _limpiar(input("Dirección de la base VIEJA: "))
+    destino = _limpiar(input("Dirección de la base NUEVA: "))
+    os.system("cls" if os.name == "nt" else "clear")  # no dejar las claves a la vista
+    print("=== Copia de la base del Sistema de Expedientes DGII ===\n")
+    for nombre, url in (("VIEJA", origen), ("NUEVA", destino)):
+        if not url.startswith(("postgresql://", "postgres://")) or "[" in url:
+            sys.exit(f"❌ La dirección {nombre} no es válida: debe empezar con postgresql:// y no tener [YOUR-PASSWORD].")
+    if origen == destino:
+        sys.exit("❌ Las dos direcciones son iguales.")
 
     co = psycopg2.connect(origen, connect_timeout=15)
     co.set_session(readonly=True)
