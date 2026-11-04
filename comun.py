@@ -532,6 +532,10 @@ def form_tramite(exp, key):
         _aviso_salida(exp)
         if not auth.puede("tramitar"):
             return
+        if st.button("📝 Hacer la nota en Word (Tramitar)", key=f"ir_tram_ok_{key}", type="primary", width="stretch",
+                     help="Abre Tramitar con este expediente para generar la nota, pase o elevación en Word"):
+            st.session_state["tram_sel"] = int(exp["id"])
+            ir_a(PAG_TRAMITAR, exp["id"])
         if bool(exp.get("entrega_pendiente")):
             ui.alerta("🚚", f"Encargado al comisionista → {exp.get('entrega_destino') or '—'}",
                       f"Pedido por {exp.get('entrega_solicitada_por') or '—'} · {ui.fmt_fecha(exp.get('entrega_solicitada_en'), True)}",
