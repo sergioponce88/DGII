@@ -278,10 +278,13 @@ def _widget(c, p, ctx, cont):
         claves = list(ctx["aut"]) + [OTRA]
         if st.session_state.get(k) not in claves:
             st.session_state[k] = claves[0]
+        nueva = st.session_state.pop(f"{k}_nueva", None)  # recién agregada a la libreta
+        if nueva in claves:
+            st.session_state[k] = nueva
 
         def _f(x):
             if x == OTRA:
-                return "✏️ Otra dependencia (escribir)"
+                return "➕ OTRO DESTINATARIO (escribirlo: dirección, división, unidad…)"
             a = ctx["aut"][x]
             return a["cargo"] + (f" — {a['titular']}" if a.get("titular") else "")
 
@@ -356,10 +359,23 @@ def _bloque(titulo, campos, p, ctx, dos_col=True):
                             db.guardar_destinatario(clave, cambios, K.usuario())
                             st.toast("Destinatario guardado en la libreta", icon="💾")
                 if c.tipo == "autoridad" and st.session_state.get(p + c.key) == OTRA:
-                    o1, o2 = st.columns([1, 2])
-                    o1.selectbox("Tratamiento", ["Señor", "Señora", "Al Señor", "A la Señora"], key=p + "o_trat")
-                    o2.text_input("Cargo / dependencia", key=p + "o_cargo")
-                    st.text_input("Grado y nombre del titular", key=p + "o_tit")
+                    st.caption("Escriba el destinatario tal como debe salir en la nota.")
+                    o1, o2 = st.columns([1, 3])
+                    o1.selectbox("Tratamiento", ["Al Señor", "Señor", "A la Señora", "Señora"], key=p + "o_trat")
+                    o2.text_input("Cargo / dependencia *", key=p + "o_cargo",
+                                  placeholder="Ej.: Director de la Dirección General de Unidades Especiales")
+                    o3, o4 = st.columns([3, 1.3], vertical_alignment="bottom")
+                    o3.text_input("Jefe / titular (grado, apellido y nombre)", key=p + "o_tit",
+                                  placeholder="Ej.: Crio. Grl. APELLIDO NOMBRE")
+                    o4.segmented_control("Su …", ["Despacho", "Oficina"], key=p + "o_sal", default="Oficina")
+                    if (st.session_state.get(p + "o_cargo") or "").strip() and st.button(
+                            "💾 Agregar este destinatario a la libreta (para elegirlo en las próximas notas)", key=p + "o_guardar"):
+                        cl = db.nueva_autoridad(st.session_state.get(p + "o_trat"), st.session_state[p + "o_cargo"],
+                                                st.session_state.get(p + "o_tit"), st.session_state.get(p + "o_sal") or "Oficina",
+                                                K.usuario())
+                        st.session_state[f"{p}{c.key}_nueva"] = cl
+                        st.toast("Destinatario agregado a la libreta", icon="💾")
+                        st.rerun()
             else:
                 cortos.append(c)
         _vaciar()
@@ -402,7 +418,7 @@ def _formulario(m, r, ctx):
     if v.get("destino") == OTRA:
         ctx["aut"][OTRA] = {"clave": OTRA, "tratamiento": st.session_state.get(p + "o_trat") or "Señor",
                             "cargo": st.session_state.get(p + "o_cargo") or "", "titular": st.session_state.get(p + "o_tit") or "",
-                            "saludo": "Oficina", "relacion": "PAR"}
+                            "saludo": st.session_state.get(p + "o_sal") or "Oficina", "relacion": "PAR"}
     faltan = [c.label for c in m.campos if c.requerido and not str(v.get(c.key) or "").strip()]
     if v.get("destino") == OTRA and not ctx["aut"][OTRA]["cargo"].strip():
         faltan.append("Cargo / dependencia del destinatario")

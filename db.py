@@ -941,6 +941,23 @@ def asignar_titular(clave, titular, usuario=""):
     invalidar()
 
 
+def nueva_autoridad(tratamiento, cargo, titular, saludo="Oficina", usuario=""):
+    """Agrega un destinatario a la libreta de autoridades y devuelve su clave."""
+    import re as _re
+    import unicodedata
+
+    base = unicodedata.normalize("NFKD", cargo or "").encode("ascii", "ignore").decode().upper()
+    base = "_".join(w for w in _re.findall(r"[A-Z0-9]+", base) if w not in {"DE", "DEL", "LA", "LAS", "LOS", "Y", "EL"})[:30] or "AUT"
+    clave, i = base, 2
+    while not leer("SELECT 1 FROM autoridades WHERE clave = %s", (clave,)).empty:
+        clave, i = f"{base}_{i}", i + 1
+    ejecutar("INSERT INTO autoridades (clave, tratamiento, cargo, titular, saludo, relacion, activa) VALUES (%s,%s,%s,%s,%s,'PAR',TRUE)",
+             (clave, tratamiento or "Señor", cargo.strip(), (titular or "").strip() or None, saludo or "Oficina"))
+    log(usuario, "NUEVA AUTORIDAD", f"{clave}: {cargo}")
+    invalidar()
+    return clave
+
+
 def guardar_destinatario(clave, datos, usuario=""):
     """Actualiza en la libreta tratamiento, cargo, titular y saludo de una autoridad."""
     campos = {k: (datos.get(k) or None) for k in ("tratamiento", "cargo", "titular", "saludo") if k in datos}
