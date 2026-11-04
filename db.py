@@ -941,6 +941,17 @@ def asignar_titular(clave, titular, usuario=""):
     invalidar()
 
 
+def guardar_destinatario(clave, datos, usuario=""):
+    """Actualiza en la libreta tratamiento, cargo, titular y saludo de una autoridad."""
+    campos = {k: (datos.get(k) or None) for k in ("tratamiento", "cargo", "titular", "saludo") if k in datos}
+    if not campos.get("cargo"):
+        campos.pop("cargo", None)
+    sets = ", ".join(f"{k} = %s" for k in campos)
+    ejecutar(f"UPDATE autoridades SET {sets} WHERE clave = %s", (*campos.values(), clave))
+    log(usuario, "DESTINATARIO", f"{clave}: {campos}")
+    invalidar()
+
+
 def asociar_dependencia(clave, dependencia):
     """Recuerda a qué dependencia se lleva lo dirigido a esa autoridad (se aprende al encargar la entrega)."""
     if clave and dependencia:

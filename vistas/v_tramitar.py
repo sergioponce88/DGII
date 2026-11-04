@@ -334,15 +334,27 @@ def _bloque(titulo, campos, p, ctx, dos_col=True):
                     ks = f"{p}sal_{clave}"
                     if ks not in st.session_state:
                         st.session_state[ks] = ctx["aut"][clave].get("saludo") or ("Despacho" if clave in M.SOLO_DESPACHO else "Oficina")
-                    t1, t3, t2 = st.columns([3, 1.3, 1], vertical_alignment="bottom")
+                    ktr, kc = f"{p}trat_{clave}", f"{p}cargo_{clave}"
+                    a0 = ctx["aut"][clave]
+                    st.session_state.setdefault(ktr, a0.get("tratamiento") or "Señor")
+                    st.session_state.setdefault(kc, a0.get("cargo") or "")
+                    tratos = ["Al Señor", "Señor", "A la Señora", "Señora"]
+                    if st.session_state[ktr] not in tratos:
+                        tratos.append(st.session_state[ktr])
+                    d1, d2 = st.columns([1, 3])
+                    d1.selectbox("Tratamiento", tratos, key=ktr)
+                    d2.text_input("Cargo / dependencia del destinatario (puede modificarlo)", key=kc)
+                    t1, t3 = st.columns([3, 1.3], vertical_alignment="bottom")
                     t1.text_input("Jefe / titular (grado, apellido y nombre)", key=kt,
                                   placeholder="Ej.: Crio. Insp. MEDINA DANIEL OSCAR — sale en la nota debajo del cargo")
                     t3.segmented_control("Su …", ["Despacho", "Oficina"], key=ks,
                                          help="Por norma: Su Despacho solo el Jefe y el Subjefe de Policía; el resto, Su Oficina")
-                    nuevo = (st.session_state.get(kt) or "").strip()
-                    if nuevo != actual and t2.button("💾 Guardar en la libreta", key=f"{kt}_g", width="stretch"):
-                        db.asignar_titular(clave, nuevo, K.usuario())
-                        st.toast("Titular guardado para las próximas notas", icon="💾")
+                    cambios = {"tratamiento": st.session_state.get(ktr), "cargo": (st.session_state.get(kc) or "").strip(),
+                               "titular": (st.session_state.get(kt) or "").strip(), "saludo": st.session_state.get(ks)}
+                    if any((a0.get(k2) or "") != (v2 or "") for k2, v2 in cambios.items()):
+                        if st.button("💾 Guardar estos datos en la libreta (para las próximas notas)", key=f"{kt}_g"):
+                            db.guardar_destinatario(clave, cambios, K.usuario())
+                            st.toast("Destinatario guardado en la libreta", icon="💾")
                 if c.tipo == "autoridad" and st.session_state.get(p + c.key) == OTRA:
                     o1, o2 = st.columns([1, 2])
                     o1.selectbox("Tratamiento", ["Señor", "Señora", "Al Señor", "A la Señora"], key=p + "o_trat")
@@ -382,8 +394,11 @@ def _formulario(m, r, ctx):
     for c in m.campos:  # titular escrito en el formulario (aunque no se haya guardado en la libreta)
         cl = v.get(c.key) if c.tipo == "autoridad" else None
         if cl and cl != OTRA and cl in ctx["aut"] and f"{p}tit_{cl}" in st.session_state:
-            ctx["aut"][cl] = {**ctx["aut"][cl], "titular": (st.session_state.get(f"{p}tit_{cl}") or "").strip(),
-                              "saludo": st.session_state.get(f"{p}sal_{cl}") or ctx["aut"][cl].get("saludo")}
+            a0 = ctx["aut"][cl]
+            ctx["aut"][cl] = {**a0, "titular": (st.session_state.get(f"{p}tit_{cl}") or "").strip(),
+                              "saludo": st.session_state.get(f"{p}sal_{cl}") or a0.get("saludo"),
+                              "tratamiento": st.session_state.get(f"{p}trat_{cl}") or a0.get("tratamiento"),
+                              "cargo": (st.session_state.get(f"{p}cargo_{cl}") or "").strip() or a0.get("cargo")}
     if v.get("destino") == OTRA:
         ctx["aut"][OTRA] = {"clave": OTRA, "tratamiento": st.session_state.get(p + "o_trat") or "Señor",
                             "cargo": st.session_state.get(p + "o_cargo") or "", "titular": st.session_state.get(p + "o_tit") or "",
