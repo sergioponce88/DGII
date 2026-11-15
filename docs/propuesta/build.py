@@ -32,11 +32,11 @@ NAVY, AZUL, TINTA, GRIS, AMARILLO, VERDE = B.NAVY, B.AZUL, B.TINTA, B.GRIS, B.AM
 W, H, M, ANCHO = B.W, B.H, B.M, B.ANCHO
 st = P.st
 Titulo, caja, tabla, imagen, lista, kpis, h1, h2, p = P.Titulo, P.caja, P.tabla, P.imagen, P.lista, P.kpis, P.h1, P.h2, P.p
-AUTOR = "Crio. Abog. Rodríguez Julio y Of. Aux. Ponce Sergio"
+AUTOR = "Crio. Abog. Rodríguez Julio, Crio. Abog. Aira Celestina y Of. Aux. Ponce Sergio"
 HOY = date.today()
 FECHA = f"{MESES[HOY.month - 1].capitalize()} de {HOY.year}"
 
-st["carta"] = ParagraphStyle("carta", parent=st["p"], fontSize=9.8, leading=13.6, firstLineIndent=28, alignment=4, spaceAfter=3)
+st["carta"] = ParagraphStyle("carta", parent=st["p"], fontSize=9.4, leading=12.6, firstLineIndent=28, alignment=4, spaceAfter=2)
 st["just"] = ParagraphStyle("just", parent=st["p"], alignment=4)
 
 
@@ -89,12 +89,13 @@ def portada(c, doc):
     c.drawCentredString(W / 2, H - 178.3 * mm, "Sin costo de licencias · con personal propio")
     c.setFillColor(colors.white)
     c.setFont("S", 10)
-    c.drawCentredString(W / 2, 70 * mm, "Elevada a consideración del Comando Superior por")
+    c.drawCentredString(W / 2, 76 * mm, "Elevada a consideración del Comando Superior por")
     c.setFont("SB", 13)
-    c.drawCentredString(W / 2, 62 * mm, "Comisario Abogado RODRÍGUEZ Julio")
-    c.drawCentredString(W / 2, 55 * mm, "Oficial Auxiliar PONCE Sergio")
+    c.drawCentredString(W / 2, 68 * mm, "Comisario Abogado RODRÍGUEZ Julio")
+    c.drawCentredString(W / 2, 61 * mm, "Comisario Abogada AIRA Celestina")
+    c.drawCentredString(W / 2, 54 * mm, "Oficial Auxiliar PONCE Sergio")
     c.setFont("S", 10)
-    c.drawCentredString(W / 2, 48.5 * mm, "Derecho · Gestión administrativa y sumarial · Desarrollo de sistemas")
+    c.drawCentredString(W / 2, 47.5 * mm, "Derecho y marco legal · Gestión administrativa y sumarial · Desarrollo de sistemas")
     c.setFillColor(colors.HexColor("#CBD5E1"))
     c.drawCentredString(W / 2, 32 * mm, f"San Miguel de Tucumán · {FECHA}")
     c.restoreState()
@@ -115,7 +116,9 @@ def normal(c, doc):
     c.line(M, 13 * mm, W - M, 13 * mm)
     c.setFillColor(GRIS)
     c.setFont("S", 8)
-    c.drawString(M, 8.5 * mm, f"Elaborado por {AUTOR} · {FECHA}")
+    c.setFont("S", 7.5)
+    c.drawString(M, 8.5 * mm, f"Elaborado por Crio. Abog. Rodríguez J., Crio. Abog. Aira C. y Of. Aux. Ponce S. · {FECHA}")
+    c.setFont("S", 8)
     c.drawRightString(W - M, 8.5 * mm, f"Página {doc.page}")
     c.restoreState()
 
@@ -135,12 +138,13 @@ class Doc(BaseDocTemplate):
 def firma():
     est = ParagraphStyle("f", parent=st["p"], alignment=1, leading=13, fontSize=9.5)
     # El de mayor antigüedad / jerarquía firma a la derecha
-    t = Table([[Paragraph("______________________________<br/><b>Oficial Auxiliar PONCE Sergio</b><br/>Auxiliar de Secretaría Académica<br/>"
+    t = Table([[Paragraph("_______________________<br/><b>Oficial Auxiliar PONCE Sergio</b><br/>Auxiliar de Secretaría Académica<br/>"
                           "I.E.S.P. “G.J.F.S.M.”", est),
-                Paragraph("______________________________<br/><b>Comisario Abogado RODRÍGUEZ Julio</b><br/>Policía de Tucumán", est)]],
-              colWidths=[ANCHO / 2, ANCHO / 2])
+                Paragraph("_______________________<br/><b>Comisario Abogada AIRA Celestina</b><br/>Policía de Tucumán", est),
+                Paragraph("_______________________<br/><b>Comisario Abogado RODRÍGUEZ Julio</b><br/>Policía de Tucumán", est)]],
+              colWidths=[ANCHO / 3] * 3)
     t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
-    return KeepTogether([Spacer(1, 14), t])
+    return KeepTogether([Spacer(1, 8), t])
 
 
 # ───────────────────────── Contenido ─────────────────────────
@@ -158,8 +162,9 @@ def armar():
                     "propuesta, cuyo objeto es comenzar a extender a las distintas oficinas, áreas, divisiones y Unidades Regionales de la Institución la experiencia de "
                     "informatización que ya se encuentra en funcionamiento en la Dirección General de Institutos e Instrucción y en el "
                     "Instituto de Enseñanza Superior de Policía “Grl. José Francisco de San Martín”.", st["carta"]),
-          Paragraph("La propuesta surge del trabajo conjunto de un <b>abogado</b> y de un <b>oficial con formación en desarrollo de sistemas</b>, "
-                    "ambos con experiencia en lo <b>sumarial y lo administrativo</b>: una combinación que permite que las herramientas sean, a la "
+          Paragraph("La propuesta surge del trabajo conjunto de <b>dos abogados</b> y de un <b>oficial con formación en desarrollo de sistemas</b>, "
+                    "con experiencia en lo <b>sumarial y lo administrativo</b>. Los abogados velan por que todo lo que se desarrolle se encuadre "
+                    "en la <b>normativa vigente</b> y en lo dispuesto por la <b>justicia ordinaria</b>, de modo que las herramientas sean, a la "
                     "vez, prácticas para el personal y jurídicamente sólidas.", st["carta"]),
           Paragraph("Esta iniciativa busca <b>complementar la tarea de excelencia</b> que viene demostrando la Policía de Tucumán, reconocida "
                     "por los medios de comunicación, reflejada en las estadísticas y destacada por el Gobierno de la Provincia y por los "
@@ -241,14 +246,16 @@ def armar():
     s += h1("2. Antecedentes: lo que ya funciona")
     s += h2("Quiénes impulsan la propuesta")
     s += [tabla(["Integrante", "Aporte"], [
-        ["<b>Comisario Abogado RODRÍGUEZ Julio</b>", "Formación jurídica y experiencia en lo sumarial y administrativo: validez legal de las actuaciones, "
-                                                     "normativa procesal y reglamentaria, protección de datos y relación con el Ministerio Público Fiscal."],
+        ["<b>Comisario Abogado RODRÍGUEZ Julio</b>", "Formación jurídica y experiencia en lo sumarial y administrativo. Control del <b>marco legal</b>: "
+                                                     "validez de las actuaciones, normativa procesal y reglamentaria, protección de datos y relación con el Ministerio Público Fiscal."],
+        ["<b>Comisario Abogada AIRA Celestina</b>", "Formación jurídica. Control del <b>marco legal</b>: que cada sistema, documento y procedimiento se "
+                                                    "encuadre en la normativa vigente y en lo dispuesto por la justicia ordinaria."],
         ["<b>Oficial Auxiliar PONCE Sergio</b><br/>Auxiliar de Secretaría Académica, I.E.S.P.", "Experiencia en lo sumarial y administrativo como "
                                                      "instructor y en la tramitación de expedientes; análisis de procesos y desarrollo de los sistemas en funcionamiento."]],
         [60 * mm, ANCHO - 60 * mm]),
         Spacer(1, 4),
-        caja("La <b>combinación de profesiones</b> es la fortaleza del proyecto: el conocimiento jurídico asegura que cada documento y cada "
-             "registro respeten la normativa y tengan validez; el conocimiento técnico y la experiencia en la tarea diaria aseguran que el sistema "
+        caja("La <b>combinación de profesiones</b> es la fortaleza del proyecto: los Comisarios Abogados Rodríguez y Aira aseguran que cada "
+             "documento y cada registro respeten la normativa vigente y lo dispuesto por la justicia ordinaria, y tengan validez; el conocimiento técnico y la experiencia en la tarea diaria aseguran que el sistema "
              "sea simple, rápido y realmente útil para el personal. Ambos comparten la experiencia en lo sumarial y lo administrativo, que es "
              "donde más tiempo se pierde hoy y donde más se puede ganar.", "ok")]
     s += h2("Sistemas en funcionamiento")
@@ -437,7 +444,10 @@ def armar():
                 "Estadísticas y exportaciones <b>anonimizadas</b>: el DNI se reemplaza por un código.",
                 "Tratamiento de datos personales conforme a la <b>Ley N° 25.326 de Protección de los Datos Personales</b> y a las disposiciones "
                 "internas que dicte la Superioridad."])
-    s += [caja("Se propone elaborar, para aprobación de la Superioridad, un <b>reglamento interno de uso</b> de los "
+    s += [caja("<b>Encuadre legal permanente:</b> los Comisarios Abogados Rodríguez Julio y Aira Celestina revisan que cada sistema, cada "
+               "modelo de documento y cada procedimiento se ajusten a la normativa vigente y a lo dispuesto por la justicia ordinaria, antes "
+               "de su implementación y durante su uso.", "ok"),
+          caja("Se propone elaborar, para aprobación de la Superioridad, un <b>reglamento interno de uso</b> de los "
                "sistemas: responsables de cada base de datos, alta y baja de usuarios, respaldos periódicos y confidencialidad.", "tip")]
 
     # 10. Cómo empezar
@@ -618,6 +628,7 @@ def armar():
         ["Resistencia al cambio", "Capacitación práctica, convivencia inicial con el libro físico y mejoras según la opinión de los usuarios."],
         ["Conectividad", "Funciona con datos móviles y bajo consumo; la documentación impresa sigue siendo válida."],
         ["Seguridad de la información", "Claves cifradas, roles, auditoría, respaldos y reglamento interno de uso."],
+        ["Desajuste normativo", "Revisión jurídica permanente a cargo de los Comisarios Abogados del proyecto, según la normativa vigente y lo dispuesto por la justicia ordinaria."],
         ["Límites de los planes gratuitos", "Plan de migración a servidores institucionales, sin cambiar los sistemas."]],
         [52 * mm, ANCHO - 52 * mm], colors.HexColor("#C2410C"))]
     s += h2("Indicadores de seguimiento")
