@@ -166,7 +166,8 @@ def armar():
                     "Ministerios de Seguridad provincial y nacional, aportando herramientas que acompañen ese trabajo y lo potencien.", st["carta"]),
           Paragraph("Los sistemas desarrollados con personal propio demuestran que es posible ordenar la gestión administrativa, contar con "
                     "trazabilidad completa de los expedientes, producir documentación normalizada y obtener estadísticas para la toma de "
-                    "decisiones, <b>sin costo de licencias</b> y utilizando el equipamiento existente.", st["carta"]),
+                    "decisiones, <b>sin costo de licencias</b> y utilizando el equipamiento existente. A ellos se suma un <b>piloto para el oficial de "
+                    "turno</b>, que guía el procedimiento desde el celular y genera las actas y notas sin volver a transcribir los datos.", st["carta"]),
           Paragraph("En ese marco, se propone <b>comenzar a trabajar</b> junto a las distintas divisiones y Unidades Regionales: designar "
                     "referentes, relevar sus procesos y necesidades, y avanzar con pruebas piloto graduales, de modo que la Superioridad "
                     "cuente con información concreta para decidir los pasos siguientes.", st["carta"]),
@@ -183,8 +184,8 @@ def armar():
 
     s += [PageBreak(), Paragraph("Índice", st["h1"]), Spacer(1, 6)]
     toc = TableOfContents()
-    toc.levelStyles = [ParagraphStyle("t0", fontName="SB", fontSize=10.5, leading=17, textColor=NAVY),
-                       ParagraphStyle("t1", fontName="S", fontSize=9, leading=13, leftIndent=14, textColor=TINTA)]
+    toc.levelStyles = [ParagraphStyle("t0", fontName="SB", fontSize=10, leading=13.5, textColor=NAVY),
+                       ParagraphStyle("t1", fontName="S", fontSize=8.6, leading=10.6, leftIndent=14, textColor=TINTA)]
     s += [toc]
 
     # Resumen ejecutivo
@@ -193,18 +194,18 @@ def armar():
                     "de Tucumán —divisiones, departamentos y Unidades Regionales— mediante sistemas web propios, <b>comenzando por un relevamiento "
                     "con referentes de cada área</b> y pruebas piloto graduales, para que el trabajo <b>administrativo y operativo</b> quede registrado "
                     "como datos útiles para el análisis y la toma de decisiones.", st["lead"]), Spacer(1, 4),
-          kpis([("4", "sistemas propios<br/>en uso o desarrollo"), ("$0", "en licencias<br/>de software"), ("Web", "PC y celular,<br/>sin instalar nada"),
+          kpis([("6", "sistemas propios<br/>en uso, piloto o desarrollo"), ("$0", "en licencias<br/>de software"), ("App", "en el celular y la PC,<br/>instalable"),
                 ("Propio", "personal para desarrollo<br/>y capacitación")]),
           Spacer(1, 8),
           tabla(["Punto", "Síntesis"], [
               ["<b>Problema</b>", "Gestión en papel y planillas dispersas: demoras para ubicar expedientes, notas con formatos distintos, errores repetidos, "
                                   "vencimientos que se pasan y ausencia de estadísticas confiables."],
               ["<b>Solución</b>", "Sistemas web con usuario y clave, roles por jerarquía, registro de cada acción, documentos normalizados en Word/PDF, "
-                                  "alertas, informes y ayuda de redacción con inteligencia artificial gratuita."],
+                                  "alertas, informes, validaciones que impiden cargar datos contradictorios y app instalable en el celular."],
               ["<b>Método</b>", "Cada sistema nace del <b>análisis del flujo de trabajo</b> del área, con entrevistas a su personal. El sistema de "
                                 "expedientes es un ejemplo: no se impone un modelo único, se diseña a medida de cada lugar."],
-              ["<b>Evidencia</b>", "Sistemas ya en funcionamiento en la D.G.I.I. y el I.E.S.P. (expedientes, legajos académicos, gabinete interdisciplinario) "
-                                   "y un piloto en desarrollo para Medicina Legal."],
+              ["<b>Evidencia</b>", "Sistemas en funcionamiento en la D.G.I.I. y el I.E.S.P. (expedientes, legajos académicos, legajo de compañía, gabinete "
+                                   "interdisciplinario), un <b>piloto para oficiales de turno</b> que ya genera actas y notas, y Medicina Legal en desarrollo."],
               ["<b>Costo</b>", "Sin licencias. Infraestructura en la nube en planes gratuitos, equipamiento existente y personal propio. Para la escala "
                                "institucional se recomienda alojarlos en servidores de la Policía."],
               ["<b>Capacitación</b>", "Corta y por perfil (de 2 a 6 horas), dictada por personal propio, con manual y material digital."],
@@ -257,12 +258,35 @@ def armar():
               ["<b>Registro, Control y Tramitación de Expedientes</b>", "Dirección General de Institutos e Instrucción",
                "Libro de mesa de entradas, seguimiento, reingresos, digitalización en Drive, 26 modelos de notas en Word, actuaciones y sumarios, "
                "oficios judiciales, actividades, alertas e informes.", "En funcionamiento"],
-              ["<b>Legajos Académicos</b>", "I.E.S.P.", "Legajo académico de cadetes, notas, promedios, orden de mérito y reportes.", "En funcionamiento"],
-              ["<b>Gabinete Interdisciplinario</b>", "I.E.S.P.", "Certificados médicos, prórrogas, altas y seguimiento de cada cadete.", "En funcionamiento"],
-              ["<b>Medicina Legal</b>", "División Medicina Legal", "Registro de intervenciones y exámenes e informes técnicos para las Unidades Fiscales.", "En desarrollo (piloto)"]],
+              ["<b>Legajos Académicos</b>", "I.E.S.P.", "Notas, promedios, orden de mérito, mesas y calendario de finales, actas volantes con el modelo "
+               "del Ministerio, Portal del Cadete y Portal Docente, aviso diario por WhatsApp y legajo digital tipo libro con código QR de verificación.",
+               "En funcionamiento"],
+              ["<b>Legajo de Compañía de Cadetes</b>", "I.E.S.P.", "Disciplina (sanciones con planilla Word), sanidad y A.R.T., servicio y guardias, "
+               "documentación del cadete, carga rápida de legajos anteriores y centro de análisis.", "En funcionamiento"],
+              ["<b>Gabinete Interdisciplinario</b>", "I.E.S.P.", "Certificados médicos, prórrogas y altas con sus PDF, y seguimiento de cada cadete.", "En funcionamiento"],
+              ["<b>Actuaciones para Oficiales de Turno</b>", "Comisarías (piloto)", "Ruta guiada del procedimiento desde el celular, acta para "
+               "NOTeWEB, notas por delito, denuncias desde el PDF de NOTeWEB, croquis, oficios y mapa del delito.", "Piloto en curso"],
+              ["<b>Medicina Legal</b>", "División Medicina Legal", "Registro de intervenciones y exámenes e informes técnicos para las Unidades Fiscales.", "En desarrollo"]],
               [42 * mm, 34 * mm, ANCHO - 106 * mm, 30 * mm]),
           Spacer(1, 6),
-          imagen(I("mB.png"), pie="Figura 1. Sistema de Expedientes D.G.I.I.: tramitación asistida con vista previa de la nota.", alto_max=120 * mm)]
+          ]
+    s += h2("Capacidades comunes ya probadas")
+    s += [pj("Con el desarrollo de estos sistemas se fue armando un conjunto de soluciones que ya funcionan y que pueden aplicarse en "
+             "cualquier área que se incorpore:"),
+          tabla(["Capacidad", "Qué aporta", "Dónde funciona"], [
+              ["<b>App en el celular</b>", "Se instala como una aplicación (Android, iPhone y PC), sin tiendas ni costo.", "Legajos, Oficiales"],
+              ["<b>Usuarios y permisos</b>", "Clave cifrada, cambio obligatorio en el primer ingreso, bloqueo por intentos fallidos y permisos por pantalla.",
+               "Todos"],
+              ["<b>Base de datos propia</b>", "Cada sistema tiene su base independiente: un problema en uno no afecta a los demás.", "Todos"],
+              ["<b>Documentos normalizados</b>", "Notas, actas y planillas en Word y PDF con membrete y formato institucional.", "Todos"],
+              ["<b>Validación de datos</b>", "Opciones con botones y controles que no dejan guardar datos contradictorios (fechas u horas imposibles).",
+               "Oficiales, Legajos"],
+              ["<b>Legajo digital verificable</b>", "Legajo tipo libro y PDF con código QR que permite verificar que es auténtico.", "Legajos, Compañía"],
+              ["<b>Avisos y portales</b>", "Avisos diarios por WhatsApp y portales para cadetes y docentes.", "Legajos"],
+              ["<b>Análisis de datos</b>", "Tableros, estadísticas, mapa del delito e informes para decidir.", "Expedientes, Compañía, Oficiales"]],
+              [38 * mm, ANCHO - 38 * mm - 40 * mm, 40 * mm]),
+          Spacer(1, 6),
+          imagen(I("mB.png"), pie="Figura 1. Sistema de Expedientes D.G.I.I.: tramitación asistida con vista previa de la nota.", alto_max=95 * mm)]
 
     # 3. Objetivos
     s += h1("3. Objetivos")
@@ -386,8 +410,9 @@ def armar():
               ["Publicación web", "Streamlit Community Cloud", "Sin costo (plan gratuito)"],
               ["Base de datos", "PostgreSQL en Supabase", "Sin costo (plan gratuito)"],
               ["Archivos (PDF)", "Google Drive", "Sin costo (cuenta existente)"],
+              ["App en el celular", "Aplicación instalable (PWA) publicada en GitHub Pages", "Sin costo"],
               ["Corrección de textos", "LanguageTool y diccionario propio", "Sin costo"],
-              ["Inteligencia artificial", "Google Gemini", "Sin costo (nivel gratuito, opcional)"],
+              ["Inteligencia artificial", "Google Gemini (solo ayuda de redacción en Expedientes)", "Sin costo (nivel gratuito, opcional)"],
               ["Equipamiento", "PC y celulares que ya usa el personal", "Sin costo adicional"],
               ["Desarrollo y capacitación", "Personal policial propio", "Dentro de sus funciones"]],
               [40 * mm, 72 * mm, ANCHO - 112 * mm]),
@@ -399,13 +424,17 @@ def armar():
 
     # 8. Seguridad
     s += h1("10. Seguridad y protección de datos")
-    s += lista(["<b>Acceso personal</b> con legajo y clave; las claves se guardan cifradas y nadie puede verlas.",
+    s += lista(["<b>Acceso personal</b> con legajo y clave; las claves se guardan cifradas y nadie puede verlas; cambio obligatorio "
+                "de la clave inicial y <b>bloqueo temporal</b> ante intentos fallidos.",
+                "Cada sistema con su <b>propia base de datos</b>, separada de las demás.",
                 "<b>Roles y permisos</b> según jerarquía y función: cada usuario ve y hace solo lo que le corresponde.",
                 "<b>Auditoría</b> de todas las acciones (usuario, fecha, hora y detalle).",
                 "<b>Respaldos</b> descargables que nunca incluyen claves ni credenciales.",
                 "Conexiones cifradas (https) desde cualquier dispositivo.",
                 "Usuarios que dejan el área se <b>deshabilitan</b>, conservando el historial.",
-                "Política de inteligencia artificial: por defecto, los documentos con datos personales <b>no se envían</b> a servicios externos.",
+                "Política de inteligencia artificial: por defecto, los documentos con datos personales <b>no se envían</b> a servicios externos. "
+                "Las actas de los oficiales se arman <b>sin inteligencia artificial</b>, con modelos fijos.",
+                "Estadísticas y exportaciones <b>anonimizadas</b>: el DNI se reemplaza por un código.",
                 "Tratamiento de datos personales conforme a la <b>Ley N° 25.326 de Protección de los Datos Personales</b> y a las disposiciones "
                 "internas que dicte la Superioridad."])
     s += [caja("Se propone elaborar, para aprobación de la Superioridad, un <b>reglamento interno de uso</b> de los "
@@ -469,6 +498,8 @@ def armar():
     s += lista(["Encuentros presenciales en la propia oficina, con los datos reales del área (aprender haciendo).",
                 "<b>Manual de usuario</b> en PDF con imágenes (ya elaborado para el Sistema de Expedientes).",
                 "Guías rápidas de una página y videos cortos para el celular.",
+                "<b>Simulacros guionados</b>: un hecho simulado con roles (conductor, víctima, testigo, primer interventor, fiscalía) para "
+                "practicar el abordaje de la escena y el uso del sistema, con planillas de evaluación.",
                 "Acompañamiento durante las primeras semanas y consultas por mensajería.",
                 "Requisito previo: manejo básico de celular o computadora."])
     s += [caja("<b>La capacitación no genera costos:</b> la dicta personal propio dentro de su horario de servicio, con material digital, "
@@ -477,25 +508,48 @@ def armar():
     # 11. Implementación
     s += h1("13. Plan de implementación por etapas")
     s += [tabla(["Etapa", "Acciones", "Plazo orientativo"], [
-        ["<b>1. Piloto</b> (en curso)", "Sistemas en funcionamiento en la D.G.I.I. y el I.E.S.P.; piloto de Medicina Legal.", "En marcha"],
+        ["<b>1. Piloto</b> (en curso)", "Sistemas en funcionamiento en la D.G.I.I. y el I.E.S.P.; piloto del sistema para oficiales de turno; Medicina Legal en desarrollo.", "En marcha"],
         ["<b>2. Evaluación</b>", "Medición de indicadores, encuesta a usuarios, demostración a la Superioridad.", "60 a 90 días"],
         ["<b>3. Mesa de trabajo y análisis</b>", "Referentes por división y Unidad Regional; entrevistas y análisis del flujo de trabajo de cada área; priorización.", "Según disponga la Superioridad"],
         ["<b>4. Pilotos</b>", "Una o dos divisiones priorizadas (por ejemplo D-1, D-5 o Asuntos Internos) y una comisaría piloto por Unidad Regional.", "6 a 12 meses"],
         ["<b>5. Extensión</b>", "Extensión a otras oficinas y comisarías; servidor propio y cuentas institucionales; capacitación permanente.", "Mediano plazo"],
-        ["<b>6. Visión a futuro</b>", "Análisis de la tarea del oficial de turno: registro único del procedimiento con imágenes, videos y audios, como complemento de la plataforma de denuncias digitales.", "A evaluar"]],
+        ["<b>6. Oficial de turno</b>", "Extender el piloto a otros delitos y a una comisaría por Unidad Regional; sumar imágenes, videos y audios del procedimiento, en coordinación con el M.P.F.", "Según resultados del piloto"]],
         [42 * mm, ANCHO - 82 * mm, 40 * mm]),
         Spacer(1, 4),
         caja("Los plazos son orientativos y dependen de las prioridades y recursos que disponga la Superioridad. Cada etapa se evalúa antes de iniciar la siguiente.", "tip")]
 
     # 12. Riesgos e indicadores
     # Visión a futuro
-    s += h1("14. Visión a futuro: la tarea del oficial de turno")
-    s += [Paragraph("Como línea de trabajo futura, se propone estudiar la <b>sistematización de la tarea del oficial de turno</b> en las "
-                    "comisarías —oficial y auxiliar de turno—, como <b>complemento de la plataforma de denuncias digitales</b> del Ministerio Público Fiscal y no en reemplazo de ella. "
-                    "Es, probablemente, donde la informatización más facilitaría el trabajo policial.", st["lead"])]
+    s += h1("14. La tarea del oficial de turno: de la idea al piloto")
+    s += [Paragraph("La <b>sistematización de la tarea del oficial de turno</b> —oficial y auxiliar de turno de las comisarías— dejó de ser "
+                    "solo una idea: ya existe un <b>sistema piloto</b> que se usa desde el celular, como <b>complemento de la plataforma de "
+                    "denuncias digitales</b> del Ministerio Público Fiscal y no en reemplazo de ella. Es donde la informatización más "
+                    "facilita el trabajo policial.", st["lead"])]
+    s += h2("Lo que ya hace el piloto")
+    s += [tabla(["Función", "Cómo ayuda al oficial"], [
+        ["<b>Ruta guiada del procedimiento</b>", "Nueve pasos, de a dos preguntas por pantalla: toma de conocimiento, salida, arribo, primer "
+                                                  "interventor, involucrados, inspección ocular, fiscalía, cumplimiento y llegada de equipos "
+                                                  "(Criminalística, Policía Vial, grúa), y croquis. Comienza por lesiones culposas en siniestros viales."],
+        ["<b>Pensado para la calle</b>", "Botones grandes, barra fija abajo, modo de alto contraste para el sol, ubicación por GPS, fotos que "
+                                         "quedan como adjuntos, lectura del DNI desde una foto y dictado con el teclado del celular."],
+        ["<b>Datos coherentes</b>", "No deja guardar datos contradictorios (fechas imposibles, horas incoherentes, croquis distinto de los "
+                                    "vehículos cargados) y cada aviso de lo que falta lleva directo al dato a completar."],
+        ["<b>Acta sin transcribir</b>", "El acta se arma sola, con modelos fijos y sin inteligencia artificial, lista para copiar en NOTeWEB "
+                                        "y en Word con el croquis."],
+        ["<b>Notas por delito</b>", "Propone las notas que corresponden al delito y las genera en A4, original y duplicado, listas para el sello."],
+        ["<b>Denuncias ya tomadas</b>", "Con solo subir el PDF de la denuncia de NOTeWEB, propone las notas y actas de diligencias "
+                                        "(constatación de domicilio, averiguaciones, notificación, secuestro, entrega)."],
+        ["<b>Croquis dinámico</b>", "Editor en pantalla para dibujar el lugar (intersecciones, rotondas, rutas), con vehículos, personas, "
+                                    "punto de impacto y orientación."],
+        ["<b>Oficios y análisis</b>", "Oficios judiciales con plazos y semáforo de vencimiento; mapa del delito e informe para el análisis criminal."],
+        ["<b>Respeto de competencias</b>", "El oficial registra lo que observa; las mediciones y la determinación técnica quedan a cargo de Criminalística."]],
+        [42 * mm, ANCHO - 42 * mm]),
+        Spacer(1, 4),
+        caja("El piloto se está probando en uso real y en <b>simulacros con cadetes del I.E.S.P.</b>, midiendo el tiempo de cada paso y "
+             "recogiendo sus observaciones para ajustarlo antes de extenderlo.", "ok")]
     s += h2("Situación actual")
     s += [pj("La plataforma de denuncias digitales del Ministerio Público Fiscal de Tucumán responde a las necesidades de la investigación "
-             "fiscal: en ella se carga, de forma manual, la información que la Fiscalía requiere. La Policía, en cambio, no cuenta con un "
+             "fiscal: en ella se carga, de forma manual, la información que la Fiscalía requiere. La Policía, en cambio, no contaba con un "
              "<b>registro propio y estructurado</b> de todo lo actuado en cada procedimiento, que le permita documentar con precisión los "
              "hechos a su cargo, reutilizar esa información y analizarla."),
           pj("Además, en un mismo procedimiento el oficial transcribe una y otra vez los mismos datos —personas, documentos, domicilios, lugar, "
@@ -516,9 +570,9 @@ def armar():
               ["No queda registro de lo producido.", "Cada nota queda asociada al procedimiento, con fecha y responsable."]],
               [ANCHO / 2, ANCHO / 2]),
           Spacer(1, 6),
-          caja("Es el mismo método que ya funciona en la Dirección General de Institutos e Instrucción, donde el oficial elige el tipo de "
-               "tramitación y obtiene la nota lista para imprimir. El conjunto de notas de cada tipo de delito surgiría del <b>análisis con las "
-               "comisarías</b> y de los modelos que hoy utilizan, validados por quienes realizan la tarea.", "tip")]
+          caja("Es el mismo método que ya funciona en la Dirección General de Institutos e Instrucción y que el piloto aplica a las "
+               "comisarías. El conjunto de notas de cada tipo de delito se completa con el <b>análisis junto a las comisarías</b> y los "
+               "modelos que hoy utilizan, validados por quienes realizan la tarea.", "tip")]
     s += h2("De la información a las actuaciones procesales")
     s += [pj("El valor central de esta línea está en <b>obtener bien la información desde el inicio</b> y convertirla, de manera directa, en las "
              "<b>actuaciones procesales</b> que el oficial firma y eleva al Ministerio Público Fiscal: actas, declaraciones, constancias, notas, "
@@ -539,10 +593,10 @@ def armar():
              "pueda confeccionarse <b>en la mitad del tiempo o menos</b>, y llegar al Ministerio Público Fiscal completo y sin errores."),
           caja("La reducción de tiempos se <b>medirá en las pruebas piloto</b>, comparando el tiempo actual de confección de un sumario con el "
                "tiempo utilizando el sistema, para presentar a la Superioridad resultados concretos.", "ok")]
-    s += h2("Qué se lograría")
-    s += lista(["<b>Registro guiado y único</b> de los datos del procedimiento, en el lugar del hecho, desde el celular.",
-                "<b>Registro de imágenes, videos y audios</b> del hecho, con fecha, hora y ubicación, asociados al procedimiento, para documentar "
-                "con precisión lo ocurrido.",
+    s += h2("Qué se logra y qué falta")
+    s += lista(["<b>Ya en el piloto:</b> registro guiado y único de los datos del procedimiento, en el lugar del hecho, desde el celular.",
+                "<b>A desarrollar:</b> registro de imágenes, videos y audios del hecho, con fecha, hora y ubicación, asociados al procedimiento, "
+                "para documentar con precisión lo ocurrido.",
                 "<b>Generación automática</b> de actas, constancias, notas y elevaciones con esos mismos datos, en los formatos vigentes.",
                 "<b>Modelos de notas por tipo de delito</b>: al elegir el delito, el sistema propone las piezas que corresponden, sin retipear.",
                 "<b>Documentación rápida, efectiva y sin errores</b>: los datos son idénticos en todas las piezas de la causa.",
@@ -556,7 +610,7 @@ def armar():
                 "Procedimientos acordes a la <b>normativa procesal</b> y a la protección de datos personales."])
     s += [caja("Esta línea requiere un análisis específico del trabajo en comisarías y debe coordinarse con el Ministerio Público Fiscal y "
                "los organismos responsables de la plataforma de denuncias digitales, respetando la normativa procesal vigente y los criterios "
-               "de cadena de custodia. Se plantea como <b>visión a futuro</b>, a evaluar a partir de los resultados de las primeras etapas.", "ojo")]
+               "de cadena de custodia. Su extensión a otros delitos y comisarías se evaluará a partir de los resultados del piloto.", "ojo")]
 
     s += h1("15. Riesgos, mitigaciones e indicadores")
     s += [tabla(["Riesgo", "Mitigación"], [
@@ -568,6 +622,7 @@ def armar():
         [52 * mm, ANCHO - 52 * mm], colors.HexColor("#C2410C"))]
     s += h2("Indicadores de seguimiento")
     s += lista(["Tiempo de confección de un sumario procesal completo (antes y después).",
+                "Tiempo de documentación de un procedimiento con el sistema para oficiales, paso por paso.",
                 "Tiempo promedio para ubicar un expediente.",
                 "Tiempo desde el ingreso hasta la tramitación.",
                 "Cantidad de expedientes vencidos o fuera de término.",
@@ -585,15 +640,15 @@ def armar():
                    (4, "<b>Autorización de pruebas piloto</b> en las áreas que se prioricen (incluida una comisaría por Unidad Regional) y de los espacios de capacitación."),
                    (5, "Uso de <b>cuentas institucionales</b> y, a mediano plazo, de un <b>servidor propio</b> para alojar los sistemas."),
                    (6, "Una <b>demostración práctica</b> ante la Superioridad de los sistemas en funcionamiento."),
-                   (7, "Tener presente, como <b>línea futura</b>, el análisis de la tarea del oficial de turno en coordinación con los organismos responsables.")])]
+                   (7, "<b>Autorización para extender el piloto del sistema para oficiales de turno</b> a una comisaría por Unidad Regional, en coordinación con el Ministerio Público Fiscal.")])]
     s += h2("Conclusión")
     s += [pj("La informatización de la gestión administrativa no es un objetivo a futuro: ya está ocurriendo en la Institución, con resultados "
              "concretos, personal propio y sin costo de licencias, y viene a complementar la tarea de excelencia que la Policía de Tucumán "
              "demuestra y que es destacada públicamente. Comenzar a trabajar junto a las divisiones y las Unidades Regionales, "
              "<b>analizando en cada caso su flujo de trabajo</b>, "
              "permitirá multiplicar esos resultados en todas las oficinas y comisarías, registrar el trabajo administrativo y operativo como datos "
-             "útiles para decidir y, a futuro, facilitar la tarea del oficial de turno —con registro de datos, imágenes, videos y audios del "
-             "procedimiento— para cumplir con mayor agilidad lo que exige la Justicia, con orden, seguridad y continuidad, en "
+             "útiles para decidir y facilitar la tarea del oficial de turno —que ya cuenta con un piloto y a futuro sumará imágenes, videos y "
+             "audios del procedimiento— para cumplir con mayor agilidad lo que exige la Justicia, con orden, seguridad y continuidad, en "
              "beneficio de la Policía de Tucumán y de la comunidad a la que sirve."),
           caja("Esta propuesta está <b>abierta a las ideas y propuestas de la Superioridad</b> y de cada área. Su espíritu es evaluar en conjunto "
                "qué puede mejorarse y optimizar el trabajo de la Institución: los sistemas y este documento <b>se irán ajustando</b> con cada "
