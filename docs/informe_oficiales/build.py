@@ -353,11 +353,19 @@ def armar():
         ["Notas según el delito", "Exámenes médicos, dosajes, informes, cadena de custodia, entre otras. En A4: original en la mitad superior y "
                                   "duplicado en la inferior, con espacio para el sello (sin bloque de firma, porque se firman con sello de tinta)."],
         ["Actas de diligencia", "Constatación de domicilio, averiguaciones, inspección ocular, notificación, secuestro, entrega y acta libre."],
-        ["Estadística", "Lugar, modalidad y medio, para el mapa del delito; los DNI se reemplazan por códigos."]],
+        ["Estadística y mapa del delito", "Lugar, fecha, hora, modalidad y medio salen del mismo procedimiento, sin volver a cargar planillas; los DNI se reemplazan por códigos."]],
         [48 * mm, ANCHO - 48 * mm]),
           Spacer(1, 6),
           dos(I("acta-1.png"), "Figura 4. Acta de intervención generada (caso ficticio).",
               I("nota-1.png"), "Figura 5. Nota en A4 con original y duplicado, lista para sellar.")]
+    s += h2("Fin de las planillas de Excel")
+    s += [pj("Hoy las comisarías, las jefaturas de zona y las Unidades Regionales arman la estadística y el mapa del delito con planillas de "
+             "Excel que cada dependencia completa a mano, con criterios distintos y con datos muchas veces erróneos o incompletos, que se "
+             "consolidan a mano en cada nivel y llegan con demora. Con la plataforma, el dato estadístico <b>no se carga: se produce</b> al "
+             "documentar el procedimiento. La misma actuación que genera el acta alimenta el mapa del delito y la estadística de la comisaría, "
+             "la zona, la regional y la provincia, con un solo criterio y sin duplicados."),
+          caja("Cada nivel de conducción ve el mismo dato, al instante, con el detalle que necesite, y los nombres y DNI quedan reemplazados por "
+               "códigos en todo lo que se exporta.", "ok")]
     s += h2("Denuncias recibidas por NOTeWEB")
     s += [pj("Cuando la denuncia ya fue tomada, el oficial <b>sube el PDF</b> y el sistema muestra las notas que corresponden al delito. Solo pide "
              "un dato cuando una nota lo necesita (por ejemplo, la persona a examinar). Para continuar la investigación, genera las <b>actas de "

@@ -454,8 +454,24 @@ def armar():
                 "<b>Registro en el momento</b>: se carga cuando ocurre, desde el celular, y no al final de la jornada.",
                 "<b>Un solo origen</b>: el mismo dato alimenta los documentos, los partes y las estadísticas, sin volver a copiarlo.",
                 "<b>Tableros</b> por oficina, comisaría, zona, Unidad Regional y provincia, para que cada nivel vea lo que necesita."])
-    s += [caja("Un buen análisis depende de un buen registro: por eso es fundamental que tanto el trabajo <b>administrativo</b> como el "
-               "<b>operativo</b> queden registrados de manera completa y uniforme desde el inicio.", "ok")]
+    s += [Spacer(1, 4),
+          pj("<b>Cómo se hace hoy.</b> Desde hace años, las comisarías, las jefaturas de zona y las Unidades Regionales elaboran su estadística "
+             "y su mapa del delito con <b>planillas de Excel y archivos comunes</b> que cada dependencia completa a mano, al final del turno o "
+             "del mes, con los datos que recuerda o que vuelve a copiar de los libros. Esas planillas viajan por correo o mensajería, se "
+             "consolidan a mano en cada nivel y llegan a la conducción con días de demora. La información resultante es, con frecuencia, "
+             "<b>errónea o incompleta</b>: criterios distintos entre dependencias, hechos duplicados o faltantes, direcciones mal escritas que no "
+             "se pueden ubicar en el mapa, y cifras que no coinciden entre la planilla de la comisaría, la de la zona y la de la regional."),
+          tabla(["Planillas de Excel (hoy)", "Datos del sistema"], [
+              ["Se cargan después, de memoria o copiando del libro.", "Se generan en el momento, desde el mismo procedimiento que ya se documentó."],
+              ["Cada dependencia usa su propio criterio y formato.", "Un solo formato, con opciones cerradas y validaciones."],
+              ["Se consolidan a mano en cada nivel.", "Se consolidan solos: comisaría, zona, regional y provincia ven el mismo dato."],
+              ["Direcciones libres, difíciles de ubicar.", "Ubicación por GPS o por calle y altura, lista para el mapa."],
+              ["Errores que nadie detecta hasta que se comparan.", "Incoherencias detectadas al cargar; sin duplicados."],
+              ["Llegan con días de demora.", "Disponibles al instante, con el detalle que cada nivel necesite."]],
+              [ANCHO / 2, ANCHO / 2], colors.HexColor("#C2410C")),
+          caja("El <b>mapa del delito</b> y la <b>estadística</b> no son un módulo aparte que alguien deba alimentar: son el <b>resultado automático</b> "
+               "de documentar el procedimiento. Un buen análisis depende de un buen registro; por eso es fundamental que tanto el trabajo "
+               "<b>administrativo</b> como el <b>operativo</b> queden registrados de manera completa y uniforme desde el inicio.", "ok")]
 
     # 6. Caso testigo
     s += h1("8. Caso testigo: Sistema de Expedientes de la D.G.I.I.")
