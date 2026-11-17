@@ -577,6 +577,26 @@ def armar():
               [40 * mm, (ANCHO - 40 * mm) / 2, (ANCHO - 40 * mm) / 2]),
           caja("El análisis también revela lo que funciona bien y conviene preservar: la informatización se adapta al saber hacer de cada área, "
                "no lo reemplaza.", "ok")]
+    s += h2("Del análisis surgen las propuestas")
+    s += [pj("El análisis no es un trámite previo a un sistema ya decidido: es el <b>origen de cada propuesta</b>. Al relevar una comisaría, una "
+             "zona, una oficina o una dirección, aparecen cosas que nadie había puesto por escrito: un trámite que pasa por cuatro manos cuando "
+             "podría pasar por una, una planilla que se completa dos veces, un plazo que se controla de memoria, un dato que se pide y nunca "
+             "se usa. Y aparecen también las prácticas que ese lugar hace mejor que los demás y que conviene extender."),
+          tabla(["El análisis de información permite…", "…y el resultado es"], [
+              ["Identificar fallas del sistema de trabajo que hoy se repiten sin que nadie las vea.", "Una propuesta concreta de mejora para esa área, con su línea de base."],
+              ["Detectar lo que se hace bien, dónde y por qué.", "Buenas prácticas documentadas y extendidas a otras dependencias."],
+              ["Dimensionar volúmenes, tiempos y cargas reales.", "Prioridades fundadas en datos, no en la urgencia del momento."],
+              ["Descubrir datos que se generan y se pierden.", "Nuevos indicadores para la conducción, sin trabajo adicional."],
+              ["Comparar circuitos entre dependencias que hacen lo mismo.", "Un circuito único, más simple, validado con quienes lo ejecutan."]],
+              [ANCHO / 2, ANCHO / 2]),
+          Spacer(1, 4),
+          pj("El fin de ese recorrido es la <b>informatización del flujo de trabajo</b> tal como quedó rediseñado: la falencia descubierta se "
+             "corrige en el circuito nuevo, lo que se hacía bien se optimiza, y el sistema que lo soporta produce, desde el primer día, los datos "
+             "que permiten seguir mejorando. Así, cada área analizada se convierte en una propuesta, cada propuesta en un sistema, y cada "
+             "sistema en información para la próxima decisión."),
+          caja("Es un <b>ciclo de mejora continua</b> para toda la Policía provincial: analizar, descubrir, proponer, informatizar, medir y volver "
+               "a analizar. Las propuestas individuales que acompañan a esta (capacitación y protocolos) nacieron exactamente así, y las que "
+               "sigan nacerán del relevamiento que hoy se solicita autorizar.", "ok")]
     s += h2("Mesa de trabajo de informatización")
     s += [pj("Se sugiere convocar una <b>mesa de trabajo</b> integrada por un referente de cada división y Unidad Regional que se incorpore, "
              "junto con el personal que desarrolló los sistemas existentes. Sus integrantes mantienen sus funciones habituales y se reúnen "
@@ -586,8 +606,7 @@ def armar():
                 "Acompañar las pruebas piloto y la capacitación en su área.",
                 "Recoger las opiniones de los usuarios y proponer mejoras.",
                 "Informar periódicamente a la Superioridad los avances y resultados."])
-    s += h2("Guía de relevamiento por área")
-    s += [pj("Como complemento de las entrevistas, se propone completar para cada área una guía breve con la siguiente información:"),
+    s += [Spacer(1, 4), pj("<b>Guía de relevamiento por área.</b> Como complemento de las entrevistas, se propone completar para cada área una guía breve con la siguiente información:"),
           tabla(["Qué se releva", "Para qué"], [
               ["Trámites y documentos que se producen (y cuántos por mes)", "Dimensionar el trabajo y priorizar."],
               ["Libros, planillas y registros que se llevan", "Definir qué se digitaliza y con qué formato."],
@@ -773,7 +792,7 @@ def armar():
              "concretos, personal propio y sin costo de licencias, y viene a complementar la tarea de excelencia que la Policía de Tucumán "
              "demuestra y que es destacada públicamente. Comenzar a trabajar junto a las divisiones y las Unidades Regionales, "
              "<b>analizando en cada caso su flujo de trabajo</b>, "
-             "permitirá multiplicar esos resultados en todas las oficinas y comisarías, registrar el trabajo administrativo y operativo como datos "
+             "hará surgir, área por área, las propuestas de mejora, las fallas a corregir y las buenas prácticas a extender; permitirá multiplicar esos resultados en todas las oficinas y comisarías, registrar el trabajo administrativo y operativo como datos "
              "útiles para decidir y facilitar la tarea del oficial de turno —que ya cuenta con un piloto y a futuro sumará imágenes, videos y "
              "audios del procedimiento— para cumplir con mayor agilidad lo que exige la Justicia, con orden, seguridad y continuidad, en "
              "beneficio de la Policía de Tucumán y de la comunidad a la que sirve."),
