@@ -275,7 +275,9 @@ def armar():
                "Si la Justicia ya trabaja en digital y la Policía continúa en papel, la brecha se traduce en transcripciones, demoras y pérdida de "
                "información. Digitalizar el origen del dato es el paso que completa el circuito.", "ojo")]
     s += h2("Situación observada")
-    s += lista(["Registros en <b>libros físicos</b> que solo puede consultar quien está en la oficina.",
+    s += lista(["<b>Partes por WhatsApp:</b> el informe de cada hecho a los jefes se envía por mensajería, en forma informal, sin registro "
+                "institucional ni resguardo de la información; si el hecho no es de relevancia, el parte queda en la nada.",
+                "Registros en <b>libros físicos</b> que solo puede consultar quien está en la oficina.",
                 "Notas redactadas a partir de <b>modelos viejos</b>, con membretes distintos, autoridades desactualizadas y errores que se arrastran.",
                 "<b>Seguimiento manual</b> de dónde está cada expediente y quién lo tiene.",
                 "<b>Vencimientos</b> y plazos judiciales controlados de memoria.",
@@ -459,7 +461,7 @@ def armar():
     s += [Spacer(1, 4),
           pj("<b>Cómo se hace hoy.</b> Desde hace años, las comisarías, las jefaturas de zona y las Unidades Regionales elaboran su estadística "
              "y su mapa del delito con <b>planillas de Excel y archivos comunes</b> que cada dependencia completa a mano, al final del turno o "
-             "del mes, con los datos que recuerda o que vuelve a copiar de los libros. Esas planillas viajan por correo o mensajería, se "
+             "del mes, con los datos que recuerda o que vuelve a copiar de los libros o de los partes enviados por WhatsApp. Esas planillas viajan por correo o mensajería, se "
              "consolidan a mano en cada nivel y llegan a la conducción con días de demora. La información resultante es, con frecuencia, "
              "<b>errónea o incompleta</b>: criterios distintos entre dependencias, hechos duplicados o faltantes, direcciones mal escritas que no "
              "se pueden ubicar en el mapa, y cifras que no coinciden entre la planilla de la comisaría, la de la zona y la de la regional."),
@@ -510,7 +512,8 @@ def armar():
               ["Despliegue del patrullaje", "Rutina o intuición individual.", "Dinámico, hacia zonas y horarios de mayor riesgo."],
               ["Cruce de información", "Imposible entre comisarías o brigadas.", "Patrones, series y vínculos detectados."],
               ["Estadística y rendición de cuentas", "Carga manual mensual.", "Reportes automáticos y envío al SNIC."],
-              ["Calidad de las actuaciones", "Depende de la memoria del oficial.", "Lista de control completa antes de elevar."]],
+              ["Calidad de las actuaciones", "Depende de la memoria del oficial.", "Lista de control completa antes de elevar."],
+              ["Parte a la superioridad", "WhatsApp: informal, sin registro ni resguardo.", "Registrado, seguro, con conteos y acuse de lectura."]],
               [40 * mm, (ANCHO - 40 * mm) / 2, (ANCHO - 40 * mm) / 2], colors.HexColor("#C2410C")),
           Spacer(1, 6),
           Paragraph("<b>Impacto esperado</b>", st["p"]),
@@ -732,6 +735,9 @@ def armar():
                                         "(constatación de domicilio, averiguaciones, notificación, secuestro, entrega)."],
         ["<b>Croquis dinámico</b>", "Editor en pantalla para dibujar el lugar (intersecciones, rotondas, rutas), con vehículos, personas, "
                                     "punto de impacto y orientación."],
+        ["<b>Partes a la superioridad</b>", "Reemplazan el parte por WhatsApp: el oficial envía un parte preliminar con lo que sabe en el "
+                                            "momento, marcando lo que está «a confirmar», y después el ampliatorio con los datos del caso. Los "
+                                            "jefes lo reciben en una bandeja segura, con conteos por tipo de hecho y dependencia y acuse de lectura."],
         ["<b>Oficios y análisis</b>", "Oficios judiciales con plazos y semáforo de vencimiento; mapa del delito e informe para el análisis criminal."],
         ["<b>Respeto de competencias</b>", "El oficial registra lo que observa; las mediciones y la determinación técnica quedan a cargo de Criminalística."]],
         [42 * mm, ANCHO - 42 * mm]),
@@ -751,6 +757,12 @@ def armar():
           pj("Además, en un mismo procedimiento el oficial transcribe una y otra vez los mismos datos —personas, documentos, domicilios, lugar, "
              "fecha y hora, elementos secuestrados, intervinientes, fiscalía— en actas, constancias, notas, partes y en la causa que se eleva a "
              "la Justicia provincial. Cada transcripción insume tiempo y abre la posibilidad de errores u omisiones."),
+          pj("A esto se suma el <b>parte a la superioridad</b>. Hoy toda la Policía informa los hechos a sus jefes por <b>WhatsApp</b>: un "
+             "mensaje informal, redactado a las apuradas mientras se procede, muchas veces como adelanto con datos que el oficial todavía no "
+             "tiene confirmados. Ese parte no queda registrado en ningún sistema institucional, la información circula por una aplicación "
+             "personal sin resguardo, y si el hecho no es de relevancia queda en la nada: nadie puede contar después cuántos hechos hubo, de "
+             "qué tipo ni dónde. La plataforma lo reemplaza por un parte <b>registrado, seguro y ordenado</b>: preliminar con los datos «a "
+             "confirmar» marcados, ampliatorio generado del caso, y una bandeja para los jefes con conteos y acuse de lectura."),
           imagen(PI("dato_unico.png"), pie="Figura 8. Dato único: la información del procedimiento, incluido el material audiovisual, se registra una vez y se reutiliza.")]
     s += h2("Las notas según el tipo de delito")
     s += [pj("Cada tipo de delito exige un conjunto propio de notas, actas y comunicaciones. Hoy el oficial o auxiliar de turno las confecciona "

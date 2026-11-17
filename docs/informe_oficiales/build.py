@@ -135,6 +135,14 @@ def firma():
     return KeepTogether([Spacer(1, 10), t])
 
 
+def _ejemplo(html):
+    t = Table([[Paragraph(html, ParagraphStyle("ej", parent=st["p"], fontSize=8.6, leading=11))]], colWidths=[ANCHO])
+    t.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F1F5F9")), ("LINEBEFORE", (0, 0), (0, -1), 4, NAVY),
+                           ("LEFTPADDING", (0, 0), (-1, -1), 10), ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                           ("TOPPADDING", (0, 0), (-1, -1), 7), ("BOTTOMPADDING", (0, 0), (-1, -1), 7)]))
+    return KeepTogether([Spacer(1, 3), t, Spacer(1, 6)])
+
+
 def dos(img1, pie1, img2, pie2, alto=118 * mm):
     """Dos capturas lado a lado."""
     from reportlab.platypus import Image
@@ -205,7 +213,7 @@ def armar():
           tabla(["Punto", "Síntesis"], [
               ["<b>Naturaleza</b>", "Herramienta de <b>apoyo</b>. No es un sistema oficial del Ministerio Público Fiscal, no lo reemplaza ni se conecta "
                                     "con él: prepara el texto que el oficial revisa y vuelca en NOTeWEB."],
-              ["<b>Problema</b>", "La plataforma del M.P.F. optimizó el trabajo de la Fiscalía, pero no contempló el de la Policía: triple carga (libreta, Word y NOTeWEB), horas de escritorio y actas incompletas que generan requerimientos."],
+              ["<b>Problema</b>", "La plataforma del M.P.F. optimizó el trabajo de la Fiscalía, pero no contempló el de la Policía: triple carga (libreta, Word y NOTeWEB), partes informales por WhatsApp, horas de escritorio y actas incompletas que generan requerimientos."],
               ["<b>Aporte central</b>", "Calidad documental: el sistema recuerda cada aspecto del procedimiento, detecta datos que no coinciden y no "
                                         "genera el acta mientras falte lo esencial."],
               ["<b>Encuadre legal</b>", "El oficial es autor y responsable del acta; las plantillas son revisadas por los Comisarios Abogados del proyecto; "
@@ -353,6 +361,7 @@ def armar():
         ["Notas según el delito", "Exámenes médicos, dosajes, informes, cadena de custodia, entre otras. En A4: original en la mitad superior y "
                                   "duplicado en la inferior, con espacio para el sello (sin bloque de firma, porque se firman con sello de tinta)."],
         ["Actas de diligencia", "Constatación de domicilio, averiguaciones, inspección ocular, notificación, secuestro, entrega y acta libre."],
+        ["Parte a la superioridad", "Preliminar (con los datos «a confirmar» marcados) y ampliatorio desde el caso; llega a la bandeja de los jefes, con acuse de lectura."],
         ["Estadística y mapa del delito", "Lugar, fecha, hora, modalidad y medio salen del mismo procedimiento, sin volver a cargar planillas; los DNI se reemplazan por códigos."]],
         [48 * mm, ANCHO - 48 * mm]),
           Spacer(1, 6),
@@ -366,6 +375,30 @@ def armar():
              "la zona, la regional y la provincia, con un solo criterio y sin duplicados."),
           caja("Cada nivel de conducción ve el mismo dato, al instante, con el detalle que necesite, y los nombres y DNI quedan reemplazados por "
                "códigos en todo lo que se exporta.", "ok")]
+    s += h2("Partes a la superioridad: fin del informe por WhatsApp")
+    s += [pj("Hoy toda la Policía informa los hechos a sus jefes por <b>WhatsApp</b>. Es un informe informal, que el oficial redacta mientras "
+             "procede y que muchas veces envía como <b>adelanto</b> con datos que todavía no tiene confirmados. Ese mensaje no queda registrado "
+             "en ningún sistema institucional, la información viaja por una aplicación personal sin resguardo, y si el hecho no es de relevancia "
+             "el informe queda en la nada: nadie puede contar después cuántos hechos hubo, de qué tipo ni en qué dependencia."),
+          tabla(["Parte por WhatsApp (hoy)", "Parte desde la plataforma"], [
+              ["Mensaje libre, distinto en cada caso.", "Formato único: hecho, lugar, hora, cifras, síntesis, fiscalía e informante."],
+              ["Datos sin confirmar que no se distinguen de los confirmados.", "Cada dato no confirmado se marca «a confirmar» y se amplía después."],
+              ["El adelanto y la ampliación son mensajes sueltos.", "Parte preliminar y ampliatorio vinculados; el ampliatorio sale de los datos del caso."],
+              ["Aplicación personal, sin resguardo institucional.", "Dentro del sistema, con usuario y clave; solo lo ven los jefes de esa dependencia."],
+              ["No se sabe quién lo leyó.", "Acuse de lectura con nombre y hora."],
+              ["Si el hecho no es relevante, se pierde.", "Todo parte queda registrado y se cuenta."],
+              ["El jefe suma partes de memoria.", "Bandeja con conteos por tipo de hecho y dependencia, urgentes y preliminares sin ampliar."]],
+              [ANCHO / 2, ANCHO / 2], ROJO),
+          Spacer(1, 4),
+          _ejemplo("<b>Ejemplo de parte preliminar generado por el sistema (caso ficticio)</b><br/><font face='Courier' size='8'>"
+               "PARTE PRELIMINAR<br/>COMISARÍA SECCIONAL 1RA. · 2026-11-17 19:50<br/>HECHO: Siniestro vial<br/>"
+               "FECHA Y HORA: 17/11/2026 · 19:45<br/>LUGAR: Av. Mate de Luna y Laprida<br/>"
+               "CIFRAS: 1 víctima(s), 1 lesionado(s), 0 aprehendido(s)/demorado(s)<br/>"
+               "SÍNTESIS: Atropello de peatón; una víctima consciente trasladada en ambulancia.<br/>FISCALÍA: A CONFIRMAR<br/>"
+               "DATOS A CONFIRMAR: identidad de los involucrados; intervención fiscal. Se ampliará.<br/>"
+               "INFORMA: OFICIAL AYUDANTE PÉREZ MARTÍN</font>"),
+          pj("Para la conducción, el parte deja de ser un mensaje más en el teléfono y pasa a ser un <b>dato</b>: cuántos hechos hubo hoy, de qué "
+             "tipo, en qué dependencias, cuántos con aprehendidos y cuántos adelantos todavía esperan su ampliación. La bandeja se actualiza sola.")]
     s += h2("Denuncias recibidas por NOTeWEB")
     s += [pj("Cuando la denuncia ya fue tomada, el oficial <b>sube el PDF</b> y el sistema muestra las notas que corresponden al delito. Solo pide "
              "un dato cuando una nota lo necesita (por ejemplo, la persona a examinar). Para continuar la investigación, genera las <b>actas de "
