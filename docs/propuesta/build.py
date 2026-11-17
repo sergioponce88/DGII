@@ -595,9 +595,8 @@ def armar():
     s += [pj("Informatizar sin firma digital deja el circuito a mitad de camino: el documento se genera en el sistema, pero hay que "
              "imprimirlo, firmarlo, sellarlo y volver a escanearlo o entregarlo en papel. La <b>firma digital</b> cierra ese círculo. La Ley "
              "Nacional N.º 25.506 la define como el resultado de aplicar a un documento digital un procedimiento matemático que requiere "
-             "información de exclusivo conocimiento del firmante [9], y Tucumán adhirió a ese régimen mediante la Ley N.º 7.291, reglamentada "
-             "por el Decreto N.º 165/2016 [7]. Ese decreto destaca que su uso en la Administración Pública Provincial protege la "
-             "<b>autenticidad, integridad y no repudio</b> de los documentos electrónicos públicos [10]."),
+             "información de exclusivo conocimiento del firmante [9]. Su uso en la administración pública protege la <b>autenticidad, "
+             "integridad y no repudio</b> de los documentos electrónicos."),
           pj("La ley establece además que, si la verificación de una firma digital es verdadera, se presume —salvo prueba en contrario— que el "
              "documento <b>no fue modificado</b> desde el momento de su firma [9]. Para una institución que produce piezas que llegan a la Justicia, "
              "esa garantía es tan importante como la firma misma."),
@@ -618,10 +617,8 @@ def armar():
                  "según los mecanismos que esos organismos admitan.",
                  "Mientras tanto, los documentos impresos con firma ológrafa y sello siguen siendo válidos: la firma digital se incorpora de "
                  "forma progresiva, sin interrumpir el trabajo."]),
-          caja("El Estado tucumano ya cuenta con la infraestructura: la Subsecretaría de Modernización del Estado de la Gobernación fue autorizada "
-               "como Autoridad de Registro de la Plataforma de Firma Digital Remota [11], al igual que la Corte Suprema de Justicia de Tucumán [12], "
-               "y el certificado emitido bajo la Política Única de Certificación es gratuito [13]. La Policía no necesita crear nada: necesita "
-               "<b>sumarse</b>.", "ok"),
+          caja("El certificado de firma digital emitido bajo la Política Única de Certificación es gratuito [10]: incorporarlo no requiere "
+               "inversión, sino <b>organización</b>.", "ok"),
           pj("<b>Qué significa para todo este proyecto.</b> Con la firma digital, la informatización deja de ser una ayuda para redactar y pasa a "
              "ser un <b>circuito digital completo</b>: el dato se registra una vez, el documento se genera solo, se firma con plena validez "
              "jurídica, se envía sin papel y queda verificable. Menos impresiones y traslados, menos tiempo entre el hecho y la pieza en manos de "
@@ -912,11 +909,8 @@ def armar():
         "[6] Diario Judicial. «Los números de la digitalización»: primer año del expediente digital en la Corte Suprema de Justicia de Tucumán. diariojudicial.com",
         "[7] Decreto N.º 165/2016 (Tucumán), reglamentario de la Ley N.º 7.291 de adhesión a la Ley N.º 25.506 de Firma Digital.",
         "[8] Ley N.º 27.446 de Simplificación y Desburocratización de la Administración Pública Nacional (B.O. 18/06/2018).",
-        "[9] Ley N.º 25.506 de Firma Digital, arts. 2 y 8, citados en la Acordada de la Corte Suprema de Justicia de Tucumán del 23/06/2022.",
-        "[10] Decreto N.º 165/2016 (Tucumán), considerandos. e-legis-ar.msal.gov.ar",
-        "[11] Resolución 25/2019, Secretaría de Modernización Administrativa: Subsecretaría de Modernización del Estado de Tucumán como Autoridad de Registro de la AC MODERNIZACIÓN-PFDR.",
-        "[12] Resolución 134/2019: Corte Suprema de Justicia de Tucumán como Autoridad de Registro de la AC MODERNIZACIÓN-PFDR.",
-        "[13] iProfesional (2026). «Diferencias entre firma electrónica y firma digital»: gratuidad del certificado bajo la Política Única de Certificación.",
+        "[9] Ley N.º 25.506 de Firma Digital, arts. 2 y 8.",
+        "[10] iProfesional (2026). «Diferencias entre firma electrónica y firma digital»: gratuidad del certificado bajo la Política Única de Certificación.",
         "Normativa provincial considerada: Ley N.º 8933 (Código Procesal Penal de Tucumán), Ley N.º 3656 (Orgánica de la Policía) y Ley N.º 25.326 de Protección de Datos Personales."]
     s += [Paragraph(r, st["li"]) for r in refs]
     return s

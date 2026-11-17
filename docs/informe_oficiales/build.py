@@ -446,7 +446,7 @@ def armar():
 
     s += h2("Firma digital: el paso que completa el circuito")
     s += [pj("Hoy el acta y las notas que genera la plataforma se imprimen, se firman y se sellan con tinta. El paso siguiente es la "
-             "<b>firma digital</b> (Ley N.º 25.506, a la que Tucumán adhirió por Ley N.º 7.291): da al documento digital la misma validez que "
+             "<b>firma digital</b> (Ley N.º 25.506): da al documento digital la misma validez que "
              "la firma manuscrita, identifica sin duda al firmante y permite detectar cualquier alteración posterior. Se propone gestionar el "
              "certificado de firma digital de los oficiales y jefes que firman, con su <b>registro en DIMAC</b>, para que las notas, los partes "
              "a la superioridad y, en coordinación con el Ministerio Público Fiscal, las piezas que se elevan, puedan firmarse y enviarse sin papel."),
