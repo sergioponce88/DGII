@@ -36,7 +36,7 @@ AUTOR = "Crio. Abog. Rodríguez Julio, Crio. Abog. Aira Celestina y Of. Aux. Pon
 HOY = date.today()
 FECHA = f"{MESES[HOY.month - 1].capitalize()} de {HOY.year}"
 
-st["carta"] = ParagraphStyle("carta", parent=st["p"], fontSize=9.4, leading=12.6, firstLineIndent=28, alignment=4, spaceAfter=2)
+st["carta"] = ParagraphStyle("carta", parent=st["p"], fontSize=9.0, leading=11.8, firstLineIndent=28, alignment=4, spaceAfter=1)
 st["just"] = ParagraphStyle("just", parent=st["p"], alignment=4)
 
 
@@ -166,9 +166,10 @@ def armar():
                     "con experiencia en lo <b>sumarial y lo administrativo</b>. Los abogados velan por que todo lo que se desarrolle se encuadre "
                     "en la <b>normativa vigente</b> y en lo dispuesto por la <b>justicia ordinaria</b>, de modo que las herramientas sean, a la "
                     "vez, prácticas para el personal y jurídicamente sólidas.", st["carta"]),
-          Paragraph("Esta iniciativa busca <b>complementar la tarea de excelencia</b> que viene demostrando la Policía de Tucumán, reconocida "
-                    "por los medios de comunicación, reflejada en las estadísticas y destacada por el Gobierno de la Provincia y por los "
-                    "Ministerios de Seguridad provincial y nacional, aportando herramientas que acompañen ese trabajo y lo potencien.", st["carta"]),
+          Paragraph("Esta iniciativa busca <b>complementar y potenciar la tarea de excelencia</b> que viene demostrando la Policía de Tucumán, "
+                    "reconocida públicamente y reflejada en las estadísticas. En 2026, cuando la Justicia provincial ya trabaja con expedientes digitales, "
+                    "<b>digitalizar los datos</b> que produce la Institución permitirá ver su trabajo con precisión, decidir con evidencia y hacer visibles "
+                    "aspectos de la gestión que hoy no se aprecian.", st["carta"]),
           Paragraph("Los sistemas desarrollados con personal propio demuestran que es posible ordenar la gestión administrativa, contar con "
                     "trazabilidad completa de los expedientes, producir documentación normalizada y obtener estadísticas para la toma de "
                     "decisiones, <b>sin costo de licencias</b> y utilizando el equipamiento existente. A ellos se suma un <b>piloto para el oficial de "
@@ -176,21 +177,16 @@ def armar():
           Paragraph("En ese marco, se propone <b>comenzar a trabajar</b> junto a las distintas divisiones y Unidades Regionales: designar "
                     "referentes, relevar sus procesos y necesidades, y avanzar con pruebas piloto graduales, de modo que la Superioridad "
                     "cuente con información concreta para decidir los pasos siguientes.", st["carta"]),
-          Paragraph("Si bien se toma como ejemplo el manejo de expedientes, cada oficina tiene su propio circuito de trabajo. Por ello, el "
-                    "<b>análisis previo</b> de cada área —mediante entrevistas con su personal y el estudio de su flujo de trabajo— es el paso "
-                    "fundamental para determinar qué informatizar y cómo, y para que el sistema que se implemente responda a sus necesidades reales.", st["carta"]),
           Paragraph("La presente no pretende ser una propuesta cerrada: quedamos <b>abiertos a las ideas, observaciones y propuestas</b> que formule "
                     "la Superioridad o que surjan de las distintas áreas, ya que de eso se trata: de evaluar en conjunto qué puede mejorarse y "
                     "de optimizar el trabajo de la Institución.", st["carta"]),
-          Paragraph("Quedamos a disposición para ampliar la información, realizar una demostración práctica de los sistemas en funcionamiento y "
-                    "colaborar en la etapa que la Superioridad estime pertinente.", st["carta"]),
-          Paragraph("Sin otro particular, saludamos a Usted con atenta y distinguida consideración y respeto.-", st["carta"]),
+          Paragraph("Quedamos a disposición para una demostración práctica. Sin otro particular, saludamos a Usted con atenta y distinguida consideración y respeto.-", st["carta"]),
           firma()]
 
-    s += [PageBreak(), Paragraph("Índice", st["h1"]), Spacer(1, 6)]
+    s += [PageBreak(), Paragraph("Índice", st["h1"]), Spacer(1, 2)]
     toc = TableOfContents()
-    toc.levelStyles = [ParagraphStyle("t0", fontName="SB", fontSize=10, leading=13.5, textColor=NAVY),
-                       ParagraphStyle("t1", fontName="S", fontSize=8.6, leading=10.6, leftIndent=14, textColor=TINTA)]
+    toc.levelStyles = [ParagraphStyle("t0", fontName="SB", fontSize=9.0, leading=10.6, textColor=NAVY),
+                       ParagraphStyle("t1", fontName="S", fontSize=7.8, leading=8.7, leftIndent=14, textColor=TINTA)]
     s += [toc]
 
     # Resumen ejecutivo
@@ -203,6 +199,8 @@ def armar():
                 ("Propio", "personal para desarrollo<br/>y capacitación")]),
           Spacer(1, 8),
           tabla(["Punto", "Síntesis"], [
+              ["<b>Fundamento</b>", "La información que produce la Policía es un <b>recurso estratégico</b>: digitalizada, permite medir, comparar "
+                                  "y decidir con evidencia, y hace visibles cargas de trabajo y problemas que hoy no se ven."],
               ["<b>Problema</b>", "Gestión en papel y planillas dispersas: demoras para ubicar expedientes, notas con formatos distintos, errores repetidos, "
                                   "vencimientos que se pasan y ausencia de estadísticas confiables."],
               ["<b>Solución</b>", "Sistemas web con usuario y clave, roles por jerarquía, registro de cada acción, documentos normalizados en Word/PDF, "
@@ -218,29 +216,85 @@ def armar():
               [30 * mm, ANCHO - 30 * mm])]
 
     # 1. Fundamentación
-    s += h1("1. Fundamentación")
-    s += [pj("La Policía de Tucumán genera a diario un volumen muy importante de actuaciones administrativas: expedientes, notas, pases, "
-             "oficios judiciales, sumarios, legajos, licencias, inventarios, partes y estadísticas. Buena parte de esa información se registra "
-             "todavía en libros de papel, planillas sueltas o archivos de Word que se copian de una vez para la otra."),
-          pj("Esta modalidad tiene costos ocultos que no figuran en ningún presupuesto pero que se pagan todos los días: horas de trabajo "
-             "dedicadas a buscar un expediente o a reescribir una nota; demoras en responder a la Justicia y al Comando; errores que se "
-             "repiten; información que se pierde cuando cambia el personal; y la imposibilidad de saber con datos cuánto se trabaja, en qué "
-             "y con qué resultados.")]
+    s += h1("1. Fundamentación: el dato como recurso de gestión")
+    s += [pj("La Policía de Tucumán viene mostrando un rendimiento creciente, reconocido por la comunidad, los medios, el Gobierno de la Provincia "
+             "y los Ministerios de Seguridad provincial y nacional. Esta propuesta parte de ese reconocimiento: <b>no viene a corregir lo que se hace "
+             "bien</b>, sino a dotar a la Institución de herramientas para que ese esfuerzo quede registrado, se mida y se multiplique."),
+          pj("A diario la Institución produce un volumen enorme de información: expedientes, notas, pases, oficios judiciales, sumarios, actas, "
+             "partes, servicios, legajos, licencias, inventarios y estadísticas. Gran parte se registra todavía en libros de papel, planillas sueltas "
+             "o archivos de Word que se copian de una vez para la otra. Esa información existe, pero <b>no está disponible</b> para ser consultada, "
+             "sumada, comparada ni analizada.")]
+    s += h2("De la información al dato")
+    s += [pj("La diferencia es concreta. Un libro de guardia <b>registra</b>; una base de datos, además, <b>responde</b>: cuántos procedimientos hubo "
+             "en una franja horaria, cuánto tardó cada trámite, qué dependencia tiene mayor carga en relación con su personal o qué oficios están "
+             "por vencer. Digitalizar no es pasar el papel a la pantalla: es registrar cada hecho de manera <b>estructurada, uniforme y en el "
+             "momento</b>, para que el mismo dato sirva a la vez para el documento, el parte, la estadística y la decisión."),
+          tabla(["Información en papel", "Dato digitalizado"], [
+              ["Se lee de a un registro por vez.", "Se cuenta, se suma y se compara en segundos."],
+              ["Está en un solo lugar físico.", "Está disponible para cada nivel de conducción, según su rol."],
+              ["Se reescribe en cada pieza, con errores.", "Se carga una vez y se reutiliza sin cambios."],
+              ["Se pierde con el traslado o el retiro del personal.", "Queda en la Institución, con historial y respaldo."],
+              ["Muestra el pasado, cuando alguien lo revisa.", "Muestra el presente y permite anticipar."]],
+              [ANCHO / 2, ANCHO / 2])]
+    s += h2("Lo que hoy no se ve")
+    s += [pj("Con la forma actual de registro, muchas preguntas de gestión no tienen respuesta precisa, aunque el personal conozca la realidad por "
+             "experiencia. La digitalización permite responderlas con números y, con ello, <b>clarificar áreas y cuestiones</b> que hoy quedan fuera "
+             "de la vista de la conducción:"),
+          tabla(["Pregunta de gestión", "Hoy", "Con datos digitalizados"], [
+              ["¿Cuántas horas del personal operativo se destinan a tareas administrativas?", "Se estima por experiencia.", "Se mide por trámite, dependencia y período."],
+              ["¿En qué zonas y franjas horarias se concentra la demanda?", "Partes y libros dispersos.", "Mapa y horarios consolidados, al día."],
+              ["¿Cuánto tarda la respuesta a un oficio judicial?", "Se controla de memoria.", "Plazos, alertas y tiempos promedio."],
+              ["¿Qué carga tiene cada comisaría u oficina respecto de su personal?", "No es comparable.", "Indicadores por dependencia."],
+              ["¿Qué actuaciones vuelven con requerimientos de la Fiscalía, y por qué?", "No se registra.", "Se registra y se corrige en el origen."],
+              ["¿Qué domicilios, vehículos o lugares se repiten en distintas intervenciones?", "Queda en la memoria de cada uno.", "Cruces sistemáticos, con resguardo legal."],
+              ["¿Cómo evolucionan licencias, aptitudes y formación del personal?", "Expedientes en papel.", "Tablero de personal y legajo digital."],
+              ["¿Qué estado tienen móviles, armamento y bienes?", "Inventarios manuales.", "Inventario trazable y actualizado."]],
+              [ANCHO * 0.42, ANCHO * 0.22, ANCHO * 0.36]),
+          caja("Lo que no se mide difícilmente pueda gestionarse. Registrar el trabajo como datos también hace visible el <b>mérito del personal</b>: "
+               "el volumen real de tareas, los resultados obtenidos y el esfuerzo que hoy no figura en ningún informe.", "ok")]
+    s += h2("Gestión de la seguridad basada en evidencia")
+    s += [pj("Las experiencias policiales de referencia coinciden en que los datos son la base de la gestión moderna. El caso más citado es el "
+             "del Departamento de Policía de Nueva York, donde un sistema informatizado para registrar y mapear el delito por barrio (CompStat) "
+             "permitió desplegar los recursos con mayor eficacia [1]."),
+          pj("El Banco Interamericano de Desarrollo sostiene que las políticas de prevención del delito requieren <b>indicadores de gestión</b> "
+             "(procesos, actividades y recursos) y <b>estratégicos</b> (impactos) [2], y en 2025 publicó una encuesta para evaluar a las policías "
+             "de la región que dedica módulos específicos a los <b>datos administrativos</b> y a la <b>información, el análisis de datos y la "
+             "tecnología</b> [3]. Es decir: la capacidad de registrar y analizar datos ya es un parámetro con el que se mide a las instituciones policiales."),
+          pj("En el plano nacional, la Ley N.º 25.266 obliga a las policías provinciales a remitir datos estadísticos a la Dirección Nacional de "
+             "Política Criminal [4]. Cuanto mejor sea el registro de origen, más precisa será la información que la Provincia aporta y la que "
+             "recibe para planificar.")]
+    s += h2("El contexto de Tucumán en 2026")
+    s += [pj("La transformación digital ya está en marcha en la Provincia. El Poder Judicial de Tucumán completó en abril de 2026 la "
+             "digitalización de los expedientes penales en papel de su fuero conclusional, un proceso iniciado en 2020 [5]; la Corte Suprema "
+             "había creado en 2017 una Oficina de Digitalización como complemento del expediente digital [6]. La Provincia adhirió al régimen "
+             "nacional de firma digital mediante la Ley N.º 7.291 [7], y en el orden nacional la Ley N.º 27.446 reconoció los documentos y "
+             "expedientes electrónicos [8]."),
+          caja("La Policía produce la <b>primera pieza</b> de cada proceso penal y una gran parte de la información de seguridad de la Provincia. "
+               "Si la Justicia ya trabaja en digital y la Policía continúa en papel, la brecha se traduce en transcripciones, demoras y pérdida de "
+               "información. Digitalizar el origen del dato es el paso que completa el circuito.", "ojo")]
     s += h2("Situación observada")
     s += lista(["Registros en <b>libros físicos</b> que solo puede consultar quien está en la oficina.",
                 "Notas redactadas a partir de <b>modelos viejos</b>, con membretes distintos, autoridades desactualizadas y errores que se arrastran.",
                 "<b>Seguimiento manual</b> de dónde está cada expediente y quién lo tiene.",
                 "<b>Vencimientos</b> y plazos judiciales controlados de memoria.",
-                "Ausencia de <b>estadísticas</b> para planificar y para informar a la Superioridad.",
+                "Estadísticas que se arman a mano, tarde y con criterios distintos según la dependencia.",
                 "Dependencia de personas: cuando alguien se traslada, se pierde parte del conocimiento de la oficina."])
     s += h2("Por qué ahora")
-    s += [pj("La Policía de Tucumán atraviesa un momento de reconocimiento por su labor: los medios, las estadísticas, el Gobierno de la "
-             "Provincia y los Ministerios de Seguridad provincial y nacional destacan su trabajo. La informatización propuesta busca "
-             "<b>complementar y sostener esa excelencia</b>, liberando tiempo del personal y ordenando la información que respalda cada resultado."),
-          pj("Los procesos de modernización del Estado avanzan hacia la gestión digital, la trazabilidad y la transparencia. Hoy existen "
-             "herramientas tecnológicas de uso libre y gratuito que permiten desarrollar sistemas a medida con recursos propios, accesibles "
-             "desde el celular, sin necesidad de grandes inversiones. La Institución cuenta además con personal joven formado en informática "
-             "y con capacidad de adaptación, lo que hace viable una transformación progresiva y sostenida.")]
+    s += [pj("Hoy existen herramientas tecnológicas de uso libre que permiten desarrollar sistemas a medida con recursos propios, accesibles desde "
+             "el celular y sin grandes inversiones, como lo demuestran los sistemas que ya funcionan en la Institución. La Policía cuenta además "
+             "con personal joven formado en informática y con capacidad de adaptación, lo que hace viable una transformación progresiva y sostenida.")]
+    s += h2("Impacto esperado")
+    s += [pj("La experiencia de los sistemas en funcionamiento permite fijar <b>metas de mejora significativas</b>, que se verificarán con datos en "
+             "cada prueba piloto, comparando contra una línea de base tomada antes de implementar:"),
+          tabla(["Aspecto", "Situación actual", "Meta con la informatización"], [
+              ["Confección de un sumario o actuación", "Horas de redacción y transcripción.", "Reducir el tiempo a la mitad o menos."],
+              ["Ubicar un expediente o trámite", "Minutos u horas de búsqueda.", "Segundos, desde cualquier puesto autorizado."],
+              ["Completitud de la documentación de procedimientos", "Depende de la memoria del oficial.", "Mejorar entre un 200 % y un 300 %."],
+              ["Plazos y vencimientos", "Control de memoria.", "Alertas previas; tender a cero vencidos."],
+              ["Estadística para la conducción", "Planillas mensuales armadas a mano.", "Disponible al día, por nivel."]],
+              [ANCHO * 0.34, ANCHO * 0.30, ANCHO * 0.36]),
+          caja("Las metas son <b>objetivos de trabajo</b>, no resultados garantizados: cada piloto medirá la situación de partida y el resultado "
+               "alcanzado, para que la Superioridad decida con evidencia.", "tip")]
 
     # 2. Antecedentes
     s += h1("2. Antecedentes: lo que ya funciona")
@@ -467,6 +521,33 @@ def armar():
                 "<b>Propuesta a medida</b>, validada con el área antes de desarrollar, y ajustada durante el piloto según la opinión de los usuarios."])
     s += [caja("Así se construyó el sistema de expedientes de la D.G.I.I.: a partir de los modelos reales que utilizan los oficiales y de la "
                "explicación de cada tramitación por parte de quienes la realizan. Ese mismo método se aplicaría en cada división y Unidad Regional.", "tip")]
+    s += h2("Un análisis profundo, área por área")
+    s += [pj("Cada área de la Policía tiene su propio circuito, sus plazos, sus documentos y su lenguaje. Por eso el análisis del flujo de trabajo "
+             "no es un trámite previo sino el <b>corazón de la propuesta</b>: es lo que permite que el sistema resuelva problemas reales y que la "
+             "información que produzca sea útil para decidir. Se propone una metodología en siete etapas:"),
+          tabla(["Etapa", "Qué se hace", "Resultado"], [
+              ["1. Relevamiento", "Entrevistas, observación del circuito real y recolección de libros, planillas y modelos.", "Mapa del proceso actual."],
+              ["2. Medición", "Volúmenes mensuales, tiempos de cada paso, demoras y tareas que se repiten.", "Línea de base para comparar."],
+              ["3. Inventario de datos", "Qué datos se generan, dónde, quién los usa y cuáles se copian varias veces.", "Diccionario de datos del área."],
+              ["4. Diagnóstico", "Cuellos de botella, controles que dependen de la memoria y riesgos legales o de seguridad.", "Informe de diagnóstico."],
+              ["5. Diseño", "Circuito propuesto, validado con el personal y revisado jurídicamente.", "Proceso mejorado y requisitos."],
+              ["6. Priorización", "Matriz de volumen, impacto y factibilidad.", "Orden de implementación."],
+              ["7. Piloto y medición", "Uso real acotado y comparación con la línea de base.", "Resultados para decidir la extensión."]],
+              [32 * mm, ANCHO * 0.52, ANCHO - 32 * mm - ANCHO * 0.52]),
+          Spacer(1, 6),
+          pj("A modo orientativo, y sujeto a lo que surja del relevamiento, estos son ejemplos de la información que distintas áreas podrían "
+             "aportar y de las decisiones que permitiría tomar:"),
+          tabla(["Área", "Información que se digitaliza", "Decisiones que permite"], [
+              ["Comisarías y jefaturas de zona", "Procedimientos, actas, denuncias recibidas, servicios y móviles.", "Distribución de personal y móviles por zona y horario."],
+              ["Unidades Regionales", "Consolidado de sus dependencias.", "Comparar dependencias y planificar refuerzos."],
+              ["Personal y recursos humanos", "Legajos, licencias, aptitudes, destinos y formación.", "Cobertura de servicios y planificación de carrera."],
+              ["Logística", "Móviles, combustible, armamento, equipamiento y bienes.", "Mantenimiento preventivo y compras basadas en uso real."],
+              ["Áreas judiciales y sumariales", "Oficios, sumarios, plazos y respuestas.", "Cumplimiento ante la Justicia y control de vencimientos."],
+              ["Áreas técnicas (Criminalística, Medicina Legal)", "Pedidos, intervenciones, tiempos y resultados.", "Demanda real y tiempos de respuesta."],
+              ["Institutos de formación", "Legajos académicos, calificaciones y asistencia.", "Calidad de la formación y seguimiento de cada cadete."]],
+              [40 * mm, (ANCHO - 40 * mm) / 2, (ANCHO - 40 * mm) / 2]),
+          caja("El análisis también revela lo que funciona bien y conviene preservar: la informatización se adapta al saber hacer de cada área, "
+               "no lo reemplaza.", "ok")]
     s += h2("Mesa de trabajo de informatización")
     s += [pj("Se sugiere convocar una <b>mesa de trabajo</b> integrada por un referente de cada división y Unidad Regional que se incorpore, "
              "junto con el personal que desarrolló los sistemas existentes. Sus integrantes mantienen sus funciones habituales y se reúnen "
@@ -645,8 +726,8 @@ def armar():
     s += h1("16. Lo que se solicita a la Superioridad")
     s += [pj("Para avanzar con la presente propuesta —que queda abierta a las modificaciones e ideas que la Superioridad estime "
              "convenientes—, se solicita respetuosamente:")]
-    s += [P.pasos([(1, "<b>Aval institucional</b> para la continuidad y extensión de los sistemas desarrollados."),
-                   (2, "<b>Designación de referentes</b> en las divisiones y en las cinco Unidades Regionales, para conformar una mesa de trabajo."),
+    s += [P.pasos([(1, "<b>Aval institucional</b> para adoptar la gestión basada en datos como política de la Institución y continuar los sistemas desarrollados."),
+                   (2, "<b>Designación de referentes</b> en comisarías, jefaturas de zona, Unidades Regionales, departamentos, direcciones y oficinas, para conformar una mesa de trabajo."),
                    (3, "<b>Autorización para realizar entrevistas y analizar el flujo de trabajo</b> de esas áreas (procesos, libros y modelos de documentos)."),
                    (4, "<b>Autorización de pruebas piloto</b> en las áreas que se prioricen (incluida una comisaría por Unidad Regional) y de los espacios de capacitación."),
                    (5, "Uso de <b>cuentas institucionales</b> y, a mediano plazo, de un <b>servidor propio</b> para alojar los sistemas."),
@@ -665,6 +746,18 @@ def armar():
                "qué puede mejorarse y optimizar el trabajo de la Institución: los sistemas y este documento <b>se irán ajustando</b> con cada "
                "aporte que se reciba.", "ok"),
           firma()]
+    s += [PageBreak(), Paragraph("Anexo: referencias", st["h1"]), Spacer(1, 4)]
+    refs = [
+        "[1] Banco Interamericano de Desarrollo, blog «Enfoque Educación», referencia al sistema CompStat del Departamento de Policía de Nueva York. blogs.iadb.org/educacion/es/?p=4640",
+        "[2] BID (2017). <i>Información para la prevención del delito y la violencia</i>. Washington D. C.: Banco Interamericano de Desarrollo.",
+        "[3] Sutton, H., Alvarado, N. y Keefer, P. (2025). <i>Encuesta sobre la gestión y administración de la policía en América Latina y el Caribe (EGAP-ALC): cuestionario y metodología</i>. BID. publications.iadb.org",
+        "[4] Ley N.º 25.266, modificatoria de la Ley N.º 22.117 (Registro Nacional de Reincidencia), art. 13. argentina.gob.ar/normativa",
+        "[5] Diario Judicial (18/05/2026). «Adiós para siempre al papel»: finaliza la digitalización de expedientes penales en Tucumán. diariojudicial.com",
+        "[6] Diario Judicial. «Los números de la digitalización»: primer año del expediente digital en la Corte Suprema de Justicia de Tucumán. diariojudicial.com",
+        "[7] Decreto N.º 165/2016 (Tucumán), reglamentario de la Ley N.º 7.291 de adhesión a la Ley N.º 25.506 de Firma Digital.",
+        "[8] Ley N.º 27.446 de Simplificación y Desburocratización de la Administración Pública Nacional (B.O. 18/06/2018).",
+        "Normativa provincial considerada: Ley N.º 8933 (Código Procesal Penal de Tucumán), Ley N.º 3656 (Orgánica de la Policía) y Ley N.º 25.326 de Protección de Datos Personales."]
+    s += [Paragraph(r, st["li"]) for r in refs]
     return s
 
 
