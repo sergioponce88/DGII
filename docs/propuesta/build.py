@@ -201,6 +201,8 @@ def armar():
           tabla(["Punto", "Síntesis"], [
               ["<b>Fundamento</b>", "La información que produce la Policía es un <b>recurso estratégico</b>: digitalizada, permite medir, comparar "
                                   "y decidir con evidencia, y hace visibles cargas de trabajo y problemas que hoy no se ven."],
+              ["<b>Firma digital</b>", "Certificados del personal registrados en DIMAC, para que lo que se genera en los sistemas se firme y circule con plena "
+                                       "validez jurídica, sin imprimir (sección 12)."],
               ["<b>Resultado</b>", "Una plataforma policial unificada: registro único, mapa del delito en tiempo real, cruce de información, "
                                    "historial de casos y tablero de gestión, con envío automático al SNIC (sección 8)."],
               ["<b>Problema</b>", "Gestión en papel y planillas dispersas: demoras para ubicar expedientes, notas con formatos distintos, errores repetidos, "
@@ -368,10 +370,9 @@ def armar():
 
     # 3. Objetivos
     s += h1("3. Objetivos")
-    s += h2("Objetivo general")
-    s += [pj("Impulsar la informatización progresiva de la gestión administrativa de la Policía de Tucumán, mediante sistemas propios, "
+    s += [pj("<b>Objetivo general.</b> Impulsar la informatización progresiva de la gestión administrativa de la Policía de Tucumán, mediante sistemas propios, "
              "seguros y accesibles, comenzando por el trabajo conjunto con cada división y Unidad Regional.")]
-    s += h2("Objetivos específicos")
+    s += [Spacer(1, 2), pj("<b>Objetivos específicos:</b>")]
     s += lista([
         "Reemplazar progresivamente libros y planillas por registros digitales con respaldo, sin perder la validez de la documentación en papel.",
         "Asegurar la <b>trazabilidad</b>: quién hizo qué, cuándo y con qué resultado.",
@@ -398,7 +399,7 @@ def armar():
         ["<b>Institucional</b>", "Imagen de una Policía moderna, ordenada y transparente; continuidad aunque cambie el personal."]],
         [32 * mm, ANCHO - 32 * mm], VERDE),
         Spacer(1, 6),
-        caja("Los beneficios concretos (tiempos, cantidades, vencimientos evitados) se medirán con los indicadores propuestos en el punto 16, "
+        caja("Los beneficios concretos (tiempos, cantidades, vencimientos evitados) se medirán con los indicadores propuestos en el punto 17, "
              "para que la Superioridad pueda evaluar resultados con datos.", "tip")]
 
     # 5. Alcance
@@ -590,7 +591,43 @@ def armar():
                "sistemas: responsables de cada base de datos, alta y baja de usuarios, respaldos periódicos y confidencialidad.", "tip")]
 
     # 10. Cómo empezar
-    s += h1("12. Cómo empezar: trabajo conjunto con las divisiones")
+    s += h1("12. Firma digital: que lo digital tenga plena validez")
+    s += [pj("Informatizar sin firma digital deja el circuito a mitad de camino: el documento se genera en el sistema, pero hay que "
+             "imprimirlo, firmarlo, sellarlo y volver a escanearlo o entregarlo en papel. La <b>firma digital</b> cierra ese círculo. La Ley "
+             "Nacional N.º 25.506 la define como el resultado de aplicar a un documento digital un procedimiento matemático que requiere "
+             "información de exclusivo conocimiento del firmante [9], y Tucumán adhirió a ese régimen mediante la Ley N.º 7.291, reglamentada "
+             "por el Decreto N.º 165/2016 [7]. Ese decreto destaca que su uso en la Administración Pública Provincial protege la "
+             "<b>autenticidad, integridad y no repudio</b> de los documentos electrónicos públicos [10]."),
+          pj("La ley establece además que, si la verificación de una firma digital es verdadera, se presume —salvo prueba en contrario— que el "
+             "documento <b>no fue modificado</b> desde el momento de su firma [9]. Para una institución que produce piezas que llegan a la Justicia, "
+             "esa garantía es tan importante como la firma misma."),
+          tabla(["Hoy: papel, firma ológrafa y sello", "Con firma digital"], [
+              ["Imprimir, firmar, sellar, escanear o entregar en mano.", "El documento se firma y se envía desde el sistema, sin imprimir."],
+              ["La autenticidad depende del sello y de la firma visible.", "La firma identifica al firmante y detecta cualquier alteración posterior."],
+              ["El original en papel se traslada, se extravía o se deteriora.", "El original digital se conserva íntegro y se verifica en cualquier momento."],
+              ["Cada pase entre oficinas suma horas o días.", "Las notas, informes y elevaciones circulan al instante, con constancia."],
+              ["Un parte por mensajería no tiene autor verificable.", "El parte firmado identifica sin duda a quien informa."]],
+              [ANCHO / 2, ANCHO / 2], colors.HexColor("#C2410C")),
+          Spacer(1, 6),
+          Paragraph("<b>Qué se propone</b>", st["p"]),
+          *lista(["Gestionar el <b>certificado de firma digital</b> del personal que firma documentos —jefes de dependencia, oficiales de turno, "
+                 "instructores sumariales, personal de las Direcciones— con su <b>registro en DIMAC</b>, y llevar un padrón de firmantes habilitados.",
+                 "Incorporar la firma digital en los sistemas propios, empezando por las notas y elevaciones de la D.G.I.I., los certificados del "
+                 "I.E.S.P. y los partes a la superioridad.",
+                 "Avanzar, en coordinación con el Ministerio Público Fiscal y el Poder Judicial, hacia el envío de piezas firmadas digitalmente, "
+                 "según los mecanismos que esos organismos admitan.",
+                 "Mientras tanto, los documentos impresos con firma ológrafa y sello siguen siendo válidos: la firma digital se incorpora de "
+                 "forma progresiva, sin interrumpir el trabajo."]),
+          caja("El Estado tucumano ya cuenta con la infraestructura: la Subsecretaría de Modernización del Estado de la Gobernación fue autorizada "
+               "como Autoridad de Registro de la Plataforma de Firma Digital Remota [11], al igual que la Corte Suprema de Justicia de Tucumán [12], "
+               "y el certificado emitido bajo la Política Única de Certificación es gratuito [13]. La Policía no necesita crear nada: necesita "
+               "<b>sumarse</b>.", "ok"),
+          pj("<b>Qué significa para todo este proyecto.</b> Con la firma digital, la informatización deja de ser una ayuda para redactar y pasa a "
+             "ser un <b>circuito digital completo</b>: el dato se registra una vez, el documento se genera solo, se firma con plena validez "
+             "jurídica, se envía sin papel y queda verificable. Menos impresiones y traslados, menos tiempo entre el hecho y la pieza en manos de "
+             "la Justicia, y una trazabilidad que el papel nunca puede ofrecer.")]
+
+    s += h1("13. Cómo empezar: trabajo conjunto con las divisiones")
     s += [Paragraph("No se propone por ahora crear estructuras nuevas, sino <b>comenzar a trabajar</b>: conocer cómo funciona cada división "
                     "y cada Unidad Regional, identificar qué conviene informatizar primero y probarlo en pequeño, con resultados medibles.", st["lead"]),
           imagen(PI("ruta.png"), pie="Figura 6. Ruta de trabajo propuesta: el análisis es el paso clave.", alto_max=48 * mm)]
@@ -676,7 +713,7 @@ def armar():
              "con la información que surja de los pilotos.")]
 
     # 10. Capacitación
-    s += h1("13. Capacitación del personal")
+    s += h1("14. Capacitación del personal")
     s += [pj("Los sistemas están diseñados para que su uso sea intuitivo: funcionan como cualquier aplicación del celular. Aun así, la "
              "capacitación es clave para la adopción. Se propone una formación <b>breve, práctica y por perfil</b>, dictada por personal propio "
              "en el lugar de trabajo."),
@@ -700,7 +737,7 @@ def armar():
                "sin traslados ni contrataciones externas.", "ok")]
 
     # 11. Implementación
-    s += h1("14. Plan de implementación por etapas")
+    s += h1("15. Plan de implementación por etapas")
     s += [tabla(["Etapa", "Acciones", "Plazo orientativo"], [
         ["<b>1. Piloto</b> (en curso)", "Sistemas en funcionamiento en la D.G.I.I. y el I.E.S.P.; piloto del sistema para oficiales de turno; Medicina Legal en desarrollo.", "En marcha"],
         ["<b>2. Evaluación</b>", "Medición de indicadores, encuesta a usuarios, demostración a la Superioridad.", "60 a 90 días"],
@@ -714,7 +751,7 @@ def armar():
 
     # 12. Riesgos e indicadores
     # Visión a futuro
-    s += h1("15. La tarea del oficial de turno: de la idea al piloto")
+    s += h1("16. La tarea del oficial de turno: de la idea al piloto")
     s += [Paragraph("La <b>sistematización de la tarea del oficial de turno</b> —oficial y auxiliar de turno de las comisarías— dejó de ser "
                     "solo una idea: ya existe un <b>sistema piloto</b> que se usa desde el celular, como <b>complemento de la plataforma de "
                     "denuncias digitales</b> del Ministerio Público Fiscal y no en reemplazo de ella. Es donde la informatización más "
@@ -820,7 +857,7 @@ def armar():
                "los organismos responsables de la plataforma de denuncias digitales, respetando la normativa procesal vigente y los criterios "
                "de cadena de custodia. Su extensión a otros delitos y comisarías se evaluará a partir de los resultados del piloto.", "ojo")]
 
-    s += h1("16. Riesgos, mitigaciones e indicadores")
+    s += h1("17. Riesgos, mitigaciones e indicadores")
     s += [tabla(["Riesgo", "Mitigación"], [
         ["Dependencia de una sola persona", "Mesa de trabajo y referentes por área, código documentado y guardado en repositorios, manuales."],
         ["Resistencia al cambio", "Capacitación práctica, convivencia inicial con el libro físico y mejoras según la opinión de los usuarios."],
@@ -840,7 +877,7 @@ def armar():
                 "Grado de satisfacción de los usuarios (encuesta breve)."])
 
     # 13. Petitorio
-    s += h1("17. Lo que se solicita a la Superioridad")
+    s += h1("18. Lo que se solicita a la Superioridad")
     s += [pj("Para avanzar con la presente propuesta —que queda abierta a las modificaciones e ideas que la Superioridad estime "
              "convenientes—, se solicita respetuosamente:")]
     s += [P.pasos([(1, "<b>Aval institucional</b> para adoptar la gestión basada en datos como política de la Institución y continuar los sistemas desarrollados."),
@@ -850,7 +887,8 @@ def armar():
                    (5, "Uso de <b>cuentas institucionales</b> y, a mediano plazo, de un <b>servidor propio</b> para alojar los sistemas."),
                    (6, "Una <b>demostración práctica</b> ante la Superioridad de los sistemas en funcionamiento."),
                    (7, "<b>Autorización para extender el piloto del sistema para oficiales de turno</b> a una comisaría por Unidad Regional, en coordinación con el Ministerio Público Fiscal."),
-                   (8, "<b>Aval para las propuestas individuales</b> de la Plataforma de Capacitación Virtual y del Repositorio de Protocolos y Normativa Vigente, que se elevan por separado.")])]
+                   (8, "<b>Aval para las propuestas individuales</b> de la Plataforma de Capacitación Virtual y del Repositorio de Protocolos y Normativa Vigente, que se elevan por separado."),
+                   (9, "<b>Gestión de la firma digital</b> del personal que firma documentos, con el registro de los certificados en DIMAC, para incorporarla progresivamente a los sistemas.")])]
     s += h2("Conclusión")
     s += [pj("La informatización de la gestión administrativa no es un objetivo a futuro: ya está ocurriendo en la Institución, con resultados "
              "concretos, personal propio y sin costo de licencias, y viene a complementar la tarea de excelencia que la Policía de Tucumán "
@@ -874,6 +912,11 @@ def armar():
         "[6] Diario Judicial. «Los números de la digitalización»: primer año del expediente digital en la Corte Suprema de Justicia de Tucumán. diariojudicial.com",
         "[7] Decreto N.º 165/2016 (Tucumán), reglamentario de la Ley N.º 7.291 de adhesión a la Ley N.º 25.506 de Firma Digital.",
         "[8] Ley N.º 27.446 de Simplificación y Desburocratización de la Administración Pública Nacional (B.O. 18/06/2018).",
+        "[9] Ley N.º 25.506 de Firma Digital, arts. 2 y 8, citados en la Acordada de la Corte Suprema de Justicia de Tucumán del 23/06/2022.",
+        "[10] Decreto N.º 165/2016 (Tucumán), considerandos. e-legis-ar.msal.gov.ar",
+        "[11] Resolución 25/2019, Secretaría de Modernización Administrativa: Subsecretaría de Modernización del Estado de Tucumán como Autoridad de Registro de la AC MODERNIZACIÓN-PFDR.",
+        "[12] Resolución 134/2019: Corte Suprema de Justicia de Tucumán como Autoridad de Registro de la AC MODERNIZACIÓN-PFDR.",
+        "[13] iProfesional (2026). «Diferencias entre firma electrónica y firma digital»: gratuidad del certificado bajo la Política Única de Certificación.",
         "Normativa provincial considerada: Ley N.º 8933 (Código Procesal Penal de Tucumán), Ley N.º 3656 (Orgánica de la Policía) y Ley N.º 25.326 de Protección de Datos Personales."]
     s += [Paragraph(r, st["li"]) for r in refs]
     return s

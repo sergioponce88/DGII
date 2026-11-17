@@ -444,6 +444,16 @@ def armar():
         ["Escala institucional", "Se recomienda alojar el sistema en servidores de la Policía de Tucumán."]],
         [44 * mm, ANCHO - 44 * mm])]
 
+    s += h2("Firma digital: el paso que completa el circuito")
+    s += [pj("Hoy el acta y las notas que genera la plataforma se imprimen, se firman y se sellan con tinta. El paso siguiente es la "
+             "<b>firma digital</b> (Ley N.º 25.506, a la que Tucumán adhirió por Ley N.º 7.291): da al documento digital la misma validez que "
+             "la firma manuscrita, identifica sin duda al firmante y permite detectar cualquier alteración posterior. Se propone gestionar el "
+             "certificado de firma digital de los oficiales y jefes que firman, con su <b>registro en DIMAC</b>, para que las notas, los partes "
+             "a la superioridad y, en coordinación con el Ministerio Público Fiscal, las piezas que se elevan, puedan firmarse y enviarse sin papel."),
+          caja("Con la firma digital, el procedimiento queda <b>digital de punta a punta</b>: se registra en el lugar, el documento sale solo, "
+               "se firma con plena validez jurídica y llega a destino al instante. Mientras se implementa, el papel firmado y sellado sigue "
+               "siendo válido.", "ok")]
+
     # 9. Carácter piloto
     s += h2("Carácter piloto y adaptación continua")
     s += [pj("La plataforma <b>no es un producto cerrado ni un formato estandarizado</b>. Durante la prueba piloto se modificará según las "
@@ -466,7 +476,8 @@ def armar():
           P.pasos([(1, "<b>Autorizar la prueba piloto</b> en una comisaría, por un período definido y con seguimiento semanal."),
                    (2, "<b>Capacitar</b> a los auxiliares de turno y a los cadetes del I.E.S.P. mediante simulacros guionados."),
                    (3, "<b>Coordinar</b> con el Ministerio Público Fiscal la recepción de las actuaciones del piloto y sus observaciones."),
-                   (4, "<b>Realizar una demostración práctica</b> ante la Superioridad.")])]
+                   (4, "<b>Gestionar la firma digital</b> de los oficiales y jefes que firman, con el registro de sus certificados en DIMAC."),
+                   (5, "<b>Realizar una demostración práctica</b> ante la Superioridad.")])]
     s += h2("Conclusión")
     s += [pj("La Plataforma para Oficiales de Turno es una ayuda concreta para quien está en la calle: reduce la transcripción, ordena el "
              "procedimiento y, sobre todo, <b>eleva la calidad de la documentación</b> que llega a la Justicia. Lo hace sin apartarse de la "
