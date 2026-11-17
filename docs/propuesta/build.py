@@ -651,11 +651,16 @@ def armar():
         Spacer(1, 4),
         caja("El piloto se está probando en uso real y en <b>simulacros con cadetes del I.E.S.P.</b>, midiendo el tiempo de cada paso y "
              "recogiendo sus observaciones para ajustarlo antes de extenderlo.", "ok")]
-    s += h2("Situación actual")
-    s += [pj("La plataforma de denuncias digitales del Ministerio Público Fiscal de Tucumán responde a las necesidades de la investigación "
-             "fiscal: en ella se carga, de forma manual, la información que la Fiscalía requiere. La Policía, en cambio, no contaba con un "
-             "<b>registro propio y estructurado</b> de todo lo actuado en cada procedimiento, que le permita documentar con precisión los "
-             "hechos a su cargo, reutilizar esa información y analizarla."),
+    s += h2("Situación actual: la Policía como auxiliar de la Justicia")
+    s += [pj("El Ministerio Público Fiscal de Tucumán dio un paso importante con la denuncia digital y su plataforma de actuaciones: ordenó la "
+             "recepción, unificó formatos y aceleró la llegada de la información a las Unidades Fiscales. Pero esa plataforma fue diseñada "
+             "desde la necesidad de la Fiscalía, para optimizar <b>su</b> trabajo. La Policía, que es quien produce la información como auxiliar "
+             "de la Justicia, <b>no fue contemplada</b>: en ella se carga, de forma manual, lo que antes hubo que escribir en otro lado, y la "
+             "Institución sigue trabajando de manera precaria en cuanto a sistematización, sin un <b>registro propio y estructurado</b> de lo "
+             "actuado en cada procedimiento."),
+          caja("La brecha no está en la Fiscalía ni en la Policía, sino <b>entre ambas</b>: en el tramo que va desde el lugar del hecho hasta la "
+               "actuación cargada, que nadie informatizó. Mejorar ese tramo mejora también la investigación y la elevación a juicio. La propuesta "
+               "no modifica la plataforma del M.P.F.: informatiza el tramo policial y abre una instancia de coordinación con la Fiscalía.", "ojo"),
           pj("Además, en un mismo procedimiento el oficial transcribe una y otra vez los mismos datos —personas, documentos, domicilios, lugar, "
              "fecha y hora, elementos secuestrados, intervinientes, fiscalía— en actas, constancias, notas, partes y en la causa que se eleva a "
              "la Justicia provincial. Cada transcripción insume tiempo y abre la posibilidad de errores u omisiones."),
