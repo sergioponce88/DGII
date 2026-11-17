@@ -195,7 +195,7 @@ def armar():
                     "de Tucumán —divisiones, departamentos y Unidades Regionales— mediante sistemas web propios, <b>comenzando por un relevamiento "
                     "con referentes de cada área</b> y pruebas piloto graduales, para que el trabajo <b>administrativo y operativo</b> quede registrado "
                     "como datos útiles para el análisis y la toma de decisiones.", st["lead"]), Spacer(1, 4),
-          kpis([("6", "sistemas propios<br/>en uso, piloto o desarrollo"), ("$0", "en licencias<br/>de software"), ("App", "en el celular y la PC,<br/>instalable"),
+          kpis([("6 + 2", "sistemas propios y<br/>propuestas individuales"), ("$0", "en licencias<br/>de software"), ("App", "en el celular y la PC,<br/>instalable"),
                 ("Propio", "personal para desarrollo<br/>y capacitación")]),
           Spacer(1, 8),
           tabla(["Punto", "Síntesis"], [
@@ -208,7 +208,7 @@ def armar():
               ["<b>Método</b>", "Cada sistema nace del <b>análisis del flujo de trabajo</b> del área, con entrevistas a su personal. El sistema de "
                                 "expedientes es un ejemplo: no se impone un modelo único, se diseña a medida de cada lugar."],
               ["<b>Evidencia</b>", "Sistemas en funcionamiento en la D.G.I.I. y el I.E.S.P. (expedientes, legajos académicos, legajo de compañía, gabinete "
-                                   "interdisciplinario), un <b>piloto para oficiales de turno</b> que ya genera actas y notas, y Medicina Legal en desarrollo."],
+                                   "interdisciplinario), un <b>piloto para oficiales de turno</b> que ya genera actas y notas, y Medicina Legal en desarrollo. Se suman dos propuestas individuales: la <b>Plataforma de Capacitación Virtual</b> y el <b>Repositorio de Protocolos y Normativa</b>."],
               ["<b>Costo</b>", "Sin licencias. Infraestructura en la nube en planes gratuitos, equipamiento existente y personal propio. Para la escala "
                                "institucional se recomienda alojarlos en servidores de la Policía."],
               ["<b>Capacitación</b>", "Corta y por perfil (de 2 a 6 horas), dictada por personal propio, con manual y material digital."],
@@ -279,8 +279,7 @@ def armar():
                 "<b>Vencimientos</b> y plazos judiciales controlados de memoria.",
                 "Estadísticas que se arman a mano, tarde y con criterios distintos según la dependencia.",
                 "Dependencia de personas: cuando alguien se traslada, se pierde parte del conocimiento de la oficina."])
-    s += h2("Por qué ahora")
-    s += [pj("Hoy existen herramientas tecnológicas de uso libre que permiten desarrollar sistemas a medida con recursos propios, accesibles desde "
+    s += [Spacer(1, 4), pj("<b>Por qué ahora.</b> Hoy existen herramientas tecnológicas de uso libre que permiten desarrollar sistemas a medida con recursos propios, accesibles desde "
              "el celular y sin grandes inversiones, como lo demuestran los sistemas que ya funcionan en la Institución. La Policía cuenta además "
              "con personal joven formado en informática y con capacidad de adaptación, lo que hace viable una transformación progresiva y sostenida.")]
     s += h2("Impacto esperado")
@@ -331,6 +330,20 @@ def armar():
               [42 * mm, 34 * mm, ANCHO - 106 * mm, 30 * mm]),
           Spacer(1, 6),
           ]
+    s += h2("Propuestas individuales que integran esta política")
+    s += [pj("Además de los sistemas en funcionamiento, se elevan por separado dos propuestas que concretan la misma política en áreas con "
+             "responsable definido y beneficio inmediato para toda la fuerza. Cada sistema de esta propuesta tendrá, del mismo modo, su "
+             "<b>propuesta individual</b>: la general fija la política; las individuales la llevan a cada área."),
+          tabla(["Propuesta", "Qué resuelve", "Datos que genera"], [
+              ["<b>Plataforma de Capacitación Virtual</b><br/>D.G.I.I.", "Convocatoria igual para toda la Provincia, disertaciones en vivo y grabadas, "
+               "inscripción y asistencia en línea, legajo de formación de cada agente.", "Alcance de cada convocatoria, inscriptos, asistencia, "
+               "horas de formación por agente, dependencia y región."],
+              ["<b>Repositorio de Protocolos y Normativa Vigente</b>", "Un solo lugar oficial, con vigencia revisada jurídicamente, donde consultar "
+               "desde el celular los protocolos propios y de otros organismos, y la normativa vigente, con aviso de novedades.",
+               "Qué se consulta, desde dónde y cuándo; novedades leídas; temas que generan dudas y conviene capacitar."]],
+              [46 * mm, (ANCHO - 46 * mm) * 0.55, (ANCHO - 46 * mm) * 0.45]),
+          caja("Ambas se complementan: el repositorio muestra qué normas consulta el personal y dónde tiene dudas; la plataforma convoca a "
+               "la disertación que lo explica. Y ambas producen datos que hoy no existen.", "tip")]
     s += h2("Capacidades comunes ya probadas")
     s += [pj("Con el desarrollo de estos sistemas se fue armando un conjunto de soluciones que ya funcionan y que pueden aplicarse en "
              "cualquier área que se incorpore:"),
@@ -732,7 +745,8 @@ def armar():
                    (4, "<b>Autorización de pruebas piloto</b> en las áreas que se prioricen (incluida una comisaría por Unidad Regional) y de los espacios de capacitación."),
                    (5, "Uso de <b>cuentas institucionales</b> y, a mediano plazo, de un <b>servidor propio</b> para alojar los sistemas."),
                    (6, "Una <b>demostración práctica</b> ante la Superioridad de los sistemas en funcionamiento."),
-                   (7, "<b>Autorización para extender el piloto del sistema para oficiales de turno</b> a una comisaría por Unidad Regional, en coordinación con el Ministerio Público Fiscal.")])]
+                   (7, "<b>Autorización para extender el piloto del sistema para oficiales de turno</b> a una comisaría por Unidad Regional, en coordinación con el Ministerio Público Fiscal."),
+                   (8, "<b>Aval para las propuestas individuales</b> de la Plataforma de Capacitación Virtual y del Repositorio de Protocolos y Normativa Vigente, que se elevan por separado.")])]
     s += h2("Conclusión")
     s += [pj("La informatización de la gestión administrativa no es un objetivo a futuro: ya está ocurriendo en la Institución, con resultados "
              "concretos, personal propio y sin costo de licencias, y viene a complementar la tarea de excelencia que la Policía de Tucumán "
