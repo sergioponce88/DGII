@@ -205,7 +205,7 @@ def armar():
           tabla(["Punto", "Síntesis"], [
               ["<b>Naturaleza</b>", "Herramienta de <b>apoyo</b>. No es un sistema oficial del Ministerio Público Fiscal, no lo reemplaza ni se conecta "
                                     "con él: prepara el texto que el oficial revisa y vuelca en NOTeWEB."],
-              ["<b>Problema</b>", "Triple carga (libreta, Word y NOTeWEB), horas de escritorio y actas incompletas que generan requerimientos de la Fiscalía."],
+              ["<b>Problema</b>", "La plataforma del M.P.F. optimizó el trabajo de la Fiscalía, pero no contempló el de la Policía: triple carga (libreta, Word y NOTeWEB), horas de escritorio y actas incompletas que generan requerimientos."],
               ["<b>Aporte central</b>", "Calidad documental: el sistema recuerda cada aspecto del procedimiento, detecta datos que no coinciden y no "
                                         "genera el acta mientras falte lo esencial."],
               ["<b>Encuadre legal</b>", "El oficial es autor y responsable del acta; las plantillas son revisadas por los Comisarios Abogados del proyecto; "
@@ -250,22 +250,46 @@ def armar():
                "cada paso, para que todo lo que produce el sistema se ajuste a la normativa vigente y a lo dispuesto por la justicia ordinaria.", "ok")]
 
     # 2. Problema
-    s += h1("2. El problema que resuelve")
-    s += [pj("Hoy el auxiliar de turno documenta el mismo procedimiento <b>tres veces</b>: lo anota en la libreta en el lugar del hecho, lo "
-             "transcribe a un modelo de Word en la dependencia y vuelve a cargarlo en NOTeWEB. Después redacta una por una las notas que "
-             "corresponden al delito (exámenes médicos, dosajes, pedidos de informes, cadena de custodia)."),
-          pj("Además del tiempo perdido, la redacción de memoria provoca <b>omisiones</b>: la inspección ocular incompleta, la falta de la hora de "
-             "arribo de Criminalística, el destino del vehículo, la identificación del personal que intervino primero o datos que no "
-             "coinciden entre una pieza y otra. Cada omisión puede derivar en un requerimiento de la Fiscalía y en más trabajo.")]
-    s += [tabla(["Hoy", "Con la plataforma"], [
-        ["Libreta, Word y NOTeWEB: triple carga.", "Una sola carga en el lugar del hecho."],
-        ["Modelos de Word sueltos y desactualizados.", "Plantillas únicas, revisadas jurídicamente."],
-        ["Lo que no se recuerda, no se documenta.", "La ruta pregunta cada aspecto del procedimiento."],
-        ["Errores que aparecen cuando la Fiscalía los observa.", "Los errores se detectan y corrigen antes de generar el acta."],
-        ["Notas redactadas una por una.", "Las notas salen con los datos ya cargados, original y duplicado."]],
-        [ANCHO / 2, ANCHO / 2], ROJO)]
+    s += h1("2. Análisis: cómo trabaja hoy el Ministerio Público Fiscal con la Policía")
+    s += [pj("El Ministerio Público Fiscal dio un paso importante al implementar la denuncia digital y su plataforma de actuaciones (NOTeWEB). "
+             "Ese avance ordenó la recepción de denuncias, unificó formatos y aceleró la llegada de la información a las Unidades Fiscales. "
+             "Corresponde reconocerlo, y esta propuesta no lo discute: lo toma como punto de partida."),
+          pj("Pero la plataforma fue diseñada desde la necesidad del Ministerio Público Fiscal, para optimizar <b>su</b> trabajo: recibir, registrar "
+             "y dirigir la investigación. La Policía, como auxiliar de la Justicia, quedó del otro lado del mostrador: es quien produce la "
+             "información, pero la herramienta <b>no contempla cómo la produce</b>. El resultado es que la Fiscalía trabaja informatizada y la "
+             "Policía sigue trabajando de manera <b>precaria</b> en cuanto a sistematización: libreta, Word y transcripción."),
+          tabla(["Lo que la plataforma del M.P.F. resuelve", "Lo que necesita la Policía y no está contemplado"], [
+              ["Recepción y registro digital de la denuncia.", "Guía del procedimiento en el lugar del hecho, desde el celular."],
+              ["Formato único para la Fiscalía.", "Captura de datos una sola vez, sin transcribir desde la libreta."],
+              ["Comunicación de disposiciones del fiscal.", "Registro del cumplimiento de cada disposición, con horas y responsables."],
+              ["Expediente digital para la investigación.", "Generación de las notas, actas de diligencia y croquis que la Policía debe producir."],
+              ["Seguimiento desde la Unidad Fiscal.", "Control de completitud antes de elevar: qué falta, qué no coincide."],
+              ["Información para la Justicia.", "Información para la Policía: estadística propia, carga por dependencia, mapa del delito."]],
+              [ANCHO / 2, ANCHO / 2]),
+          Spacer(1, 6),
+          pj("Así, el oficial carga en la plataforma del M.P.F. un texto que antes tuvo que escribir en otro lado, con los mismos datos que "
+             "después vuelve a tipear en cada nota. La brecha no está en la Fiscalía ni en la Policía, sino <b>entre ambas</b>: en el tramo que va "
+             "desde el lugar del hecho hasta que la actuación queda cargada, que nadie informatizó."),
+          caja("La consecuencia es doble. Para la Policía, horas de transcripción y actuaciones que vuelven con requerimientos. Para la Justicia, "
+               "causas que llegan incompletas y demoran su investigación y su elevación a juicio. <b>Mejorar el tramo policial mejora también el "
+               "resultado judicial.</b>", "ojo")]
+    s += h2("Lo que se propone a partir de ese análisis")
+    s += [pj("No se propone modificar la plataforma del Ministerio Público Fiscal ni reemplazarla, lo que excede a la Policía. Se propone "
+             "informatizar <b>el tramo que le corresponde a la Policía</b>: desde la toma de conocimiento hasta la actuación lista para cargar en "
+             "NOTeWEB y las piezas que la Fiscalía necesita para investigar y elevar a juicio."),
+          tabla(["Hoy", "Con la plataforma para oficiales"], [
+              ["Libreta, Word y NOTeWEB: triple carga.", "Una sola carga en el lugar del hecho; el texto para NOTeWEB sale listo."],
+              ["Modelos de Word sueltos y desactualizados.", "Plantillas únicas, revisadas jurídicamente."],
+              ["Lo que no se recuerda, no se documenta.", "La ruta pregunta cada aspecto del procedimiento."],
+              ["Errores que aparecen cuando la Fiscalía los observa.", "Los errores se detectan y corrigen antes de generar el acta."],
+              ["Notas redactadas una por una.", "Las notas salen con los datos ya cargados, original y duplicado."],
+              ["La Policía no tiene datos propios de lo que produce.", "Estadística, mapa del delito y carga por dependencia, de la Policía."]],
+              [ANCHO / 2, ANCHO / 2], ROJO),
+          Spacer(1, 4),
+          pj("La propuesta es, además, una <b>oportunidad de coordinación</b>: con el piloto en marcha, la Policía puede acercar al Ministerio "
+             "Público Fiscal actuaciones más completas y uniformes, y acordar con él los formatos y los datos que facilitan la investigación y "
+             "la elevación a juicio. Esa coordinación se plantea como parte del pedido a la Superioridad.")]
 
-    # 3. Cómo funciona
     s += h1("3. Cómo funciona")
     s += [imagen(I("dato_unico.png"), pie="Figura 1. Dato único: el oficial registra una vez y el sistema reutiliza los datos en cada pieza.")]
     s += h2("Ruta guiada del procedimiento")
